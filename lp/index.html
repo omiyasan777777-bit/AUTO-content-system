@@ -3,940 +3,982 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>月収10万円を実現する｜けんしろう式 副業完全攻略プログラム</title>
+  <title>KENSHIRO — The Side Income Programme</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    /* ===== RESET & BASE ===== */
+    /* ─── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --ink:      #0e0e0e;
+      --ink-2:    #1c1c1c;
+      --ink-3:    #2a2a2a;
+      --mist:     #f5f3ef;
+      --cream:    #faf8f4;
+      --warm-mid: #8a7f72;
+      --warm-lt:  #c9bfb0;
+      --accent:   #b5985a;
+      --accent-lt:#d4b87a;
+      --rule:     rgba(180,168,148,0.25);
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --sans:  'Inter', system-ui, sans-serif;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ─── RESET ──────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; font-size: 16px; }
     body {
-      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
-      background: #0a0a0a;
-      color: #f0f0f0;
+      font-family: var(--sans);
+      background: var(--ink);
+      color: var(--mist);
       line-height: 1.7;
-      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
     }
     a { color: inherit; text-decoration: none; }
-    img { max-width: 100%; display: block; }
+    img { display: block; max-width: 100%; }
 
-    /* ===== UTILITY ===== */
-    .container { max-width: 720px; margin: 0 auto; padding: 0 20px; }
-    .section { padding: 64px 0; }
-    .section--alt { background: #111; }
-    .section--dark { background: #050505; }
-    .label {
-      display: inline-block;
-      background: #d4a017;
-      color: #000;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      padding: 4px 12px;
-      border-radius: 2px;
-      margin-bottom: 12px;
-      text-transform: uppercase;
+    /* ─── LAYOUT ─────────────────────────────────────────── */
+    .wrap   { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+    .wrap--wide { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 100px 0; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
     }
-    .heading-xl {
-      font-size: clamp(24px, 5vw, 38px);
-      font-weight: 900;
-      line-height: 1.35;
+    @media (max-width: 540px) { .row { grid-template-columns: 1fr; } }
+
+    /* ─── EYEBROW ────────────────────────────────────────── */
+    .eyebrow {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .eyebrow::after {
+      content: '';
+      display: block;
+      height: 1px;
+      width: 40px;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+
+    /* ─── TYPOGRAPHY ─────────────────────────────────────── */
+    .display {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: clamp(40px, 8vw, 72px);
+      line-height: 1.08;
       letter-spacing: -0.01em;
     }
-    .heading-lg {
-      font-size: clamp(20px, 4vw, 28px);
-      font-weight: 800;
-      line-height: 1.4;
+    .display em { font-style: italic; color: var(--accent-lt); }
+    .h2 {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
     }
-    .heading-md {
-      font-size: clamp(17px, 3vw, 22px);
-      font-weight: 700;
-      line-height: 1.5;
+    .h2 em { font-style: italic; color: var(--accent-lt); }
+    .h3 {
+      font-family: var(--serif);
+      font-size: clamp(20px, 3vw, 26px);
+      font-weight: 400;
+      line-height: 1.3;
     }
-    .text-gold { color: #d4a017; }
-    .text-red  { color: #e74c3c; }
-    .text-center { text-align: center; }
-    .mt-4  { margin-top: 4px; }
-    .mt-8  { margin-top: 8px; }
-    .mt-12 { margin-top: 12px; }
-    .mt-16 { margin-top: 16px; }
-    .mt-24 { margin-top: 24px; }
-    .mt-32 { margin-top: 32px; }
-    .mt-40 { margin-top: 40px; }
+    .body-lg { font-size: 15px; line-height: 1.85; color: var(--warm-lt); font-weight: 300; }
+    .body-sm { font-size: 13px; line-height: 1.8;  color: var(--warm-mid); font-weight: 300; }
 
-    /* ===== HERO ===== */
-    .hero {
-      background: linear-gradient(160deg, #0a0a0a 0%, #1a1200 60%, #0a0a0a 100%);
-      border-bottom: 1px solid #222;
-      padding: 56px 0 64px;
+    /* ─── RULE ───────────────────────────────────────────── */
+    .rule { border: none; border-top: 1px solid var(--rule); }
+
+    /* ─── SPACERS ────────────────────────────────────────── */
+    .mt-6  { margin-top: 6px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-20 { margin-top: 20px; }
+    .mt-28 { margin-top: 28px; }
+    .mt-40 { margin-top: 40px; }
+    .mt-56 { margin-top: 56px; }
+
+    /* ─── BUTTON ─────────────────────────────────────────── */
+    .btn {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 16px 36px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.25s var(--ease), color 0.25s var(--ease);
+      text-align: center;
     }
-    .hero__badge {
+    .btn--fill {
+      background: var(--accent);
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+    .btn--fill:hover { background: var(--accent-lt); border-color: var(--accent-lt); }
+    .btn--ghost {
+      background: transparent;
+      color: var(--mist);
+      border-color: rgba(245,243,239,0.3);
+    }
+    .btn--ghost:hover { background: rgba(245,243,239,0.06); }
+    .btn--block { display: block; width: 100%; }
+
+    /* ─── NAV ────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      background: rgba(14,14,14,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--rule);
+    }
+    .nav__inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: #888;
-      margin-bottom: 20px;
+      justify-content: space-between;
     }
-    .hero__badge span {
-      background: #d4a017;
-      color: #000;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 8px;
+    .nav__logo {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+    }
+    .nav__cta { display: none; }
+    @media (min-width: 540px) { .nav__cta { display: block; } }
+
+    /* ─── HERO ───────────────────────────────────────────── */
+    .hero {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-top: 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero__bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 80% 20%, rgba(181,152,90,0.07) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 10% 80%, rgba(181,152,90,0.04) 0%, transparent 60%),
+        linear-gradient(170deg, #121010 0%, #0e0e0e 100%);
+    }
+    .hero__grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--rule) 1px, transparent 1px),
+        linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+    }
+    .hero__inner {
+      position: relative;
+      padding: 80px 24px 72px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .hero__kicker { margin-bottom: 28px; }
+    .hero__title { max-width: 640px; }
+    .hero__body {
+      max-width: 480px;
+      margin-top: 24px;
+    }
+    .hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 40px;
+    }
+    .hero__stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      margin-top: 72px;
+      border-top: 1px solid var(--rule);
+      padding-top: 32px;
+    }
+    .hero__stat {
+      flex: 1 0 120px;
+      padding: 0 32px 0 0;
+    }
+    .hero__stat + .hero__stat {
+      padding-left: 32px;
+      border-left: 1px solid var(--rule);
+    }
+    .hero__stat-val {
+      font-family: var(--serif);
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 300;
+      color: var(--accent-lt);
+      line-height: 1;
+    }
+    .hero__stat-lbl { font-size: 11px; color: var(--warm-mid); margin-top: 6px; letter-spacing: 0.05em; }
+
+    /* ─── SECTION ALT ────────────────────────────────────── */
+    .bg-ink2  { background: var(--ink-2); }
+    .bg-ink3  { background: var(--ink-3); }
+    .bg-cream { background: var(--cream); color: var(--ink); }
+    .bg-cream .body-lg { color: #5a5248; }
+    .bg-cream .body-sm { color: #8a7f72; }
+    .bg-cream .rule { border-color: rgba(0,0,0,0.1); }
+    .bg-cream .eyebrow { color: #8a6c32; }
+    .bg-cream .eyebrow::after { background: #8a6c32; }
+
+    /* ─── PAIN LIST ──────────────────────────────────────── */
+    .pain-list { margin-top: 48px; }
+    .pain-item {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 20px;
+      align-items: start;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .pain-item:first-child { border-top: 1px solid var(--rule); }
+    .pain-num {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--accent);
+      font-style: italic;
+      padding-top: 2px;
+    }
+    .pain-text { font-size: 14px; line-height: 1.85; color: var(--warm-lt); font-weight: 300; }
+    .pain-text strong { color: var(--mist); font-weight: 500; }
+
+    /* ─── CALLOUT ────────────────────────────────────────── */
+    .callout {
+      margin-top: 40px;
+      border: 1px solid var(--rule);
+      border-left: 2px solid var(--accent);
+      padding: 24px 28px;
       border-radius: 2px;
     }
-    .hero__title {
-      font-size: clamp(26px, 6vw, 44px);
-      font-weight: 900;
-      line-height: 1.3;
-      letter-spacing: -0.02em;
-    }
-    .hero__title em {
-      font-style: normal;
-      color: #d4a017;
-      position: relative;
-    }
-    .hero__subtitle {
-      margin-top: 20px;
-      font-size: clamp(14px, 2.5vw, 16px);
-      color: #aaa;
-      line-height: 1.8;
-    }
-    .hero__numbers {
+    .callout p { font-size: 14px; line-height: 1.9; color: var(--warm-lt); }
+    .callout strong { color: var(--mist); }
+
+    /* ─── METHOD ─────────────────────────────────────────── */
+    .method-steps { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
+    .method-step {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 36px;
+      grid-template-columns: 48px 1fr;
+      gap: 24px;
+      padding: 32px 0;
+      border-bottom: 1px solid var(--rule);
+      align-items: start;
     }
-    .hero__number {
-      background: rgba(212,160,23,0.08);
-      border: 1px solid rgba(212,160,23,0.25);
-      border-radius: 8px;
-      padding: 16px 12px;
-      text-align: center;
-    }
-    .hero__number-value {
-      font-size: clamp(22px, 5vw, 34px);
-      font-weight: 900;
-      color: #d4a017;
+    .method-step:first-child { border-top: 1px solid var(--rule); }
+    .step-num {
+      font-family: var(--serif);
+      font-size: 36px;
+      font-weight: 300;
+      color: var(--accent);
+      opacity: 0.5;
       line-height: 1;
     }
-    .hero__number-label {
-      font-size: 11px;
-      color: #888;
-      margin-top: 6px;
-      line-height: 1.4;
-    }
-    .hero__cta { margin-top: 36px; }
-
-    /* ===== CTA BUTTON ===== */
-    .btn {
-      display: block;
-      width: 100%;
-      text-align: center;
-      padding: 18px 24px;
-      border-radius: 6px;
-      font-weight: 800;
-      font-size: clamp(15px, 3vw, 18px);
-      cursor: pointer;
-      border: none;
-      transition: transform 0.15s, box-shadow 0.15s;
-      letter-spacing: 0.03em;
-    }
-    .btn:active { transform: scale(0.98); }
-    .btn--primary {
-      background: linear-gradient(135deg, #e8b820 0%, #c49a10 100%);
-      color: #000;
-      box-shadow: 0 4px 24px rgba(212,160,23,0.4);
-    }
-    .btn--primary:hover { box-shadow: 0 6px 32px rgba(212,160,23,0.6); transform: translateY(-1px); }
-    .btn--outline {
-      background: transparent;
-      border: 2px solid #d4a017;
-      color: #d4a017;
-    }
-    .btn__sub {
-      font-size: 12px;
+    .step-content {}
+    .step-title {
+      font-family: var(--serif);
+      font-size: 20px;
       font-weight: 400;
-      color: #666;
-      text-align: center;
+      line-height: 1.3;
+    }
+    .step-body { margin-top: 8px; font-size: 14px; color: var(--warm-lt); line-height: 1.85; font-weight: 300; }
+
+    /* ─── METRICS ────────────────────────────────────────── */
+    .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--rule); margin-top: 48px; }
+    .metric {
+      background: var(--ink-2);
+      padding: 36px 28px;
+    }
+    .metric__label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warm-mid); }
+    .metric__val {
+      font-family: var(--serif);
+      font-size: clamp(28px, 6vw, 44px);
+      font-weight: 300;
+      color: var(--accent-lt);
       margin-top: 8px;
-    }
-
-    /* ===== PAIN ===== */
-    .pain__list { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; }
-    .pain__item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      background: #161616;
-      border: 1px solid #222;
-      border-left: 3px solid #e74c3c;
-      border-radius: 6px;
-      padding: 14px 16px;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .pain__icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
-    .pain__close {
-      margin-top: 32px;
-      background: rgba(231,76,60,0.08);
-      border: 1px solid rgba(231,76,60,0.3);
-      border-radius: 8px;
-      padding: 20px;
-      font-size: 14px;
-      line-height: 1.8;
-      color: #ccc;
-    }
-
-    /* ===== SOLUTION ===== */
-    .solution__intro {
-      margin-top: 24px;
-      font-size: 15px;
-      color: #bbb;
-      line-height: 1.9;
-    }
-    .solution__box {
-      margin-top: 28px;
-      background: linear-gradient(135deg, rgba(212,160,23,0.1) 0%, rgba(212,160,23,0.04) 100%);
-      border: 1px solid rgba(212,160,23,0.3);
-      border-radius: 10px;
-      padding: 28px 24px;
-    }
-    .solution__box-title { font-size: 18px; font-weight: 800; color: #d4a017; }
-    .solution__box-body { margin-top: 12px; font-size: 14px; color: #bbb; line-height: 1.9; }
-
-    /* ===== RESULTS ===== */
-    .results__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 28px; }
-    .result-card {
-      background: #141414;
-      border: 1px solid #222;
-      border-radius: 8px;
-      padding: 18px 14px;
-      position: relative;
-      overflow: hidden;
-    }
-    .result-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 3px;
-      background: linear-gradient(90deg, #d4a017, #e8b820);
-    }
-    .result-card__name { font-size: 12px; color: #888; }
-    .result-card__value {
-      font-size: clamp(22px, 5vw, 30px);
-      font-weight: 900;
-      color: #d4a017;
-      margin-top: 6px;
       line-height: 1;
     }
-    .result-card__label { font-size: 12px; color: #777; margin-top: 4px; }
-    .result-card__period { font-size: 11px; color: #555; margin-top: 8px; }
+    .metric__sub { font-size: 12px; color: var(--warm-mid); margin-top: 6px; }
+    @media (max-width: 420px) { .metrics { grid-template-columns: 1fr; } }
 
-    /* ===== CURRICULUM ===== */
-    .curriculum__chapters { margin-top: 28px; display: flex; flex-direction: column; gap: 8px; }
+    /* ─── CURRICULUM ─────────────────────────────────────── */
+    .chapters { margin-top: 48px; }
     .chapter {
-      background: #141414;
-      border: 1px solid #222;
-      border-radius: 8px;
-      overflow: hidden;
+      border-top: 1px solid var(--rule);
+      padding: 28px 0;
     }
-    .chapter__header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 16px 18px;
-    }
-    .chapter__num {
-      background: #d4a017;
-      color: #000;
-      font-weight: 800;
-      font-size: 12px;
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .chapter__title { font-size: 15px; font-weight: 700; }
-    .chapter__lessons {
-      padding: 0 18px 14px 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .lesson {
-      font-size: 13px;
-      color: #999;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .lesson::before { content: '▶'; font-size: 9px; color: #d4a017; flex-shrink: 0; }
-
-    /* ===== INSTRUCTOR ===== */
-    .instructor__card {
-      margin-top: 28px;
-      background: #141414;
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .instructor__top {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-    .instructor__avatar {
-      width: 72px; height: 72px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #d4a017, #8b6914);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      flex-shrink: 0;
-    }
-    .instructor__name-block .name { font-size: 20px; font-weight: 800; }
-    .instructor__name-block .title { font-size: 12px; color: #888; margin-top: 4px; }
-    .instructor__stats {
+    .chapter:last-child { border-bottom: 1px solid var(--rule); }
+    .chapter__head {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 28px 1fr;
+      gap: 20px;
+      align-items: baseline;
+    }
+    .chapter__index {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--accent);
+      font-style: italic;
+    }
+    .chapter__title { font-size: 15px; font-weight: 500; color: var(--mist); }
+    .chapter__lessons {
+      margin-top: 16px;
+      padding-left: 48px;
+      display: flex;
+      flex-direction: column;
       gap: 8px;
     }
-    .instructor__stat {
-      text-align: center;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 6px;
-      padding: 10px 6px;
-    }
-    .instructor__stat-val { font-size: 18px; font-weight: 800; color: #d4a017; }
-    .instructor__stat-lbl { font-size: 10px; color: #777; margin-top: 2px; }
-    .instructor__bio { font-size: 14px; color: #bbb; line-height: 1.9; }
-
-    /* ===== TESTIMONIALS ===== */
-    .testimonials__list { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
-    .testimonial {
-      background: #141414;
-      border: 1px solid #222;
-      border-radius: 10px;
-      padding: 20px 18px;
-    }
-    .testimonial__header {
+    .lesson-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--warm-mid);
+      font-weight: 300;
     }
-    .testimonial__avatar {
-      width: 40px; height: 40px;
+    .lesson-row::before {
+      content: '';
+      display: block;
+      width: 4px; height: 4px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #333, #555);
+      background: var(--accent);
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+
+    /* ─── INSTRUCTOR ─────────────────────────────────────── */
+    .instructor { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    @media (max-width: 540px) { .instructor { grid-template-columns: 1fr; } }
+    .instructor__portrait {
+      aspect-ratio: 3/4;
+      background: linear-gradient(160deg, #2a2520 0%, #1a1a18 100%);
+      border: 1px solid var(--rule);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      flex-shrink: 0;
+      font-size: 64px;
+      color: var(--warm-mid);
+      border-radius: 2px;
     }
-    .testimonial__name { font-size: 14px; font-weight: 700; }
-    .testimonial__meta { font-size: 11px; color: #666; margin-top: 2px; }
-    .testimonial__stars { color: #d4a017; font-size: 14px; margin-bottom: 8px; }
-    .testimonial__result {
-      font-size: 15px;
-      font-weight: 700;
-      color: #d4a017;
-      margin-bottom: 8px;
+    .instructor__name {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 300;
+      line-height: 1.1;
     }
-    .testimonial__body { font-size: 13px; color: #bbb; line-height: 1.8; }
-
-    /* ===== PRICE ===== */
-    .price__card {
+    .instructor__role { font-size: 12px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 8px; }
+    .instructor__figures {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
       margin-top: 28px;
-      background: linear-gradient(160deg, #141200 0%, #0f0f0f 100%);
-      border: 1px solid rgba(212,160,23,0.4);
-      border-radius: 12px;
-      padding: 32px 24px;
-      text-align: center;
+      padding-top: 28px;
+      border-top: 1px solid var(--rule);
     }
-    .price__original {
-      font-size: 16px;
-      color: #666;
-      text-decoration: line-through;
+    .figure__val {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 300;
+      color: var(--accent-lt);
     }
-    .price__main {
-      font-size: clamp(36px, 8vw, 54px);
-      font-weight: 900;
-      color: #d4a017;
+    .figure__lbl { font-size: 11px; color: var(--warm-mid); margin-top: 4px; }
+    .instructor__bio { margin-top: 24px; font-size: 14px; line-height: 1.9; color: var(--warm-lt); font-weight: 300; }
+
+    /* ─── TESTIMONIALS ───────────────────────────────────── */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--rule);
+      margin-top: 48px;
+    }
+    @media (max-width: 540px) { .testimonials-grid { grid-template-columns: 1fr; } }
+    .testi {
+      background: var(--ink-2);
+      padding: 32px 28px;
+    }
+    .testi__stars { color: var(--accent); font-size: 12px; letter-spacing: 3px; margin-bottom: 16px; }
+    .testi__result {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--accent-lt);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .testi__body { font-size: 13px; line-height: 1.85; color: var(--warm-lt); font-weight: 300; }
+    .testi__meta {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+      font-size: 12px;
+      color: var(--warm-mid);
+    }
+
+    /* ─── PRICE ──────────────────────────────────────────── */
+    .price-card {
+      margin-top: 48px;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .price-card__top {
+      background: linear-gradient(135deg, #1e1a14 0%, #141210 100%);
+      padding: 48px 40px;
+    }
+    .price-original { font-size: 14px; color: var(--warm-mid); text-decoration: line-through; }
+    .price-amount {
+      font-family: var(--serif);
+      font-size: clamp(48px, 10vw, 72px);
+      font-weight: 300;
+      color: var(--accent-lt);
       line-height: 1;
       margin-top: 4px;
     }
-    .price__main sup { font-size: 50%; vertical-align: super; margin-right: 2px; }
-    .price__tax { font-size: 12px; color: #777; margin-top: 4px; }
-    .price__features {
-      margin-top: 24px;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .price__feature {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    .price__feature-icon { color: #d4a017; font-size: 16px; flex-shrink: 0; }
-    .price__guarantee {
-      margin-top: 24px;
-      background: rgba(212,160,23,0.06);
-      border: 1px dashed rgba(212,160,23,0.3);
-      border-radius: 8px;
-      padding: 16px;
-      font-size: 13px;
-      color: #aaa;
-      line-height: 1.7;
-    }
-
-    /* ===== FAQ ===== */
-    .faq__list { margin-top: 28px; display: flex; flex-direction: column; gap: 8px; }
-    .faq__item {
-      background: #141414;
-      border: 1px solid #1e1e1e;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .faq__q {
-      padding: 16px 18px;
-      font-size: 14px;
-      font-weight: 700;
+    .price-amount sup { font-size: 40%; vertical-align: super; margin-right: 4px; }
+    .price-amount sub { font-size: 22px; margin-left: 4px; font-family: var(--sans); color: var(--warm-mid); }
+    .price-tax { font-size: 12px; color: var(--warm-mid); margin-top: 8px; }
+    .price-card__body { padding: 36px 40px; }
+    .price-features { display: flex; flex-direction: column; gap: 14px; }
+    .price-feature {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
+      gap: 14px;
+      font-size: 14px;
+      color: var(--warm-lt);
+      font-weight: 300;
     }
-    .faq__q-icon { color: #d4a017; font-weight: 900; flex-shrink: 0; }
-    .faq__a {
-      padding: 0 18px 16px 18px;
+    .pf-check {
+      width: 18px; height: 18px;
+      border: 1px solid var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+    .price-guarantee {
+      margin-top: 28px;
+      padding: 20px 24px;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
       font-size: 13px;
-      color: #999;
-      line-height: 1.8;
-      border-top: 1px solid #1e1e1e;
-      padding-top: 14px;
+      color: var(--warm-mid);
+      line-height: 1.75;
     }
+    .price-guarantee strong { color: var(--warm-lt); display: block; margin-bottom: 4px; }
+    .price-cta-block { margin-top: 32px; display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+    .price-note { font-size: 12px; color: var(--warm-mid); text-align: center; }
 
-    /* ===== FINAL CTA ===== */
-    .final-cta {
-      background: linear-gradient(160deg, #110e00 0%, #0a0a0a 100%);
-      border-top: 1px solid rgba(212,160,23,0.2);
-      padding: 72px 0;
-      text-align: center;
+    /* ─── FAQ ────────────────────────────────────────────── */
+    .faqs { margin-top: 48px; }
+    .faq {
+      border-top: 1px solid var(--rule);
+      padding: 24px 0;
     }
-    .final-cta__headline {
-      font-size: clamp(22px, 5vw, 34px);
-      font-weight: 900;
+    .faq:last-child { border-bottom: 1px solid var(--rule); }
+    .faq__q {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--mist);
+      line-height: 1.5;
+    }
+    .faq__q-mark {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 18px;
+      color: var(--accent);
+      flex-shrink: 0;
       line-height: 1.4;
     }
-    .final-cta__sub {
-      margin-top: 12px;
-      font-size: 14px;
-      color: #888;
-    }
+    .faq__a { margin-top: 12px; padding-left: 30px; font-size: 14px; color: var(--warm-lt); line-height: 1.85; font-weight: 300; }
 
-    /* ===== FOOTER ===== */
-    footer {
-      background: #060606;
-      border-top: 1px solid #1a1a1a;
-      padding: 28px 0;
+    /* ─── CLOSING ────────────────────────────────────────── */
+    .closing {
+      background: var(--ink);
+      padding: 120px 24px;
       text-align: center;
-      font-size: 12px;
-      color: #444;
     }
-    footer a { color: #555; }
+    .closing__inner { max-width: 560px; margin: 0 auto; }
+    .closing__quote {
+      font-family: var(--serif);
+      font-size: clamp(26px, 5vw, 40px);
+      font-weight: 300;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+    }
+    .closing__quote em { font-style: italic; color: var(--accent-lt); }
+    .closing__sub { margin-top: 20px; font-size: 14px; color: var(--warm-mid); line-height: 1.8; font-weight: 300; }
 
-    /* ===== STICKY CTA (mobile) ===== */
-    .sticky-cta {
+    /* ─── FOOTER ─────────────────────────────────────────── */
+    footer {
+      background: var(--ink-2);
+      border-top: 1px solid var(--rule);
+      padding: 40px 24px;
+    }
+    .footer__inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .footer__logo { font-family: var(--serif); font-size: 18px; color: var(--warm-mid); }
+    .footer__links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer__links a { font-size: 12px; color: var(--warm-mid); letter-spacing: 0.05em; }
+    .footer__copy { width: 100%; font-size: 11px; color: #3a3a3a; margin-top: 24px; }
+
+    /* ─── STICKY BAR ─────────────────────────────────────── */
+    .sticky {
       position: fixed;
-      bottom: 0; left: 0;
-      width: 100%;
-      background: rgba(10,10,10,0.95);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid rgba(212,160,23,0.3);
-      padding: 12px 20px;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(14,14,14,0.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--rule);
+      padding: 12px 24px;
       z-index: 100;
     }
-    .sticky-cta__btn {
-      display: block;
-      background: linear-gradient(135deg, #e8b820, #c49a10);
-      color: #000;
-      font-weight: 800;
-      font-size: 16px;
-      text-align: center;
-      padding: 14px;
-      border-radius: 6px;
-      letter-spacing: 0.04em;
-    }
+    .sticky a { display: block; }
+    @media (min-width: 600px) { .sticky { display: none; } }
 
-    /* ===== DIVIDER ===== */
-    .divider {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-    }
-    .section-header { margin-bottom: 8px; }
-
-    /* ===== HIGHLIGHT BOX ===== */
-    .highlight-box {
-      background: rgba(212,160,23,0.07);
-      border-left: 3px solid #d4a017;
-      padding: 16px 18px;
-      border-radius: 0 8px 8px 0;
-      font-size: 14px;
-      color: #ccc;
-      line-height: 1.8;
-      margin-top: 20px;
-    }
-
-    @media (min-width: 600px) {
-      .sticky-cta { display: none; }
-    }
+    /* ─── LIGHT SECTION ──────────────────────────────────── */
+    .bg-cream .h2 em   { color: #8a6c32; }
+    .bg-cream .chapter { border-color: rgba(0,0,0,0.1); }
+    .bg-cream .chapter__index { color: #8a6c32; }
+    .bg-cream .chapter__title { color: var(--ink); }
+    .bg-cream .lesson-row { color: #7a6e64; }
+    .bg-cream .lesson-row::before { background: #8a6c32; }
+    .bg-cream .faq__q { color: var(--ink); }
+    .bg-cream .faq__q-mark { color: #8a6c32; }
+    .bg-cream .faq__a { color: #5a5248; }
+    .bg-cream .faq { border-color: rgba(0,0,0,0.1); }
+    .bg-cream .callout { border-color: rgba(0,0,0,0.12); border-left-color: #8a6c32; }
+    .bg-cream .callout p { color: #5a5248; }
+    .bg-cream .callout strong { color: var(--ink); }
+    .bg-cream .eyebrow::after { background: #8a6c32; }
   </style>
 </head>
 <body>
 
-<!-- ===== HERO ===== -->
+<!-- ─── NAV ───────────────────────────────────────────────── -->
+<nav>
+  <div class="nav__inner">
+    <div class="nav__logo">Kenshiro</div>
+    <a class="btn btn--fill nav__cta" href="#enrol">Enrol Now</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ──────────────────────────────────────────────── -->
 <section class="hero">
-  <div class="container">
-    <div class="hero__badge">
-      <span>NEW</span> 2024年最新版 副業完全攻略プログラム
+  <div class="hero__bg"></div>
+  <div class="hero__grid"></div>
+  <div class="hero__inner">
+    <div class="hero__kicker">
+      <span class="eyebrow">The Side Income Programme — 2024</span>
     </div>
-    <h1 class="hero__title">
-      副業初心者でも<br>
-      <em>3ヶ月で月10万円</em>を<br>
-      現実にする方法
+    <h1 class="display hero__title">
+      副業で<em>月10万円</em><br>を実現する、<br>最短の道。
     </h1>
-    <p class="hero__subtitle">
-      「時間がない」「スキルがない」「何から始めればいい？」<br>
-      その悩み、すべて解決します。<br>
-      再現性100%の仕組み化ロードマップで、<br>
-      あなたの副業を本業超えまでリードします。
+    <p class="body-lg hero__body">
+      才能でも運でもなく、正しい設計と仕組みで。<br>
+      初心者でも再現できる、完全ロードマップ。
     </p>
-
-    <div class="hero__numbers">
-      <div class="hero__number">
-        <div class="hero__number-value">1,240<span style="font-size:14px">名</span></div>
-        <div class="hero__number-label">受講生累計</div>
-      </div>
-      <div class="hero__number">
-        <div class="hero__number-value">97<span style="font-size:14px">%</span></div>
-        <div class="hero__number-label">満足度</div>
-      </div>
-      <div class="hero__number">
-        <div class="hero__number-value">3<span style="font-size:14px">ヶ月</span></div>
-        <div class="hero__number-label">平均結果期間</div>
-      </div>
+    <div class="hero__actions">
+      <a class="btn btn--fill" href="#enrol">プログラムに参加する</a>
+      <a class="btn btn--ghost" href="#curriculum">カリキュラムを見る</a>
     </div>
-
-    <div class="hero__cta mt-32">
-      <a class="btn btn--primary" href="#price">今すぐプログラムに参加する →</a>
-      <p class="btn__sub">30日間返金保証付き｜今だけ限定価格</p>
+    <div class="hero__stats">
+      <div class="hero__stat">
+        <div class="hero__stat-val">1,240</div>
+        <div class="hero__stat-lbl">受講生</div>
+      </div>
+      <div class="hero__stat">
+        <div class="hero__stat-val">97%</div>
+        <div class="hero__stat-lbl">満足度</div>
+      </div>
+      <div class="hero__stat">
+        <div class="hero__stat-val">3ヶ月</div>
+        <div class="hero__stat-lbl">平均結果期間</div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ===== PAIN ===== -->
-<section class="section section--alt">
-  <div class="container">
-    <div class="section-header">
-      <span class="label">こんな悩みはありませんか？</span>
-    </div>
-    <h2 class="heading-lg">副業を始めたいのに<br><span class="text-red">前に進めない人</span>の典型的なパターン</h2>
-
-    <div class="pain__list">
-      <div class="pain__item">
-        <span class="pain__icon">😰</span>
-        <div>副業を始めようと情報収集するが、何が正しいかわからず<strong>数ヶ月が経過してしまう</strong></div>
+<!-- ─── PAIN ───────────────────────────────────────────────── -->
+<section class="bg-ink2">
+  <div class="wrap">
+    <span class="eyebrow">The Problem</span>
+    <h2 class="h2 mt-20">なぜ、多くの人が<br><em>副業で結果を出せないのか。</em></h2>
+    <div class="pain-list">
+      <div class="pain-item">
+        <div class="pain-num">01</div>
+        <div class="pain-text">情報収集に数ヶ月費やすが、<strong>何が正しいか判断できない</strong>まま行動できずに終わる。</div>
       </div>
-      <div class="pain__item">
-        <span class="pain__icon">😓</span>
-        <div>仕事が忙しくて<strong>時間が取れない</strong>。夜と週末だけでは何もできない気がする</div>
+      <div class="pain-item">
+        <div class="pain-num">02</div>
+        <div class="pain-text">仕事が忙しく<strong>まとまった時間が取れない</strong>。夜と週末だけでは何もできない気がする。</div>
       </div>
-      <div class="pain__item">
-        <span class="pain__icon">😣</span>
-        <div>YoutubeやSNSで勉強しているが<strong>再現性がなく</strong>、自分には無理かもと感じている</div>
+      <div class="pain-item">
+        <div class="pain-num">03</div>
+        <div class="pain-text">SNSやYoutubeで独学するが再現性がなく、<strong>「自分には無理」という思い込み</strong>が強まる。</div>
       </div>
-      <div class="pain__item">
-        <span class="pain__icon">😤</span>
-        <div>一度チャレンジしたが結果が出ず、<strong>副業で稼げる人は特別な人だけ</strong>と思い込んでいる</div>
+      <div class="pain-item">
+        <div class="pain-num">04</div>
+        <div class="pain-text">一度チャレンジし挫折。以来、<strong>副業で稼げるのは特別な人だけ</strong>だと信じている。</div>
       </div>
-      <div class="pain__item">
-        <span class="pain__icon">💸</span>
-        <div>高額な塾に入ったが<strong>サポートが薄く</strong>、結局自力で何もできないまま終わった</div>
+      <div class="pain-item">
+        <div class="pain-num">05</div>
+        <div class="pain-text">高額な塾に入ったが<strong>サポートが薄く</strong>、結局自力では何もできないまま費用だけかかった。</div>
       </div>
     </div>
-
-    <div class="pain__close mt-24">
-      <strong class="text-red">⚠ 正直に言います。</strong><br>
-      この悩みの原因は「あなたの努力不足」ではありません。
-      間違ったやり方と、<strong>設計のない戦略</strong>が問題なのです。
-      正しい順番と仕組みさえあれば、誰でも再現できます。
+    <div class="callout">
+      <p>
+        <strong>これはあなたの努力不足ではありません。</strong><br>
+        原因は、間違ったやり方と設計のない戦略にあります。
+        正しい順番と仕組みさえあれば、誰でも再現できます。
+      </p>
     </div>
   </div>
 </section>
 
-<!-- ===== SOLUTION ===== -->
-<section class="section">
-  <div class="container">
-    <span class="label">解決策</span>
-    <h2 class="heading-lg mt-8">
-      「仕組み化」こそが<br><em class="text-gold">副業を加速させる唯一の答え</em>
-    </h2>
-    <p class="solution__intro">
-      月10万円の壁を超えられない人の9割は、
-      「頑張り方」を間違えています。副業は<strong>時間を売るビジネス</strong>ではなく、
-      <strong>仕組みで稼ぐビジネス</strong>です。<br><br>
-      正しい設計のもとで動けば、週10時間以下でも着実に収入を積み上げることができます。
+<!-- ─── METHOD ─────────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">The Method</span>
+    <h2 class="h2 mt-20">仕組み化こそが、<br><em>唯一の答え。</em></h2>
+    <p class="body-lg mt-20">
+      月10万円の壁を超えられない人の9割は、努力の方向を間違えています。
+      副業は時間を売るビジネスではなく、仕組みで稼ぐビジネスです。
     </p>
-
-    <div class="solution__box">
-      <div class="solution__box-title">🏆 けんしろう式 3ステップ仕組み化メソッド</div>
-      <div class="solution__box-body">
-        <strong style="color:#f0f0f0">① 稼げる市場の選定</strong><br>
-        競合が少なく需要が高いニッチを特定。最初から勝てる土俵を選ぶ。<br><br>
-        <strong style="color:#f0f0f0">② 自動集客システムの構築</strong><br>
-        SNS×コンテンツマーケティングで、寝ている間も見込み客が集まる仕組みを作る。<br><br>
-        <strong style="color:#f0f0f0">③ 高単価商品への誘導設計</strong><br>
-        信頼を積み上げながら、5万〜30万の高単価商品を自然に売れる導線を設計する。
+    <div class="method-steps">
+      <div class="method-step">
+        <div class="step-num">I</div>
+        <div class="step-content">
+          <div class="step-title">稼げる市場の選定</div>
+          <div class="step-body">競合が少なく需要が高いニッチを特定。最初から勝てる土俵を選ぶことで、努力の効率を最大化します。</div>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">II</div>
+        <div class="step-content">
+          <div class="step-title">自動集客システムの構築</div>
+          <div class="step-body">SNS × コンテンツマーケティングで、寝ている間も見込み客が集まる仕組みを構築します。</div>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">III</div>
+        <div class="step-content">
+          <div class="step-title">高単価商品への誘導設計</div>
+          <div class="step-body">信頼を積み上げながら、5万〜30万円の商品が自然に売れる導線を設計します。</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== RESULTS ===== -->
-<section class="section section--alt">
-  <div class="container">
-    <span class="label">受講生の実績</span>
-    <h2 class="heading-lg mt-8">
-      <em class="text-gold">1,240名以上</em>が実証した<br>リアルな成果
+<!-- ─── METRICS ─────────────────────────────────────────────── -->
+<section class="bg-ink2">
+  <div class="wrap--wide">
+    <span class="eyebrow" style="padding:0 0 0 0; max-width:680px; display:block; margin: 0 auto 0; padding:0 24px 0 0;">Results</span>
+    <h2 class="h2 mt-20" style="max-width:680px; margin:20px auto 0; padding:0 24px 0 0; padding-left:0;">
+      1,240名が証明した、<br><em>リアルな数字。</em>
     </h2>
-    <div class="results__grid">
-      <div class="result-card">
-        <div class="result-card__name">Aさん / 30代 会社員</div>
-        <div class="result-card__value">+12万<span style="font-size:14px">円</span></div>
-        <div class="result-card__label">月収UP</div>
-        <div class="result-card__period">受講2ヶ月目</div>
+    <div class="metrics mt-12" style="max-width:720px; margin-left:auto; margin-right:auto;">
+      <div class="metric">
+        <div class="metric__label">月収 UP — Aさん / 30代会社員</div>
+        <div class="metric__val">＋12万円</div>
+        <div class="metric__sub">受講2ヶ月目</div>
       </div>
-      <div class="result-card">
-        <div class="result-card__name">Bさん / 20代 OL</div>
-        <div class="result-card__value">+8万<span style="font-size:14px">円</span></div>
-        <div class="result-card__label">月収UP</div>
-        <div class="result-card__period">受講3ヶ月目</div>
+      <div class="metric">
+        <div class="metric__label">月収 UP — Bさん / 20代OL</div>
+        <div class="metric__val">＋8万円</div>
+        <div class="metric__sub">受講3ヶ月目</div>
       </div>
-      <div class="result-card">
-        <div class="result-card__name">Cさん / 40代 主婦</div>
-        <div class="result-card__value">+21万<span style="font-size:14px">円</span></div>
-        <div class="result-card__label">月収UP</div>
-        <div class="result-card__period">受講4ヶ月目</div>
+      <div class="metric">
+        <div class="metric__label">月収 UP — Cさん / 40代主婦</div>
+        <div class="metric__val">＋21万円</div>
+        <div class="metric__sub">受講4ヶ月目</div>
       </div>
-      <div class="result-card">
-        <div class="result-card__name">Dさん / 30代 教師</div>
-        <div class="result-card__value">+6万<span style="font-size:14px">円</span></div>
-        <div class="result-card__label">月収UP</div>
-        <div class="result-card__period">受講1ヶ月目</div>
+      <div class="metric">
+        <div class="metric__label">月収 UP — Dさん / 30代教師</div>
+        <div class="metric__val">＋6万円</div>
+        <div class="metric__sub">受講1ヶ月目</div>
       </div>
     </div>
-
-    <div class="highlight-box">
-      ※ 上記はすべて実際の受講生の成果です。個人の努力・環境によって結果は異なります。
-      ただし、プログラム修了者の<strong style="color:#d4a017">83%が3ヶ月以内に初収益</strong>を達成しています。
-    </div>
+    <p class="body-sm mt-20" style="max-width:680px; margin-left:auto; margin-right:auto;">※ 個人の環境・努力により成果は異なります。修了者の83%が3ヶ月以内に初収益を達成。</p>
   </div>
 </section>
 
-<!-- ===== CURRICULUM ===== -->
-<section class="section">
-  <div class="container">
-    <span class="label">カリキュラム</span>
-    <h2 class="heading-lg mt-8">
-      ゼロから月10万円まで<br>完全ロードマップ
+<!-- ─── CURRICULUM ──────────────────────────────────────────── -->
+<section class="bg-cream" id="curriculum">
+  <div class="wrap">
+    <span class="eyebrow">Curriculum</span>
+    <h2 class="h2 mt-20" style="color:var(--ink)">
+      ゼロから月10万円まで、<br><em>完全ロードマップ。</em>
     </h2>
-    <p class="mt-16" style="font-size:14px;color:#888;">全62講義 ／ 動画 + テキスト + テンプレート付き</p>
-
-    <div class="curriculum__chapters">
+    <p class="body-lg mt-20">全62講義 · 動画 + テキスト + テンプレート</p>
+    <div class="chapters">
       <div class="chapter">
-        <div class="chapter__header">
-          <div class="chapter__num">1</div>
-          <div class="chapter__title">マインドセット ＆ 副業設計の基礎</div>
+        <div class="chapter__head">
+          <div class="chapter__index">I</div>
+          <div class="chapter__title">マインドセット & 副業設計の基礎</div>
         </div>
         <div class="chapter__lessons">
-          <div class="lesson">副業で失敗する人の共通パターン</div>
-          <div class="lesson">稼げる市場の選び方・4つの判定基準</div>
-          <div class="lesson">あなただけの強みを発掘するワーク</div>
-          <div class="lesson">90日ロードマップの作り方</div>
+          <div class="lesson-row">副業で失敗する人の共通パターン</div>
+          <div class="lesson-row">稼げる市場の選び方 — 4つの判定基準</div>
+          <div class="lesson-row">あなただけの強みを発掘するワーク</div>
+          <div class="lesson-row">90日ロードマップの作り方</div>
         </div>
       </div>
       <div class="chapter">
-        <div class="chapter__header">
-          <div class="chapter__num">2</div>
+        <div class="chapter__head">
+          <div class="chapter__index">II</div>
           <div class="chapter__title">SNS × コンテンツで集客する仕組み</div>
         </div>
         <div class="chapter__lessons">
-          <div class="lesson">アルゴリズム解析とバズるコンテンツの法則</div>
-          <div class="lesson">フォロワー0→1,000人の最速ルート</div>
-          <div class="lesson">コンテンツカレンダーの設計と自動化</div>
-          <div class="lesson">DM集客テンプレートと返信率を上げる文章術</div>
+          <div class="lesson-row">アルゴリズム解析とバズるコンテンツの法則</div>
+          <div class="lesson-row">フォロワー0→1,000人の最速ルート</div>
+          <div class="lesson-row">コンテンツカレンダーの設計と自動化</div>
+          <div class="lesson-row">DM集客テンプレートと返信率を上げる文章術</div>
         </div>
       </div>
       <div class="chapter">
-        <div class="chapter__header">
-          <div class="chapter__num">3</div>
+        <div class="chapter__head">
+          <div class="chapter__index">III</div>
           <div class="chapter__title">高単価商品の設計と販売</div>
         </div>
         <div class="chapter__lessons">
-          <div class="lesson">5〜30万円の商品を作るフレームワーク</div>
-          <div class="lesson">初回面談クロージングの台本</div>
-          <div class="lesson">価格の伝え方・値下げ交渉への対応</div>
-          <div class="lesson">リピート率90%を実現するアフターフォロー</div>
+          <div class="lesson-row">5〜30万円の商品を作るフレームワーク</div>
+          <div class="lesson-row">初回面談クロージングの台本</div>
+          <div class="lesson-row">価格の伝え方・値下げ交渉への対応</div>
+          <div class="lesson-row">リピート率90%を実現するアフターフォロー</div>
         </div>
       </div>
       <div class="chapter">
-        <div class="chapter__header">
-          <div class="chapter__num">4</div>
-          <div class="chapter__title">仕組み化 ＆ 月10万円の自動化</div>
+        <div class="chapter__head">
+          <div class="chapter__index">IV</div>
+          <div class="chapter__title">仕組み化 & 月10万円の自動化</div>
         </div>
         <div class="chapter__lessons">
-          <div class="lesson">LP・メルマガ・決済の連携設定</div>
-          <div class="lesson">コンテンツ販売の自動化フロー</div>
-          <div class="lesson">外注化で時間を買う方法</div>
-          <div class="lesson">本業を超えたら次に向かうスケールアップ戦略</div>
+          <div class="lesson-row">LP・メルマガ・決済の連携設定</div>
+          <div class="lesson-row">コンテンツ販売の自動化フロー</div>
+          <div class="lesson-row">外注化で時間を買う方法</div>
+          <div class="lesson-row">本業を超えたらスケールアップする戦略</div>
         </div>
       </div>
       <div class="chapter">
-        <div class="chapter__header">
-          <div class="chapter__num">5</div>
-          <div class="chapter__title">【特典】実践サポート ＆ コミュニティ</div>
+        <div class="chapter__head">
+          <div class="chapter__index">V</div>
+          <div class="chapter__title">特典 — 実践サポート & コミュニティ</div>
         </div>
         <div class="chapter__lessons">
-          <div class="lesson">月2回のグループ質問会（LIVE）</div>
-          <div class="lesson">Slackコミュニティ（6ヶ月間）</div>
-          <div class="lesson">受講生限定テンプレート素材集</div>
+          <div class="lesson-row">月2回のグループ質問会（LIVE・録画あり）</div>
+          <div class="lesson-row">Slackコミュニティ — 6ヶ月間</div>
+          <div class="lesson-row">受講生限定テンプレート素材集（30種以上）</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== INSTRUCTOR ===== -->
-<section class="section section--alt">
-  <div class="container">
-    <span class="label">講師紹介</span>
-    <h2 class="heading-lg mt-8">このプログラムを作った人</h2>
-
-    <div class="instructor__card">
-      <div class="instructor__top">
-        <div class="instructor__avatar">👨</div>
-        <div class="instructor__name-block">
-          <div class="name">けんしろう</div>
-          <div class="title">副業コンサルタント / コンテンツクリエイター</div>
-        </div>
-      </div>
-      <div class="instructor__stats">
-        <div class="instructor__stat">
-          <div class="instructor__stat-val">6年</div>
-          <div class="instructor__stat-lbl">副業歴</div>
-        </div>
-        <div class="instructor__stat">
-          <div class="instructor__stat-val">1,240</div>
-          <div class="instructor__stat-lbl">指導実績</div>
-        </div>
-        <div class="instructor__stat">
-          <div class="instructor__stat-val">月280万</div>
-          <div class="instructor__stat-lbl">最高収益</div>
-        </div>
-      </div>
-      <div class="instructor__bio">
-        会社員時代に副業を開始。最初の3ヶ月は月収0円だったが、
-        「仕組み化」という概念に出会い、6ヶ月で月収10万円を突破。<br><br>
-        現在はオンラインビジネス・コンテンツ販売・コンサルを中心に
-        月収280万円を達成。延べ1,200名以上の副業スタートを支援し、
-        受講生の多くが3ヶ月以内に初収益を達成している。<br><br>
-        「才能がなくても、仕組みがあれば誰でも稼げる」を信念に、
-        再現性にこだわったカリキュラムを設計し続けている。
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== TESTIMONIALS ===== -->
-<section class="section">
-  <div class="container">
-    <span class="label">受講生の声</span>
-    <h2 class="heading-lg mt-8">
-      リアルな声を<br>そのままお届けします
-    </h2>
-    <div class="testimonials__list">
-      <div class="testimonial">
-        <div class="testimonial__header">
-          <div class="testimonial__avatar">👩</div>
+<!-- ─── INSTRUCTOR ─────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Instructor</span>
+    <h2 class="h2 mt-20">このプログラムを<br><em>設計した人。</em></h2>
+    <div class="instructor">
+      <div class="instructor__portrait">👨</div>
+      <div class="instructor__info">
+        <div class="instructor__role">Side Income Consultant</div>
+        <div class="instructor__name">けんしろう</div>
+        <div class="instructor__figures">
           <div>
-            <div class="testimonial__name">Aさん（30代 / 会社員）</div>
-            <div class="testimonial__meta">受講期間：3ヶ月</div>
+            <div class="figure__val">6年</div>
+            <div class="figure__lbl">副業歴</div>
+          </div>
+          <div>
+            <div class="figure__val">1,240</div>
+            <div class="figure__lbl">指導実績</div>
+          </div>
+          <div>
+            <div class="figure__val">月280万</div>
+            <div class="figure__lbl">最高収益</div>
           </div>
         </div>
-        <div class="testimonial__stars">★★★★★</div>
-        <div class="testimonial__result">→ 月収 +12万円達成</div>
-        <div class="testimonial__body">
-          最初は「また情報商材か…」と思っていましたが、カリキュラムの質と
-          具体性に驚きました。特に集客の仕組み化のパートは、今まで誰にも
-          教わったことがない視点で、目からウロコでした。
-          3ヶ月目に初の10万円超えを達成した瞬間は本当に感動しました。
-        </div>
-      </div>
-      <div class="testimonial">
-        <div class="testimonial__header">
-          <div class="testimonial__avatar">👩</div>
-          <div>
-            <div class="testimonial__name">Bさん（20代 / パート主婦）</div>
-            <div class="testimonial__meta">受講期間：4ヶ月</div>
-          </div>
-        </div>
-        <div class="testimonial__stars">★★★★★</div>
-        <div class="testimonial__result">→ 月収 +21万円達成</div>
-        <div class="testimonial__body">
-          子育て中でまとまった時間が取れない中でも、スキマ時間で実践できる
-          内容で助かりました。Slackコミュニティでの仲間の存在も大きく、
-          一人で悩まなくて済んだのが続けられた理由です。
-        </div>
-      </div>
-      <div class="testimonial">
-        <div class="testimonial__header">
-          <div class="testimonial__avatar">👨</div>
-          <div>
-            <div class="testimonial__name">Cさん（40代 / 会社員男性）</div>
-            <div class="testimonial__meta">受講期間：2ヶ月</div>
-          </div>
-        </div>
-        <div class="testimonial__stars">★★★★★</div>
-        <div class="testimonial__result">→ 月収 +8万円達成</div>
-        <div class="testimonial__body">
-          40代で副業を始めるのは遅すぎるかと不安でしたが、
-          このプログラムは年齢関係なく再現できる設計になっていました。
-          毎月の質問会でけんしろうさんに直接相談できるのも安心感が違います。
+        <div class="instructor__bio">
+          会社員時代に副業を開始。最初の3ヶ月は月収0円だったが、「仕組み化」という概念に出会い、6ヶ月で月収10万円を突破。<br><br>
+          現在はオンラインビジネス・コンテンツ販売・コンサルを中心に月収280万円を達成。1,200名以上の副業スタートを支援し、受講生の多くが3ヶ月以内に初収益を達成している。
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== PRICE ===== -->
-<section class="section section--dark" id="price">
-  <div class="container">
-    <span class="label">料金・申込み</span>
-    <h2 class="heading-lg mt-8 text-center">
-      今だけの<em class="text-gold">特別価格</em>でご参加いただけます
-    </h2>
-
-    <div class="price__card">
-      <div class="price__original">通常価格：¥198,000</div>
-      <div class="price__main"><sup>¥</sup>98,000</div>
-      <div class="price__tax">税込 ／ 分割払い可（月々 ¥8,700〜）</div>
-
-      <div class="price__features">
-        <div class="price__feature"><span class="price__feature-icon">✓</span>全62講義（動画 + テキスト）</div>
-        <div class="price__feature"><span class="price__feature-icon">✓</span>月2回 LIVE質問会（6ヶ月間）</div>
-        <div class="price__feature"><span class="price__feature-icon">✓</span>Slackサポートコミュニティ（6ヶ月）</div>
-        <div class="price__feature"><span class="price__feature-icon">✓</span>実践テンプレート素材集（30種以上）</div>
-        <div class="price__feature"><span class="price__feature-icon">✓</span>コンテンツ設計ワークシート</div>
-        <div class="price__feature"><span class="price__feature-icon">✓</span>30日間 完全返金保証</div>
+<!-- ─── TESTIMONIALS ───────────────────────────────────────── -->
+<section class="bg-ink2">
+  <div class="wrap">
+    <span class="eyebrow">Testimonials</span>
+    <h2 class="h2 mt-20">受講生の声を、<br><em>そのままお届けします。</em></h2>
+    <div class="testimonials-grid">
+      <div class="testi">
+        <div class="testi__stars">★★★★★</div>
+        <div class="testi__result">月収 ＋12万円</div>
+        <div class="testi__body">「また情報商材か」と思っていましたが、カリキュラムの質と具体性に驚きました。集客の仕組み化のパートは今まで誰にも教わったことがない視点で、3ヶ月目に初の10万円超えを達成した瞬間は本当に感動しました。</div>
+        <div class="testi__meta">A.S. — 30代 会社員 · 受講3ヶ月</div>
       </div>
-
-      <div class="price__guarantee">
-        🛡️ <strong>30日間返金保証</strong><br>
-        万が一「期待と違った」「合わなかった」場合、
-        購入から30日以内であれば理由を問わず全額返金いたします。
-        安心してお試しください。
+      <div class="testi">
+        <div class="testi__stars">★★★★★</div>
+        <div class="testi__result">月収 ＋21万円</div>
+        <div class="testi__body">子育て中でまとまった時間が取れない中でも、スキマ時間で実践できる内容で助かりました。Slackコミュニティで仲間がいたことが、続けられた最大の理由です。</div>
+        <div class="testi__meta">M.K. — 20代 主婦 · 受講4ヶ月</div>
       </div>
-
-      <a class="btn btn--primary mt-32" href="#">今すぐ参加する（¥98,000）→</a>
-      <p class="btn__sub mt-8">残り枠：7名 ／ 価格は予告なく変更になる場合があります</p>
+      <div class="testi">
+        <div class="testi__stars">★★★★★</div>
+        <div class="testi__result">月収 ＋8万円</div>
+        <div class="testi__body">40代で副業を始めるのは遅すぎるかと不安でしたが、年齢に関係なく再現できる設計でした。毎月の質問会でけんしろうさんに直接相談できる安心感が違います。</div>
+        <div class="testi__meta">T.H. — 40代 会社員 · 受講2ヶ月</div>
+      </div>
+      <div class="testi" style="grid-column: 1 / -1; border-top: 1px solid var(--rule);">
+        <div class="testi__stars">★★★★★</div>
+        <div class="testi__result">月収 ＋6万円 → 翌月 ＋18万円</div>
+        <div class="testi__body">最初の月こそ時間がかかりましたが、仕組みが完成した翌月から一気に加速しました。「仕組み化」の意味が体感として理解できたとき、副業への向き合い方が根本から変わりました。</div>
+        <div class="testi__meta">R.Y. — 30代 フリーランス · 受講5ヶ月</div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FAQ ===== -->
-<section class="section section--alt">
-  <div class="container">
-    <span class="label">よくある質問</span>
-    <h2 class="heading-lg mt-8">FAQ</h2>
+<!-- ─── PRICE ───────────────────────────────────────────────── -->
+<section id="enrol">
+  <div class="wrap">
+    <span class="eyebrow">Enrolment</span>
+    <h2 class="h2 mt-20">今だけの<em>特別価格</em>で<br>ご参加いただけます。</h2>
+    <div class="price-card">
+      <div class="price-card__top">
+        <div class="price-original">通常価格 ¥198,000</div>
+        <div class="price-amount"><sup>¥</sup>98,000<sub>（税込）</sub></div>
+        <div class="price-tax">分割払い可 — 月々 ¥8,700〜（12回）</div>
+      </div>
+      <div class="price-card__body">
+        <div class="price-features">
+          <div class="price-feature"><span class="pf-check">✓</span>全62講義（動画 + テキスト）</div>
+          <div class="price-feature"><span class="pf-check">✓</span>月2回 LIVE質問会（6ヶ月間）</div>
+          <div class="price-feature"><span class="pf-check">✓</span>Slackサポートコミュニティ（6ヶ月）</div>
+          <div class="price-feature"><span class="pf-check">✓</span>実践テンプレート素材集（30種以上）</div>
+          <div class="price-feature"><span class="pf-check">✓</span>コンテンツ設計ワークシート</div>
+          <div class="price-feature"><span class="pf-check">✓</span>30日間 完全返金保証</div>
+        </div>
+        <div class="price-guarantee">
+          <strong>30-Day Money-Back Guarantee</strong>
+          購入から30日以内であれば、理由を問わず全額返金いたします。
+          安心してお試しください。
+        </div>
+        <div class="price-cta-block">
+          <a class="btn btn--fill btn--block" href="#">今すぐ参加する — ¥98,000</a>
+          <a class="btn btn--ghost btn--block" href="#">無料説明会に参加する</a>
+          <p class="price-note">残り 7 名 · 価格は予告なく変更になる場合があります</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <div class="faq__list">
-      <div class="faq__item">
-        <div class="faq__q"><span class="faq__q-icon">Q</span>副業経験がゼロでも大丈夫ですか？</div>
+<!-- ─── FAQ ────────────────────────────────────────────────── -->
+<section class="bg-cream">
+  <div class="wrap">
+    <span class="eyebrow">FAQ</span>
+    <h2 class="h2 mt-20" style="color:var(--ink)">よくある質問</h2>
+    <div class="faqs">
+      <div class="faq">
+        <div class="faq__q"><span class="faq__q-mark">Q</span>副業経験がゼロでも大丈夫ですか？</div>
         <div class="faq__a">はい、完全初心者を想定して設計しています。受講生の約60%が副業経験ゼロからのスタートです。基礎から順番に解説しているので、迷わず進めます。</div>
       </div>
-      <div class="faq__item">
-        <div class="faq__q"><span class="faq__q-icon">Q</span>忙しい会社員でも取り組めますか？</div>
+      <div class="faq">
+        <div class="faq__q"><span class="faq__q-mark">Q</span>忙しい会社員でも取り組めますか？</div>
         <div class="faq__a">週10時間（平日1〜2時間 + 週末）を目安に設計しています。動画は1本5〜15分で隙間時間に視聴可能。忙しい会社員・主婦の受講生が多数います。</div>
       </div>
-      <div class="faq__item">
-        <div class="faq__q"><span class="faq__q-icon">Q</span>どんな副業に使えますか？</div>
+      <div class="faq">
+        <div class="faq__q"><span class="faq__q-mark">Q</span>どんな副業に使えますか？</div>
         <div class="faq__a">コンテンツ販売・コンサル・SNS運用代行・情報発信など、「無形商材 × オンライン」の副業に幅広く応用できます。物販・せどりには不向きです。</div>
       </div>
-      <div class="faq__item">
-        <div class="faq__q"><span class="faq__q-icon">Q</span>サポートはどのくらい受けられますか？</div>
+      <div class="faq">
+        <div class="faq__q"><span class="faq__q-mark">Q</span>サポートはどのくらい受けられますか？</div>
         <div class="faq__a">月2回のLIVE質問会（録画あり）と、Slackコミュニティでの質問対応（営業日48時間以内）を6ヶ月間ご利用いただけます。</div>
       </div>
-      <div class="faq__item">
-        <div class="faq__q"><span class="faq__q-icon">Q</span>分割払いはできますか？</div>
+      <div class="faq">
+        <div class="faq__q"><span class="faq__q-mark">Q</span>分割払いはできますか？</div>
         <div class="faq__a">クレジットカードの分割払いをご利用いただけます（月々¥8,700〜 / 12回払い目安）。詳細はお申し込みページをご確認ください。</div>
       </div>
-      <div class="faq__item">
-        <div class="faq__q"><span class="faq__q-icon">Q</span>返金保証の条件を教えてください。</div>
-        <div class="faq__a">購入から30日以内にご連絡いただければ、理由を問わず全額返金いたします。ただし、複数の決済サービスの手数料分は返金対象外となる場合があります。</div>
+      <div class="faq">
+        <div class="faq__q"><span class="faq__q-mark">Q</span>返金保証の条件を教えてください。</div>
+        <div class="faq__a">購入から30日以内にご連絡いただければ、理由を問わず全額返金いたします。ただし、決済サービスの手数料分は返金対象外となる場合があります。</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FINAL CTA ===== -->
-<section class="final-cta">
-  <div class="container">
-    <h2 class="final-cta__headline">
-      迷っている時間が<br>
-      <em class="text-gold">一番のリスクです。</em>
-    </h2>
-    <p class="final-cta__sub mt-16">
-      1年後、月10万円の副収入がある自分と、<br>
-      今と変わらない自分——どちらを選びますか？
+<!-- ─── CLOSING ────────────────────────────────────────────── -->
+<section class="closing">
+  <div class="closing__inner">
+    <p class="closing__quote">
+      迷っている時間が、<br>
+      <em>一番のリスクです。</em>
     </p>
-    <div class="mt-32">
-      <a class="btn btn--primary" href="#price">今すぐプログラムに参加する →</a>
-      <p class="btn__sub mt-8">30日間返金保証付き｜残り7名</p>
-    </div>
-    <div class="mt-24">
-      <a class="btn btn--outline" href="#">まず無料説明会に参加する</a>
+    <p class="closing__sub">
+      1年後、月10万円の副収入がある自分と、<br>今と変わらない自分——どちらを選びますか？
+    </p>
+    <div class="mt-40" style="display:flex; flex-direction:column; gap:12px; max-width:360px; margin:40px auto 0;">
+      <a class="btn btn--fill btn--block" href="#enrol">プログラムに参加する</a>
+      <a class="btn btn--ghost btn--block" href="#">まず無料説明会へ</a>
     </div>
   </div>
 </section>
 
-<!-- ===== FOOTER ===== -->
+<!-- ─── FOOTER ────────────────────────────────────────────── -->
 <footer>
-  <div class="container">
-    <p>© 2024 けんしろう副業スクール All Rights Reserved.</p>
-    <p class="mt-8">
-      <a href="#">プライバシーポリシー</a> ／
-      <a href="#">特定商取引法に基づく表記</a> ／
+  <div class="footer__inner">
+    <div class="footer__logo">Kenshiro</div>
+    <div class="footer__links">
+      <a href="#">プライバシーポリシー</a>
+      <a href="#">特定商取引法</a>
       <a href="#">お問い合わせ</a>
-    </p>
+    </div>
+    <div class="footer__copy">© 2024 Kenshiro Side Income Programme. All rights reserved.</div>
   </div>
 </footer>
 
-<!-- ===== STICKY CTA (mobile only) ===== -->
-<div class="sticky-cta">
-  <a class="sticky-cta__btn" href="#price">今すぐ参加する（¥98,000）→</a>
+<!-- ─── STICKY (mobile) ───────────────────────────────────── -->
+<div class="sticky">
+  <a class="btn btn--fill btn--block" href="#enrol">参加する — ¥98,000</a>
 </div>
 
 </body>
