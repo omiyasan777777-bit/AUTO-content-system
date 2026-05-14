@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>省エネ設計図 特典3点セット</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #1a1a1a;
+    background: #fff;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 30px;
+  }
+
+  /* 表紙 */
+  .cover {
+    text-align: center;
+    padding: 60px 20px;
+    border-bottom: 3px solid #2d6a4f;
+    margin-bottom: 40px;
+    page-break-after: always;
+  }
+  .cover .product-name {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+  .cover h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #2d6a4f;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 28px;
+    border-radius: 30px;
+    margin-bottom: 32px;
+  }
+  .cover .toc {
+    text-align: left;
+    display: inline-block;
+    background: #f5f9f7;
+    border: 1px solid #c8e6c9;
+    border-radius: 10px;
+    padding: 24px 32px;
+    margin-top: 16px;
+  }
+  .cover .toc p {
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #2d6a4f;
+    font-size: 15px;
+  }
+  .cover .toc ul { list-style: none; }
+  .cover .toc ul li {
+    padding: 6px 0;
+    font-size: 14px;
+    border-bottom: 1px dashed #c8e6c9;
+  }
+  .cover .toc ul li:last-child { border-bottom: none; }
+  .cover .toc ul li span {
+    display: inline-block;
+    background: #2d6a4f;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+
+  /* セクション区切り */
+  .bonus-section {
+    page-break-before: always;
+    margin-bottom: 48px;
+  }
+  .bonus-section:first-of-type { page-break-before: avoid; }
+
+  .section-header {
+    background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+    color: #fff;
+    padding: 20px 24px;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 0;
+  }
+  .section-header .bonus-num {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    opacity: 0.85;
+    margin-bottom: 6px;
+  }
+  .section-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .section-header .chapter-ref {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 6px;
+  }
+
+  .section-body {
+    border: 1px solid #c8e6c9;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 24px;
+    background: #fff;
+  }
+
+  /* 使い方ボックス */
+  .how-to {
+    background: #f0f9f4;
+    border-left: 4px solid #2d6a4f;
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+  }
+  .how-to h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2d6a4f;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .how-to ol { padding-left: 20px; }
+  .how-to ol li {
+    padding: 4px 0;
+    font-size: 13px;
+    color: #333;
+  }
+
+  /* 切り口カード */
+  .pattern-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .pattern-card .card-header {
+    background: #f5f9f7;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pattern-num {
+    background: #2d6a4f;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .pattern-card .card-header h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .pattern-card .card-body { padding: 16px; }
+  .pattern-card .description {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 10px;
+  }
+  .pattern-card .hint {
+    font-size: 12px;
+    color: #2d6a4f;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  /* 記入表 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  table th {
+    background: #2d6a4f;
+    color: #fff;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  table td {
+    border: 1px solid #ddd;
+    padding: 12px 10px;
+    vertical-align: top;
+  }
+  table td:first-child { width: 28px; text-align: center; font-weight: 700; color: #555; }
+  table td.write-area { min-height: 36px; color: #aaa; font-size: 11px; font-style: italic; }
+  table tr:nth-child(even) td { background: #f9f9f9; }
+
+  /* まとめ表 */
+  .summary-table { margin-top: 20px; }
+  .summary-table table th:first-child { width: 70px; text-align: center; }
+  .summary-table table td:first-child { width: 70px; text-align: center; font-size: 13px; }
+
+  /* 次のステップ */
+  .next-step {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 24px;
+  }
+  .next-step h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f57f17;
+    margin-bottom: 10px;
+  }
+  .next-step ol { padding-left: 20px; }
+  .next-step ol li { padding: 4px 0; font-size: 13px; }
+  .template-box {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #333;
+    margin-top: 12px;
+    white-space: pre-wrap;
+  }
+
+  /* テンプレートブロック（特典2） */
+  .block-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .block-card .block-header {
+    background: #f5f9f7;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .block-card .block-header h4 { font-size: 14px; font-weight: 700; }
+  .block-card .block-header .block-meta { font-size: 11px; color: #777; }
+  .block-card .block-body { padding: 16px; }
+  .block-card .block-body p { font-size: 12px; color: #555; margin-bottom: 10px; }
+  .fill-box {
+    background: #f8f8f8;
+    border: 1px dashed #bbb;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 12px;
+    color: #888;
+    font-style: italic;
+    white-space: pre-wrap;
+    line-height: 2;
+  }
+  .fill-slot {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid #2d6a4f;
+    color: #2d6a4f;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* チェックリスト（特典3） */
+  .check-category {
+    margin-bottom: 24px;
+  }
+  .check-category h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2d6a4f;
+    padding: 10px 14px;
+    background: #f0f9f4;
+    border-left: 4px solid #2d6a4f;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 12px;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: #fff;
+  }
+  .check-box {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #2d6a4f;
+    border-radius: 4px;
+    margin-top: 1px;
+  }
+  .check-item .item-text { font-size: 13px; flex: 1; }
+  .check-item .item-hint { font-size: 11px; color: #777; margin-top: 4px; }
+
+  .score-box {
+    text-align: right;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2d6a4f;
+    border-top: 1px dashed #c8e6c9;
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+
+  /* スコア表 */
+  .score-table table th { background: #455a64; }
+  .score-table table td:first-child { width: auto; text-align: left; }
+
+  /* 週次シート */
+  .weekly-sheet {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .weekly-sheet h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
+  .weekly-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+  .weekly-row label { font-size: 12px; white-space: nowrap; color: #555; min-width: 160px; }
+  .weekly-row .write-line {
+    flex: 1;
+    border-bottom: 1px solid #bbb;
+    min-height: 22px;
+  }
+  .weekly-area-label { font-size: 12px; color: #555; margin-bottom: 6px; }
+  .weekly-area {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    height: 48px;
+    margin-bottom: 12px;
+  }
+
+  /* スケール */
+  .scale-box {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 20px;
+  }
+  .scale-box h3 { font-size: 14px; font-weight: 700; color: #2d6a4f; margin-bottom: 12px; }
+  .scale-box .formula { background: #fff; border-radius: 6px; padding: 12px; font-size: 12px; font-family: monospace; color: #333; line-height: 2; }
+
+  /* 印刷設定 */
+  @media print {
+    body { max-width: 100%; padding: 10px 20px; font-size: 12px; }
+    .cover { padding: 40px 10px; }
+    .bonus-section { page-break-before: always; }
+    .pattern-card, .block-card, .check-item { break-inside: avoid; }
+  }
+
+  h3.sub { font-size: 13px; font-weight: 700; margin: 20px 0 10px; color: #1a1a1a; }
+  .divider { border: none; border-top: 1px dashed #ddd; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- 表紙 -->
+<div class="cover">
+  <p class="product-name">毎日ヘトヘトの会社員が、日常経験だけで月1万円のnoteを作る省エネ設計図</p>
+  <h1>特典3点セット</h1>
+  <div class="badge">購入者限定 特別資料</div>
+  <div class="toc">
+    <p>収録コンテンツ</p>
+    <ul>
+      <li><span>特典1</span>経験の切り取り7パターンワークシート（穴埋め式）</li>
+      <li><span>特典2</span>有料note最小構成テンプレート（コピペ対応）</li>
+      <li><span>特典3</span>月1万円達成チェックリスト（全20項目）</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== 特典1 ===== -->
+<div class="bonus-section">
+  <div class="section-header">
+    <p class="bonus-num">▼ BONUS 01</p>
+    <h2>経験の切り取り7パターンワークシート</h2>
+    <p class="chapter-ref">「省エネ設計図」本編 第3章 対応</p>
+  </div>
+  <div class="section-body">
+
+    <div class="how-to">
+      <h3>使い方</h3>
+      <ol>
+        <li>7つの切り口を順番に読む</li>
+        <li>各切り口の「書き出しのヒント」に沿って、思いついたことをそのまま書く</li>
+        <li>完璧じゃなくてOK。まずは「書いてみる」が大事</li>
+        <li>目標：全部で <strong>10個以上</strong> のネタを書き出す</li>
+        <li>所要時間：<strong>15〜20分</strong></li>
+      </ol>
+    </div>
+
+    <!-- 切り口1 -->
+    <div class="pattern-card">
+      <div class="card-header">
+        <span class="pattern-num">切り口1</span>
+        <h4>失敗談</h4>
+      </div>
+      <div class="card-body">
+        <p class="description">「やってみて失敗した・遠回りした・時間を無駄にした」経験</p>
+        <p class="hint">📌 書き出しのヒント：「過去に時間・お金・労力を無駄にしてしまったこと」を3つ書き出してください。</p>
+        <table>
+          <tr><th>#</th><th>失敗した内容</th><th>どんな読者の悩みを解決できるか</th></tr>
+          <tr><td>1</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>2</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>3</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 切り口2 -->
+    <div class="pattern-card">
+      <div class="card-header">
+        <span class="pattern-num">切り口2</span>
+        <h4>工夫・試行錯誤</h4>
+      </div>
+      <div class="card-body">
+        <p class="description">「最初はうまくいかなかったが、こう変えたらうまくいった」経験</p>
+        <p class="hint">📌 書き出しのヒント：「工夫して問題を解決したこと」を3つ書き出してください。</p>
+        <table>
+          <tr><th>#</th><th>工夫した内容</th><th>どんな読者の悩みを解決できるか</th></tr>
+          <tr><td>1</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>2</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>3</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 切り口3 -->
+    <div class="pattern-card">
+      <div class="card-header">
+        <span class="pattern-num">切り口3</span>
+        <h4>節約・時短・効率化</h4>
+      </div>
+      <div class="card-body">
+        <p class="description">「日常生活の中でやっている時間・お金・手間の節約や効率化」</p>
+        <p class="hint">📌 書き出しのヒント：「自分の日常で工夫している時短・節約・効率化」を3つ書き出してください。</p>
+        <table>
+          <tr><th>#</th><th>節約・時短の内容</th><th>どんな読者の悩みを解決できるか</th></tr>
+          <tr><td>1</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>2</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>3</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 切り口4 -->
+    <div class="pattern-card">
+      <div class="card-header">
+        <span class="pattern-num">切り口4</span>
+        <h4>感情の変化・気づき</h4>
+      </div>
+      <div class="card-body">
+        <p class="description">「価値観が変わった・考え方が180度変わった」経験</p>
+        <p class="hint">📌 書き出しのヒント：「以前と今で、考え方や行動が大きく変わったこと」を2つ書き出してください。</p>
+        <table>
+          <tr><th>#</th><th>変化・気づきの内容</th><th>どんな読者の悩みを解決できるか</th></tr>
+          <tr><td>1</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>2</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 切り口5 -->
+    <div class="pattern-card">
+      <div class="card-header">
+        <span class="pattern-num">切り口5</span>
+        <h4>初心者の目線</h4>
+      </div>
+      <div class="card-body">
+        <p class="description">「最近（1〜3年以内）初めてやってみた経験・最初の正直な感想」</p>
+        <p class="hint">📌 書き出しのヒント：「最近初めて経験したこと」を3つ書き出してください。</p>
+        <table>
+          <tr><th>#</th><th>初めてやった内容</th><th>どんな読者の悩みを解決できるか</th></tr>
+          <tr><td>1</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>2</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>3</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 切り口6 -->
+    <div class="pattern-card">
+      <div class="card-header">
+        <span class="pattern-num">切り口6</span>
+        <h4>比較・検証</h4>
+      </div>
+      <div class="card-body">
+        <p class="description">「複数の方法・商品・サービスを試して比べた経験」</p>
+        <p class="hint">📌 書き出しのヒント：「2つ以上の方法・商品・サービスを試して比べた経験」を2つ書き出してください。</p>
+        <table>
+          <tr><th>#</th><th>比較した内容</th><th>どんな読者の悩みを解決できるか</th></tr>
+          <tr><td>1</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>2</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 切り口7 -->
+    <div class="pattern-card">
+      <div class="card-header">
+        <span class="pattern-num">切り口7</span>
+        <h4>「教えて」と言われること</h4>
+      </div>
+      <div class="card-body">
+        <p class="description">「職場・家族・友人から『これどうやるの？』と聞かれること」</p>
+        <p class="hint">📌 書き出しのヒント：「最近、誰かに『教えて』と言われたこと」を3つ書き出してください。</p>
+        <table>
+          <tr><th>#</th><th>聞かれた内容</th><th>どんな読者の悩みを解決できるか</th></tr>
+          <tr><td>1</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>2</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+          <tr><td>3</td><td class="write-area">ここに書く</td><td class="write-area">ここに書く</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- まとめ -->
+    <h3 class="sub">まとめ：あなたのネタリスト TOP10</h3>
+    <p style="font-size:12px;color:#555;margin-bottom:12px;">上の表から「これは書けそう」と思うもの10個を選んでください。</p>
+    <div class="summary-table">
+      <table>
+        <tr><th style="width:80px">優先度</th><th>ネタのタイトル案</th><th style="width:100px">対応する切り口</th></tr>
+        <tr><td>★★★</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★★★</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★★★</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★★☆</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★★☆</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★★☆</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★★☆</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★☆☆</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★☆☆</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+        <tr><td>★☆☆</td><td class="write-area"> </td><td class="write-area"> </td></tr>
+      </table>
+    </div>
+
+    <div class="next-step">
+      <h3>▶ 次のステップ</h3>
+      <ol>
+        <li>★★★のネタを1つ選ぶ</li>
+        <li>本編 第3章「ネタを読者の悩みに変換する」に進む</li>
+        <li>選んだネタを「読んだ後の未来1文」に変換する</li>
+      </ol>
+      <p style="font-size:12px;margin-top:12px;font-weight:700;">変換テンプレート：</p>
+      <div class="template-box">このnoteを読んだら、[読者の属性]が[具体的な成果]できるようになる
+
+例：
+・「このnoteを読んだら、育児中の主婦が帰宅後30分で夕食を作れるようになる」
+・「このnoteを読んだら、副業初心者が最初の失敗を避けて1本目を公開できるようになる」</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 特典2 ===== -->
+<div class="bonus-section">
+  <div class="section-header">
+    <p class="bonus-num">▼ BONUS 02</p>
+    <h2>有料note最小構成テンプレート（コピペ対応）</h2>
+    <p class="chapter-ref">「省エネ設計図」本編 第4章 対応</p>
+  </div>
+  <div class="section-body">
+
+    <div class="how-to">
+      <h3>使い方</h3>
+      <ol>
+        <li>このテンプレートをそのままnoteの下書きにコピーする</li>
+        <li>【　】の中を自分の内容に書き換える</li>
+        <li>（目安：〇〇字）は参考にしながら書く</li>
+        <li>完成したら特典3のチェックリストで確認する</li>
+      </ol>
+    </div>
+
+    <!-- ブロック1 -->
+    <div class="block-card">
+      <div class="block-header">
+        <h4>ブロック1：導入・共感</h4>
+        <span class="block-meta">目的：「これは自分のことだ」と思わせる　｜　目安：500〜800字</span>
+      </div>
+      <div class="block-body">
+        <div class="fill-box">こんな状況、ありませんか。
+
+・<span class="fill-slot">読者の悩みを1文で</span>
+・<span class="fill-slot">読者の悩みを1文で</span>
+・<span class="fill-slot">読者の悩みを1文で</span>
+
+<span class="fill-slot">この状況が続く原因を1〜2文で。読者を責めない書き方で。</span>
+
+でも、<span class="fill-slot">解決できることを示す1文</span>
+この記事で<span class="fill-slot">何が手に入るかを1文</span>を解説します。</div>
+      </div>
+    </div>
+
+    <!-- ブロック2 -->
+    <div class="block-card">
+      <div class="block-header">
+        <h4>ブロック2：問題提起</h4>
+        <span class="block-meta">目的：「この問題は放置できない」と感じさせる　｜　目安：500〜800字</span>
+      </div>
+      <div class="block-body">
+        <div class="fill-box">この問題を放置すると、<span class="fill-slot">悪化した未来を1〜2文で</span>
+
+よく言われる「<span class="fill-slot">一般的な解決策</span>」を試しても、
+<span class="fill-slot">なぜそれが効かないかの理由を1〜2文で</span>
+
+だから必要なのは<span class="fill-slot">新しいアプローチを1文で示唆</span></div>
+      </div>
+    </div>
+
+    <!-- ブロック3 -->
+    <div class="block-card">
+      <div class="block-header">
+        <h4>ブロック3：解決策の全体像</h4>
+        <span class="block-meta">目的：「この記事で解決できる」と約束する　｜　目安：500〜800字</span>
+      </div>
+      <div class="block-body">
+        <div class="fill-box">この記事では<span class="fill-slot">メソッド名・手法の名前</span>を使って、
+<span class="fill-slot">解決策の概要を1文で</span>を解説します。
+
+具体的にはこんな流れで進めます。
+
+1. <span class="fill-slot">ステップ1の名称</span>：<span class="fill-slot">1行説明</span>
+2. <span class="fill-slot">ステップ2の名称</span>：<span class="fill-slot">1行説明</span>
+3. <span class="fill-slot">ステップ3の名称</span>：<span class="fill-slot">1行説明</span>
+
+これを順番にやれば、<span class="fill-slot">到達点を1文で</span></div>
+      </div>
+    </div>
+
+    <!-- ブロック4 -->
+    <div class="block-card">
+      <div class="block-header">
+        <h4>ブロック4：詳細ノウハウ（省エネ4行構造を繰り返す）</h4>
+        <span class="block-meta">目的：読者が実際に行動できる手順を解説する　｜　目安：2,000〜5,000字</span>
+      </div>
+      <div class="block-body">
+        <p>以下の4行構造を、ステップの数だけ繰り返してください。</p>
+        <div class="fill-box">【<span class="fill-slot">ステップ名</span>】
+
+①課題：<span class="fill-slot">読者がここで直面する壁を1文で</span>
+
+②解決策：<span class="fill-slot">解決策を1文で言い切る</span>
+
+③具体例：<span class="fill-slot">具体例を2〜3行で。数字・事例・体験談を入れる</span>
+
+④まとめ：<span class="fill-slot">このブロックの核心を1文で締める</span>
+
+─────────────（ここまでを繰り返す）─────────────
+
+✅ ここだけは覚えてほしいポイント
+・<span class="fill-slot">重要なポイント1</span>
+・<span class="fill-slot">重要なポイント2</span>
+
+📝 ワーク
+<span class="fill-slot">読者が手を動かす演習を1つ</span></div>
+      </div>
+    </div>
+
+    <!-- ブロック5 -->
+    <div class="block-card">
+      <div class="block-header">
+        <h4>ブロック5：まとめ・行動促進</h4>
+        <span class="block-meta">目的：振り返りと次の行動を一つだけ提示する　｜　目安：500〜800字</span>
+      </div>
+      <div class="block-body">
+        <div class="fill-box">この記事でお伝えしたことを振り返ります。
+
+・<span class="fill-slot">振り返り1文</span>
+・<span class="fill-slot">振り返り1文</span>
+・<span class="fill-slot">振り返り1文</span>
+
+まず最初にやることは、<span class="fill-slot">最初の行動を一つだけ具体的に</span>です。
+
+<span class="fill-slot">期間や作業量を最小に見せる1文</span>でいいです。
+
+<span class="fill-slot">読者を前向きにするひと言で締める</span></div>
+      </div>
+    </div>
+
+    <!-- ブロック6 -->
+    <div class="block-card">
+      <div class="block-header">
+        <h4>ブロック6：次のステップへ</h4>
+        <span class="block-meta">目的：次の記事・次のアクションに誘導する　｜　目安：200〜400字</span>
+      </div>
+      <div class="block-body">
+        <div class="fill-box">この記事の内容が実践できたら、次は<span class="fill-slot">次のステップのテーマ</span>です。
+
+<span class="fill-slot">次の記事で扱う内容を1〜2文で予告する</span>
+
+興味がある方は、ぜひわたしの他の記事も覗いてみてください。
+
+<span class="fill-slot">SNSアカウント名や次の記事リンクを貼る場所</span></div>
+      </div>
+    </div>
+
+    <!-- 書き換えチェック -->
+    <h3 class="sub">書き換えチェックリスト</h3>
+    <div class="check-category">
+      <div class="check-item"><div class="check-box"></div><div class="item-text">タイトルに「誰が・何を得られる・どうやって」が入っている</div></div>
+      <div class="check-item"><div class="check-box"></div><div class="item-text">ブロック1の読者の悩みが3つ書かれている</div></div>
+      <div class="check-item"><div class="check-box"></div><div class="item-text">ブロック3にステップが2〜4つある</div></div>
+      <div class="check-item"><div class="check-box"></div><div class="item-text">ブロック4の各ステップが「省エネ4行構造」になっている</div></div>
+      <div class="check-item"><div class="check-box"></div><div class="item-text">ブロック4に具体的な数字・事例が入っている</div></div>
+      <div class="check-item"><div class="check-box"></div><div class="item-text">ブロック5の「まず最初にやること」が1つだけ書かれている</div></div>
+      <div class="check-item"><div class="check-box"></div><div class="item-text">全体の文字数が3,000字以上ある</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 特典3 ===== -->
+<div class="bonus-section">
+  <div class="section-header">
+    <p class="bonus-num">▼ BONUS 03</p>
+    <h2>月1万円達成チェックリスト（全20項目）</h2>
+    <p class="chapter-ref">「省エネ設計図」本編 第5章 対応</p>
+  </div>
+  <div class="section-body">
+
+    <div class="how-to">
+      <h3>使い方</h3>
+      <ol>
+        <li>現在できているものに ✅ をつける</li>
+        <li>チェックが少ない項目が「今やること」</li>
+        <li>週1回見直して進捗を確認する</li>
+        <li>全20項目にチェックが入ったとき、月1万円の土台は完成</li>
+      </ol>
+    </div>
+
+    <!-- カテゴリ1 -->
+    <div class="check-category">
+      <h3>カテゴリ1：土台設計（5項目）</h3>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">1本目の有料noteが公開済みである</div><div class="item-hint">→ 本編 第4章を実践して1本目を公開しよう</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">タイトルに「誰が・何を得られる・どうやって」が含まれている</div><div class="item-hint">→ タイトル方程式で見直す（本編 第3章）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">価格が980〜1,980円の範囲に設定されている</div><div class="item-hint">→ 価格の3軸マトリクスを確認（本編 第3章）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">ハッシュタグが5〜6個設定されている</div><div class="item-hint">→ 大・中・小カテゴリで5〜6個設定する（本編 第4章）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">無料公開部分（セールスレター相当）が500字以上ある</div><div class="item-hint">→ 4段構成テンプレートで書き直す（本編 第4章）</div></div>
+      </div>
+      <div class="score-box">カテゴリ1の達成数：　　　/ 5</div>
+    </div>
+
+    <!-- カテゴリ2 -->
+    <div class="check-category">
+      <h3>カテゴリ2：コンテンツ品質（5項目）</h3>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">有料部分の本文が3,000字以上ある</div><div class="item-hint">→ 省エネ4行構造でブロックを追加する（特典2を使う）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">本文内に「具体的な手順・数字」が含まれている</div><div class="item-hint">→「なんとなく」を数字・事例に書き換える</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">読者が実際に行動できるワークまたはチェックリストがある</div><div class="item-hint">→ 各ステップの末尾に📝ワークを1つ追加する</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">読者の「悩み→解決→実践」の流れになっている</div><div class="item-hint">→ 6ブロック構成を確認する（特典2を参照）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">次のステップへの誘導文が最後にある</div><div class="item-hint">→ ブロック6（次のステップへ）を追加する（特典2を参照）</div></div>
+      </div>
+      <div class="score-box">カテゴリ2の達成数：　　　/ 5</div>
+    </div>
+
+    <!-- カテゴリ3 -->
+    <div class="check-category">
+      <h3>カテゴリ3：積み上げ状況（4項目）</h3>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">公開済み記事が3本以上ある</div><div class="item-hint">→ シリーズ化3パターンで次の2本を設計する（本編 第5章）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">シリーズ計画（次の2〜3本のネタ）が決まっている</div><div class="item-hint">→ 深掘り型・対象者変換型・時系列型から1つ選ぶ（本編 第5章）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">再利用できる素材リスト（SNS投稿・日記・メモ）がある</div><div class="item-hint">→ 3つの転用パターンで素材を探す（本編 第5章）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">公開ペースが月1〜2本以上維持できている</div><div class="item-hint">→「1ブロックだけ書く日」を週1回設けるだけでOK</div></div>
+      </div>
+      <div class="score-box">カテゴリ3の達成数：　　　/ 4</div>
+    </div>
+
+    <!-- カテゴリ4 -->
+    <div class="check-category">
+      <h3>カテゴリ4：集客・告知（3項目）</h3>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">公開のたびにSNSで告知している</div><div class="item-hint">→ 告知テンプレートを使って毎回投稿する（本編 第4章）</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">同テーマのnoteクリエイターにスキをしている</div><div class="item-hint">→ 1日10〜20件のスキを3日間継続してみる</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">noteのプロフィール文が整っている（何を書いている人か一目でわかる）</div><div class="item-hint">→「誰が・何について書いている・読むとどうなる」を1〜2文で書く</div></div>
+      </div>
+      <div class="score-box">カテゴリ4の達成数：　　　/ 3</div>
+    </div>
+
+    <!-- カテゴリ5 -->
+    <div class="check-category">
+      <h3>カテゴリ5：数字確認（3項目）</h3>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">月の売上（販売本数×価格）を週1回確認している</div><div class="item-hint">→ noteのダッシュボードで毎週確認する習慣をつける</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">最も売れている記事（またはスキが多い記事）がどれか把握している</div><div class="item-hint">→ 売れている記事の「タイトル・内容・告知方法」を他の記事に応用する</div></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box"></div>
+        <div><div class="item-text">「次に強化すべき項目」が1〜3個特定できている</div><div class="item-hint">→ このチェックリストのチェックが少ないカテゴリに集中する</div></div>
+      </div>
+      <div class="score-box">カテゴリ5の達成数：　　　/ 3</div>
+    </div>
+
+    <!-- 合計 -->
+    <h3 class="sub">合計スコア</h3>
+    <table>
+      <tr><th>カテゴリ</th><th style="width:100px;text-align:center">達成数</th></tr>
+      <tr><td>カテゴリ1：土台設計</td><td style="text-align:center">　　/ 5</td></tr>
+      <tr><td>カテゴリ2：コンテンツ品質</td><td style="text-align:center">　　/ 5</td></tr>
+      <tr><td>カテゴリ3：積み上げ状況</td><td style="text-align:center">　　/ 4</td></tr>
+      <tr><td>カテゴリ4：集客・告知</td><td style="text-align:center">　　/ 3</td></tr>
+      <tr><td>カテゴリ5：数字確認</td><td style="text-align:center">　　/ 3</td></tr>
+      <tr style="font-weight:700;background:#f0f9f4"><td>合計</td><td style="text-align:center">　　/ 20</td></tr>
+    </table>
+
+    <!-- スコア別アドバイス -->
+    <h3 class="sub">スコア別アドバイス</h3>
+    <div class="score-table">
+      <table>
+        <tr><th style="width:90px">スコア</th><th style="width:140px">現在地</th><th>次にやること</th></tr>
+        <tr><td>0〜5点</td><td>スタート地点</td><td>カテゴリ1を全て埋めることだけに集中する</td></tr>
+        <tr><td>6〜10点</td><td>動き出した段階</td><td>カテゴリ1・2を完成させ、最初の1本を公開する</td></tr>
+        <tr><td>11〜15点</td><td>土台ができてきた段階</td><td>カテゴリ3・4を進めて積み上げを加速する</td></tr>
+        <tr><td>16〜19点</td><td>月1万円まであと一歩</td><td>チェックが入っていない項目だけに集中する</td></tr>
+        <tr><td style="color:#2d6a4f;font-weight:700">20点</td><td style="color:#2d6a4f;font-weight:700">月1万円の土台完成 🎉</td><td>月3万円へのスケール設計図に進もう</td></tr>
+      </table>
+    </div>
+
+    <!-- 週次振り返り -->
+    <div class="weekly-sheet">
+      <h3>📅 週次振り返りシート（毎週1回記入）</h3>
+      <div class="weekly-row">
+        <label>記入日：</label>
+        <div class="write-line"></div>
+        <label style="white-space:nowrap">年</label>
+        <div class="write-line" style="max-width:40px"></div>
+        <label style="white-space:nowrap">月</label>
+        <div class="write-line" style="max-width:40px"></div>
+        <label style="white-space:nowrap">日</label>
+      </div>
+      <div class="weekly-row">
+        <label>今週公開した記事数：</label>
+        <div class="write-line" style="max-width:60px"></div>
+        <label>本（累計：</label>
+        <div class="write-line" style="max-width:60px"></div>
+        <label>本）</label>
+      </div>
+      <div class="weekly-row">
+        <label>今週の売上：</label>
+        <div class="write-line" style="max-width:80px"></div>
+        <label>円（累計：</label>
+        <div class="write-line" style="max-width:80px"></div>
+        <label>円）</label>
+      </div>
+      <div class="weekly-row">
+        <label>最も売れた記事：</label>
+        <div class="write-line"></div>
+      </div>
+      <div class="weekly-row">
+        <label>チェックリストスコア：</label>
+        <div class="write-line" style="max-width:40px"></div>
+        <label>/20（先週比：+</label>
+        <div class="write-line" style="max-width:40px"></div>
+        <label>点）</label>
+      </div>
+      <p class="weekly-area-label">今週できたこと：</p>
+      <div class="weekly-area"></div>
+      <p class="weekly-area-label">来週やること（1〜3個だけ）：</p>
+      <div class="weekly-area" style="height:70px"></div>
+    </div>
+
+    <!-- スケール -->
+    <div class="scale-box">
+      <h3>🚀 月1万円達成後：月3万円へのスケール設計図</h3>
+      <p style="font-size:13px;margin-bottom:12px;">月1万円の土台が完成したら、次の目標は <strong>月3万円</strong> です。やることは2つだけ。</p>
+      <p style="font-size:13px;font-weight:700;margin-bottom:6px;">STEP 1：記事を増やす（目標：20本以上）</p>
+      <p style="font-size:12px;color:#555;margin-bottom:12px;">シリーズ化・転用パターンで月2〜3本ペースに上げる</p>
+      <p style="font-size:13px;font-weight:700;margin-bottom:6px;">STEP 2：高単価記事を1〜2本追加する（目標：2,980〜4,980円）</p>
+      <p style="font-size:12px;color:#555;margin-bottom:12px;">複数の記事をまとめた「完全版」または「上級編」として展開する</p>
+      <div class="formula">月1万円 → 月3万円の計算式例
+
+パターンA: 1,000円 × 30本販売 = 月3万円
+パターンB: 1,000円 × 10本 ＋ 3,000円 × 7本 = 月3.1万円
+パターンC: 1,480円 × 20本 = 月2.96万円</div>
+    </div>
+
+  </div>
+</div>
+
+<p style="text-align:center;font-size:11px;color:#aaa;margin-top:40px;padding-top:20px;border-top:1px solid #eee;">
+  「省エネ設計図」購入者限定特典 ／ 無断転載・再配布禁止
+</p>
+
+</body>
+</html>
