@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【特典⑤】トラブルシューティングガイド</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #f7f7f7;
+    color: #222;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .header {
+    background: linear-gradient(135deg, #e8602c 0%, #c94a1e 100%);
+    color: white;
+    padding: 32px 20px 28px;
+    text-align: center;
+  }
+  .header .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: clamp(18px, 4vw, 26px);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  .intro-box {
+    background: #fff8f5;
+    border-left: 4px solid #e8602c;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: #555;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c94a1e;
+    border-bottom: 2px solid #e8602c;
+    padding-bottom: 6px;
+    margin: 32px 0 16px;
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    margin: 20px 0 10px;
+    padding-left: 10px;
+    border-left: 3px solid #e8602c;
+  }
+  p { margin-bottom: 12px; }
+  /* TOC */
+  .toc {
+    background: #fff;
+    border: 1px solid #e0d8d4;
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+  }
+  .toc h3 {
+    border-left: none;
+    padding-left: 0;
+    color: #c94a1e;
+    font-size: 15px;
+    margin: 0 0 10px;
+  }
+  .toc ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 6px;
+  }
+  .toc ul li a {
+    display: block;
+    color: #e8602c;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .toc ul li a:hover { background: #fff0eb; }
+  /* Section header */
+  .section-header {
+    background: linear-gradient(90deg, #e8602c 0%, #f07c4a 100%);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 28px 0 16px;
+  }
+  /* Error card */
+  .error-card {
+    background: #fff;
+    border: 1px solid #e0d8d4;
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .error-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #e0d8d4;
+  }
+  .error-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .meta-tag {
+    display: inline-block;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .meta-windows { background: #e8f0ff; color: #1a56cc; }
+  .meta-mac { background: #f0f8e8; color: #2d7a1e; }
+  .meta-both { background: #fff0eb; color: #c94a1e; }
+  .field-label {
+    font-size: 12px;
+    color: #999;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin: 10px 0 4px;
+  }
+  .field-value { font-size: 14px; color: #444; }
+  .steps-list {
+    list-style: none;
+    padding: 0;
+    counter-reset: step-counter;
+  }
+  .steps-list li {
+    counter-increment: step-counter;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 14px;
+    color: #444;
+  }
+  .steps-list li::before {
+    content: counter(step-counter);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    background: #e8602c;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 10px 0;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  th {
+    background: #e8602c;
+    color: white;
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0eae6;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #fdf9f7; }
+  /* Code */
+  pre, code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0;
+    line-height: 1.6;
+  }
+  code {
+    background: #f0ebe6;
+    color: #c94a1e;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  /* SOS box */
+  .sos-box {
+    background: #fff;
+    border: 2px solid #e8602c;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 28px 0;
+  }
+  .sos-box h3 {
+    border-left: none;
+    padding-left: 0;
+    font-size: 17px;
+    color: #c94a1e;
+    margin-bottom: 12px;
+  }
+  .footer {
+    background: #333;
+    color: #ccc;
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">特典⑤ / トラブルシューティング</div>
+  <h1>トラブルシューティングガイド</h1>
+  <p>よくあるエラーと解決策一覧（Windows/Mac別）</p>
+</div>
+
+<div class="container">
+
+  <div class="intro-box">
+    まず「エラーメッセージ」または「現象」で目次から該当箇所を探してください。
+    解決しない場合はエラー内容をCodexに貼り付けると自動で修正コードを生成してくれます。
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>目次</h3>
+    <ul>
+      <li><a href="#sec-a">A. Codexアプリのインストール・起動エラー</a></li>
+      <li><a href="#sec-b">B. APIキー・接続エラー</a></li>
+      <li><a href="#sec-c">C. 楽天APIエラー</a></li>
+      <li><a href="#sec-d">D. 投稿文生成エラー（OpenAI API）</a></li>
+      <li><a href="#sec-e">E. CSVファイル・ファイル保存エラー</a></li>
+      <li><a href="#sec-f">F. 自動実行エラー</a></li>
+      <li><a href="#sec-g">G. Pythonライブラリ・環境エラー</a></li>
+    </ul>
+  </div>
+
+  <!-- Section A -->
+  <div id="sec-a" class="section-header">A. Codexアプリのインストール・起動エラー</div>
+
+  <div class="error-card">
+    <h4>A-01：「WindowsによってPCが保護されました」が表示される</h4>
+    <div class="error-meta"><span class="meta-tag meta-windows">Windows</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">Codexのインストーラーを実行すると青い警告画面が表示される</div>
+    <span class="field-label">原因</span>
+    <div class="field-value">Microsoft Defender SmartScreenが新しいソフトウェアをブロックしている</div>
+    <span class="field-label">解決策</span>
+    <ol class="steps-list" style="margin-top:6px;">
+      <li>警告画面の「詳細情報」（下線付きのテキスト）をクリックする</li>
+      <li>「実行」ボタンが表示されたらクリックする</li>
+      <li>インストールが再開される</li>
+    </ol>
+  </div>
+
+  <div class="error-card">
+    <h4>A-02：「"Codex"は開発元を確認できないため開けません」が表示される</h4>
+    <div class="error-meta"><span class="meta-tag meta-mac">Mac</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">Codexアプリをダブルクリックしても開けない</div>
+    <span class="field-label">原因</span>
+    <div class="field-value">macOSのGatekeeperがブロックしている</div>
+    <span class="field-label">解決策</span>
+    <ol class="steps-list" style="margin-top:6px;">
+      <li>Appleメニュー →「システム設定」を開く</li>
+      <li>「プライバシーとセキュリティ」を選択する</li>
+      <li>「セキュリティ」セクションに「Codexは…」という表示がある</li>
+      <li>「このまま開く」ボタンをクリックする</li>
+      <li>管理者パスワードを入力する</li>
+    </ol>
+    <p style="font-size:13px; color:#666; margin-top:8px;">または：Finderでアプリケーションフォルダを開く → Codexアプリを右クリック（Controlキー+クリック）→「開く」を選択 →「開く」をクリック</p>
+  </div>
+
+  <div class="error-card">
+    <h4>A-03：Codexを起動するとAPIキーエラーが表示される</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">起動直後に「APIキーが無効です」「APIキーを設定してください」と表示される</div>
+    <span class="field-label">原因</span>
+    <div class="field-value">APIキーが未設定、または誤ったキーが設定されている</div>
+    <span class="field-label">解決策</span>
+    <ol class="steps-list" style="margin-top:6px;">
+      <li>Codexアプリを開く</li>
+      <li>左サイドバーの「Settings」アイコンをクリックする</li>
+      <li>「API Key」欄の内容を削除する</li>
+      <li><code>platform.openai.com</code> でAPIキーを再確認してコピーする</li>
+      <li>「API Key」欄に貼り付けて「Save」をクリックする</li>
+    </ol>
+  </div>
+
+  <!-- Section B -->
+  <div id="sec-b" class="section-header">B. APIキー・接続エラー</div>
+
+  <div class="error-card">
+    <h4>B-01：「Invalid API Key」エラー</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">エラーメッセージ</span>
+    <div class="field-value"><code>Invalid API Key</code> / <code>Authentication Error</code> / <code>401 Unauthorized</code></div>
+    <span class="field-label">原因と解決策</span>
+    <table style="margin-top:8px;">
+      <thead><tr><th>原因</th><th>確認方法</th><th>解決策</th></tr></thead>
+      <tbody>
+        <tr><td>APIキーのコピーミス</td><td>メモ帳でAPIキーを確認</td><td>再度コピーして貼り直す</td></tr>
+        <tr><td>APIキーの前後にスペース</td><td>APIキーの先頭・末尾を確認</td><td>スペースを削除する</td></tr>
+        <tr><td>APIキーが無効化されている</td><td>platform.openai.com で確認</td><td>新しいAPIキーを発行する</td></tr>
+        <tr><td>支払い情報がない</td><td>platform.openai.com のBillingで確認</td><td>クレジットカードを登録する</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="error-card">
+    <h4>B-02：「Rate Limit Exceeded」エラー</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">エラーメッセージ</span>
+    <div class="field-value"><code>Rate limit exceeded</code> / <code>429 Too Many Requests</code></div>
+    <span class="field-label">原因</span>
+    <div class="field-value">APIリクエストの回数・トークン数が上限を超えた</div>
+    <span class="field-label">解決策</span>
+    <ul style="list-style:disc; padding-left:20px; font-size:14px; color:#444; margin-top:6px;">
+      <li>1〜2分待ってから再実行する</li>
+      <li><code>gpt-4o-mini</code> モデルを使用しているか確認する（上位モデルは制限が厳しい）</li>
+      <li>Codexへの指示書を1回1処理に絞り、1度に大量の商品を処理させない</li>
+    </ul>
+  </div>
+
+  <div class="error-card">
+    <h4>B-03：「Insufficient quota」エラー</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">エラーメッセージ</span>
+    <div class="field-value"><code>You exceeded your current quota</code> / <code>Insufficient quota</code></div>
+    <span class="field-label">原因</span>
+    <div class="field-value">OpenAI APIの無料クレジットが切れた、または設定した上限に達した</div>
+    <span class="field-label">解決策</span>
+    <ol class="steps-list" style="margin-top:6px;">
+      <li><code>platform.openai.com</code> の「Billing」を開く</li>
+      <li>現在の残高・使用量を確認する</li>
+      <li>残高が0の場合はクレジットカードを登録してチャージする</li>
+      <li>「Usage limits」で設定したHard limitを超えていないか確認する</li>
+    </ol>
+  </div>
+
+  <!-- Section C -->
+  <div id="sec-c" class="section-header">C. 楽天APIエラー</div>
+
+  <div class="error-card">
+    <h4>C-01：「applicationId is required」エラー</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">エラーメッセージ</span>
+    <div class="field-value"><code>applicationId is required</code> / <code>パラメータエラー</code></div>
+    <span class="field-label">原因</span>
+    <div class="field-value">楽天のアプリIDが指示書に設定されていない、またはコピーミスがある</div>
+    <span class="field-label">解決策</span>
+    <ol class="steps-list" style="margin-top:6px;">
+      <li><code>webservice.rakuten.co.jp</code> でアプリID（<code>applicationId</code>）を確認する</li>
+      <li>指示書の <code>YOUR_APP_ID</code> の部分が自分のアプリIDに書き換えられているか確認する</li>
+      <li>アプリIDの前後にスペースや引用符が余分に入っていないか確認する</li>
+    </ol>
+    <span class="field-label">正しい形式</span>
+    <pre>applicationId: "1234567890abcdef"  ← ダブルクォートで囲まれている</pre>
+  </div>
+
+  <div class="error-card">
+    <h4>C-02：アフィリエイトURLが通常のURLになっている</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value"><code>affiliateUrl</code> が <code>https://item.rakuten.co.jp/...</code> になっている（<code>hb.afl.rakuten.co.jp</code> ではない）</div>
+    <span class="field-label">原因</span>
+    <div class="field-value">アフィリエイトID（<code>affiliateId</code>）が設定されていない</div>
+    <span class="field-label">解決策</span>
+    <ol class="steps-list" style="margin-top:6px;">
+      <li><code>affiliate.rakuten.co.jp</code> のダッシュボードでアフィリエイトIDを確認する</li>
+      <li>アフィリエイトIDの形式は <code>xxxx.xxxx.xxxx.xxxx</code> の形式</li>
+      <li>指示書の <code>YOUR_AFFILIATE_ID</code> にアフィリエイトIDを設定する</li>
+      <li>再実行してURLが <code>https://hb.afl.rakuten.co.jp/</code> で始まることを確認する</li>
+    </ol>
+  </div>
+
+  <div class="error-card">
+    <h4>C-03：「No items found」/ 検索結果が0件になる</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <table style="margin-top:8px;">
+      <thead><tr><th>原因</th><th>解決策</th></tr></thead>
+      <tbody>
+        <tr><td>キーワードに特殊文字が含まれている</td><td>キーワードをシンプルな日本語に変更する</td></tr>
+        <tr><td>在庫がない・販売停止のジャンル</td><td>別のキーワードを試す</td></tr>
+        <tr><td>APIのgenresIdパラメータが誤っている</td><td>genresIdを削除してキーワード検索だけで試す</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="error-card">
+    <h4>C-04：タイムアウトエラー / 接続エラー</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">エラーメッセージ</span>
+    <div class="field-value"><code>Connection timeout</code> / <code>Read timeout</code> / <code>ConnectionError</code></div>
+    <table style="margin-top:8px;">
+      <thead><tr><th>原因</th><th>解決策</th></tr></thead>
+      <tbody>
+        <tr><td>楽天APIが一時的に不安定</td><td>5〜10分後に再実行する</td></tr>
+        <tr><td>VPNを使用している</td><td>VPNをオフにして試す</td></tr>
+        <tr><td>ファイアウォールがブロックしている</td><td>ファイアウォールの設定を確認する</td></tr>
+        <tr><td>ネットワークが不安定</td><td>有線接続またはWi-Fiを変えて試す</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section D -->
+  <div id="sec-d" class="section-header">D. 投稿文生成エラー（OpenAI API）</div>
+
+  <div class="error-card">
+    <h4>D-01：日本語が文字化けする</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">生成された投稿文が文字化けしている</div>
+    <span class="field-label">Windows の解決策</span>
+    <pre># コード内でこのように修正
+with open('posts.txt', 'w', encoding='utf-8-bom') as f:</pre>
+    <span class="field-label">Mac の解決策</span>
+    <pre>export LANG=ja_JP.UTF-8</pre>
+    <span class="field-label">Codexへの修正依頼</span>
+    <div class="field-value">「生成されたテキストファイルが文字化けしています。UTF-8-BOMで保存するよう修正してください」</div>
+  </div>
+
+  <div class="error-card">
+    <h4>D-02：生成された投稿文の品質が低い・自然でない</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">投稿文が機械的・不自然・繰り返しが多い</div>
+    <span class="field-label">解決策：指示書の「制約・条件」に追記する内容</span>
+    <pre>【追加する条件（指示書の「制約・条件」に追記）】
+- 毎回異なる書き出しパターンを使ってください
+- 「注目の商品」「おすすめの商品」という定型文を使わないでください
+- 商品の具体的な特徴（素材・重量・対応年齢など）を必ず1つ以上入れてください
+- 読者に語りかける自然な口語体で書いてください</pre>
+  </div>
+
+  <!-- Section E -->
+  <div id="sec-e" class="section-header">E. CSVファイル・ファイル保存エラー</div>
+
+  <div class="error-card">
+    <h4>E-01：CSVファイルが保存されない</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <table style="margin-top:8px;">
+      <thead><tr><th>原因</th><th>確認方法</th><th>解決策</th></tr></thead>
+      <tbody>
+        <tr><td>保存先フォルダが存在しない</td><td>フォルダを確認</td><td>フォルダを作成してから実行</td></tr>
+        <tr><td>書き込み権限がない</td><td>管理者権限で実行</td><td>保存先を別のフォルダに変更</td></tr>
+        <tr><td>ファイルパスに日本語が含まれている</td><td>パスを確認</td><td>保存先を英語パスに変更</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px; color:#d4700a; margin-top:10px; padding:8px 12px; background:#fff9e6; border-radius:6px;">
+      ⚠️ <strong>Windowsユーザーへの注意：</strong> 保存先パスに「ユーザー名が日本語」の場合にエラーが起きることがあります。<code>C:\Users\user01\楽天アフィリエイト\</code> のように英数字のユーザー名フォルダを使うか、<code>C:\rakuten\</code> など別の場所に作業フォルダを作成することを推奨します。
+    </p>
+  </div>
+
+  <div class="error-card">
+    <h4>E-02：ExcelでCSVを開くと文字化けする</h4>
+    <div class="error-meta"><span class="meta-tag meta-windows">Windows</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">CSVファイルをダブルクリックしてExcelで開くと日本語が文字化けしている</div>
+    <span class="field-label">原因</span>
+    <div class="field-value">CSVがUTF-8で保存されているが、ExcelはShift-JISを期待している</div>
+    <span class="field-label">解決策A（推奨）：CSVをUTF-8-BOMで保存する</span>
+    <pre>df.to_csv('products.csv', encoding='utf-8-bom', index=False)</pre>
+    <span class="field-label">解決策B</span>
+    <div class="field-value">Excelで「データ」タブ→「テキストから取り込み」でUTF-8を指定して開く</div>
+    <span class="field-label">Codexへの修正依頼</span>
+    <div class="field-value">「CSVをUTF-8-BOMエンコーディングで保存するよう修正してください」</div>
+  </div>
+
+  <!-- Section F -->
+  <div id="sec-f" class="section-header">F. 自動実行エラー（タスクスケジューラー/launchd）</div>
+
+  <div class="error-card">
+    <h4>F-01（Windows）：タスクが「完了」するがファイルが生成されない</h4>
+    <div class="error-meta"><span class="meta-tag meta-windows">Windows</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">タスクスケジューラーで「最後の実行結果：操作が正常に完了しました」と表示されるが、CSVが生成されていない</div>
+    <span class="field-label">原因と解決策</span>
+    <div style="margin-top:8px; font-size:14px; color:#444;">
+      <p><strong>1. バッチファイルのパスが間違っている</strong></p>
+      <ul style="list-style:disc; padding-left:20px;">
+        <li><code>run_main.bat</code> をメモ帳で開いて <code>main.py</code> のフルパスを確認する</li>
+        <li>パスに日本語や特殊文字が含まれていないか確認する</li>
+      </ul>
+      <p style="margin-top:10px;"><strong>2. Pythonがパスに登録されていない</strong></p>
+      <ul style="list-style:disc; padding-left:20px;">
+        <li>コマンドプロンプトで <code>python --version</code> を実行して確認する</li>
+        <li>バッチファイル内でPythonのフルパスを指定する：</li>
+      </ul>
+      <pre>"C:\Users\ユーザー名\AppData\Local\Programs\Python\Python3xx\python.exe" main.py</pre>
+      <p><strong>3. 作業ディレクトリが設定されていない</strong></p>
+      <ul style="list-style:disc; padding-left:20px;">
+        <li>タスクのプロパティ→「操作」→「開始」欄に作業フォルダのパスを入力する</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="error-card">
+    <h4>F-02（Windows）：タスクスケジューラーでエラーコードが表示される</h4>
+    <div class="error-meta"><span class="meta-tag meta-windows">Windows</span></div>
+    <table style="margin-top:8px;">
+      <thead><tr><th>エラーコード</th><th>意味</th><th>解決策</th></tr></thead>
+      <tbody>
+        <tr><td><code>0x1</code></td><td>スクリプトがエラーで終了した</td><td>log_*.txtを確認してPythonエラーを修正する</td></tr>
+        <tr><td><code>0x2</code></td><td>ファイルが見つからない</td><td>バッチファイルのパスを確認する</td></tr>
+        <tr><td><code>0xC000013A</code></td><td>ユーザーがログオフしている</td><td>タスクのプロパティで「ユーザーがログオンしているかどうかにかかわらず実行する」を選択する</td></tr>
+        <tr><td><code>0x41301</code></td><td>タスクが現在実行中</td><td>前回の実行が完了していない。スクリプトの実行時間を確認する</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="error-card">
+    <h4>F-03（Mac）：launchdが実行されない</h4>
+    <div class="error-meta"><span class="meta-tag meta-mac">Mac</span></div>
+    <span class="field-label">確認コマンド</span>
+    <pre># launchdへの登録確認
+launchctl list | grep rakuten
+
+# 手動実行テスト
+launchctl start com.rakutenaffiliate.daily
+
+# ログの確認
+cat ~/楽天アフィリエイト/launchd_out.log
+cat ~/楽天アフィリエイト/launchd_err.log</pre>
+    <span class="field-label">よくある原因と解決策</span>
+    <table style="margin-top:8px;">
+      <thead><tr><th>原因</th><th>解決策</th></tr></thead>
+      <tbody>
+        <tr><td>plistが正しく登録されていない</td><td><code>launchctl load ~/Library/LaunchAgents/com.rakutenaffiliate.daily.plist</code> を再実行</td></tr>
+        <tr><td>plistのパスが間違っている</td><td>plistファイルをメモ帳で開いてパスを確認・修正する</td></tr>
+        <tr><td>plistの権限が適切でない</td><td><code>chmod 644 ~/Library/LaunchAgents/com.rakutenaffiliate.daily.plist</code> を実行</td></tr>
+        <tr><td>Macがスリープ中</td><td>スリープ設定を変更するか、実行時刻を変更する</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section G -->
+  <div id="sec-g" class="section-header">G. Pythonライブラリ・環境エラー</div>
+
+  <div class="error-card">
+    <h4>G-01：「Module not found」エラー</h4>
+    <div class="error-meta"><span class="meta-tag meta-both">Windows / Mac</span></div>
+    <span class="field-label">エラーメッセージ</span>
+    <div class="field-value"><code>ModuleNotFoundError: No module named 'requests'</code>（requestsの部分は他のライブラリ名の場合もあり）</div>
+    <span class="field-label">解決策（Windows）</span>
+    <pre>pip install requests openai pandas</pre>
+    <span class="field-label">解決策（Mac）</span>
+    <pre>pip3 install requests openai pandas</pre>
+  </div>
+
+  <div class="error-card">
+    <h4>G-02（Windows）：<code>pip</code> コマンドが認識されない</h4>
+    <div class="error-meta"><span class="meta-tag meta-windows">Windows</span></div>
+    <span class="field-label">エラーメッセージ</span>
+    <div class="field-value"><code>'pip' は内部コマンド...として認識されていません</code></div>
+    <span class="field-label">解決策</span>
+    <ol class="steps-list" style="margin-top:6px;">
+      <li>コマンドプロンプトで <code>python --version</code> を実行してPythonがインストールされているか確認</li>
+      <li>Pythonがインストールされていない場合：<code>python.org</code> からPython 3をダウンロードしてインストール</li>
+      <li>インストール時に「Add Python to PATH」にチェックを入れることが重要</li>
+      <li>インストール後にコマンドプロンプトを再起動して再試行</li>
+    </ol>
+  </div>
+
+  <div class="error-card">
+    <h4>G-03：Pythonスクリプトの文字化け（Windows）</h4>
+    <div class="error-meta"><span class="meta-tag meta-windows">Windows</span></div>
+    <span class="field-label">現象</span>
+    <div class="field-value">スクリプト実行時に「SyntaxError: Non-UTF-8 code」エラーが出る</div>
+    <span class="field-label">解決策：スクリプトの先頭に以下を追加する</span>
+    <pre># -*- coding: utf-8 -*-</pre>
+  </div>
+
+  <!-- SOS -->
+  <div class="sos-box">
+    <h3>🆘 解決できない場合</h3>
+    <p style="font-size:14px; color:#555; margin-bottom:12px;">上記で解決できない場合は、以下の情報をCodexに貼り付けてください：</p>
+    <pre>【エラー報告テンプレート】
+1. 発生したエラーメッセージ（全文をコピー）:
+2. 使用OS: Windows / Mac（バージョン: ）
+3. Pythonバージョン（python --version の結果）:
+4. 実行したコマンドまたは指示書番号:
+5. エラーが発生した状況（何をしたときに起きたか）:</pre>
+    <p style="font-size:14px; color:#444; margin-top:12px;">Codexへの依頼文：「以下のエラーが発生しました。原因と修正方法を教えてください。[エラー内容を貼り付け]」</p>
+    <p style="font-size:14px; color:#444; margin-top:8px;">Codexがエラーの原因を分析して修正コードを生成してくれます。</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  楽天×Codex 自動アフィリエイトシステム ｜ 特典⑤ トラブルシューティングガイド
+</div>
+
+</body>
+</html>

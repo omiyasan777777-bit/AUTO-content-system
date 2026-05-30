@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【特典②】Windows環境構築チェックリスト</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #f7f7f7;
+    color: #222;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .header {
+    background: linear-gradient(135deg, #e8602c 0%, #c94a1e 100%);
+    color: white;
+    padding: 32px 20px 28px;
+    text-align: center;
+  }
+  .header .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: clamp(18px, 4vw, 26px);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 13px;
+    opacity: 0.85;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  .intro-box {
+    background: #fff8f5;
+    border-left: 4px solid #e8602c;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: #555;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c94a1e;
+    border-bottom: 2px solid #e8602c;
+    padding-bottom: 6px;
+    margin: 32px 0 16px;
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    margin: 20px 0 10px;
+    padding-left: 10px;
+    border-left: 3px solid #e8602c;
+  }
+  p { margin-bottom: 12px; }
+  .phase-header {
+    background: linear-gradient(90deg, #e8602c 0%, #f07c4a 100%);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 28px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 16px;
+  }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    background: #fff;
+    border: 1px solid #eee;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .checklist li:hover { background: #fff8f5; }
+  .checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border: 2px solid #e8602c;
+    border-radius: 4px;
+    margin-top: 2px;
+    background: white;
+    color: transparent;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .warning-box {
+    background: #fff9e6;
+    border: 1px solid #f0c040;
+    border-left: 4px solid #f0a500;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .warning-box strong {
+    display: block;
+    color: #d4700a;
+    margin-bottom: 6px;
+  }
+  .warning-box ol {
+    padding-left: 20px;
+    margin-top: 6px;
+  }
+  .warning-box ol li { margin-bottom: 4px; }
+  pre, code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 16px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.6;
+  }
+  code {
+    background: #f0ebe6;
+    color: #c94a1e;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+  .final-checklist {
+    background: #fff;
+    border: 2px solid #e8602c;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 24px 0;
+  }
+  .final-checklist h3 {
+    border-left: none;
+    padding-left: 0;
+    color: #c94a1e;
+    margin-top: 0;
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  .faq-section { margin-top: 28px; }
+  .faq-item {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .faq-q {
+    font-weight: 700;
+    color: #e8602c;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .faq-a { font-size: 14px; color: #444; }
+  .footer {
+    background: #333;
+    color: #ccc;
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">特典② / Windows版</div>
+  <h1>Windows環境構築チェックリスト</h1>
+  <p>Codexアプリ導入〜初回実行までの全工程確認リスト</p>
+</div>
+
+<div class="container">
+
+  <div class="intro-box">
+    このチェックリストを上から順番に進めれば、Windowsで詰まることなくCodex×楽天アフィリエイト自動化を構築できます。
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase-header">✅ PHASE 1：Codexアプリのインストール</div>
+
+  <h3>1-1. ダウンロード</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ブラウザで <code>openai.com/codex</code> にアクセスできた</li>
+    <li><span class="checkbox">☐</span>「Download for Windows」ボタンをクリックしてインストーラー（.exeファイル）をダウンロードした</li>
+    <li><span class="checkbox">☐</span>ダウンロードフォルダにファイルが保存されていることを確認した</li>
+  </ul>
+
+  <h3>1-2. インストール実行</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ダウンロードした <code>.exe</code> ファイルをダブルクリックして実行した</li>
+  </ul>
+
+  <div class="warning-box">
+    <strong>⚠️ Windowsユーザーが最もよくハマるポイント①：SmartScreenの警告</strong>
+    インストール時に「WindowsによってPCが保護されました」という青い画面が出た場合：
+    <ol>
+      <li>「詳細情報」をクリック（リンクのようなテキスト）</li>
+      <li>「実行」ボタンが表示されたらクリック</li>
+      <li>インストールウィザードが起動する</li>
+    </ol>
+  </div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>SmartScreenの警告が出た場合、「詳細情報」→「実行」で対処した（または出なかった）</li>
+    <li><span class="checkbox">☐</span>インストールウィザードが表示された</li>
+    <li><span class="checkbox">☐</span>インストール先はデフォルトのまま（変更不要）で「次へ」をクリックした</li>
+    <li><span class="checkbox">☐</span>「インストール」ボタンをクリックしてインストールを開始した</li>
+    <li><span class="checkbox">☐</span>インストール完了の画面が表示された</li>
+  </ul>
+
+  <h3>1-3. 起動確認</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>スタートメニューで「Codex」と検索してアプリが表示された</li>
+    <li><span class="checkbox">☐</span>Codexアプリをクリックして起動できた</li>
+    <li><span class="checkbox">☐</span>Codexのホーム画面（テキスト入力欄のある画面）が表示された</li>
+  </ul>
+
+  <!-- PHASE 2 -->
+  <div class="phase-header">✅ PHASE 2：OpenAI APIキーの取得と設定</div>
+
+  <h3>2-1. OpenAIアカウントとAPIキーの準備</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ブラウザで <code>platform.openai.com</code> にアクセスした</li>
+    <li><span class="checkbox">☐</span>OpenAIアカウントでログインした（アカウントがない場合は新規作成）</li>
+    <li><span class="checkbox">☐</span>右上のアカウントアイコンをクリックした</li>
+    <li><span class="checkbox">☐</span>メニューから「API Keys」を選択した</li>
+  </ul>
+
+  <h3>2-2. APIキーの発行</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>「Create new secret key」ボタンをクリックした</li>
+    <li><span class="checkbox">☐</span>APIキーの名前を入力した（例：「楽天アフィリエイト用」）</li>
+    <li><span class="checkbox">☐</span>「Create secret key」をクリックしてAPIキーを発行した</li>
+    <li><span class="checkbox">☐</span>発行されたAPIキー（<code>sk-proj-...</code>で始まる文字列）をコピーした</li>
+  </ul>
+
+  <div class="warning-box">
+    <strong>⚠️ 重要：この画面を閉じるとAPIキーは二度と表示されません</strong>
+  </div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>メモ帳にAPIキーを貼り付けて保存した（ファイル名例：<code>api_keys.txt</code>）</li>
+    <li><span class="checkbox">☐</span>APIキーを保存したメモ帳を安全な場所に置いた（デスクトップは避けてください）</li>
+  </ul>
+
+  <h3>2-3. CodexアプリへのAPIキー設定</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>Codexアプリを開いた</li>
+    <li><span class="checkbox">☐</span>左サイドバーの「Settings（設定）」アイコンをクリックした</li>
+    <li><span class="checkbox">☐</span>「API Key」の入力欄を見つけた</li>
+    <li><span class="checkbox">☐</span>メモ帳からAPIキーをコピーして入力欄に貼り付けた</li>
+    <li><span class="checkbox">☐</span>「Save（保存）」ボタンをクリックした</li>
+    <li><span class="checkbox">☐</span>設定が保存されたことを確認した（エラーメッセージが出ていない）</li>
+  </ul>
+
+  <h3>2-4. 推奨モデルの設定</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>Settings画面の「Model」項目を見つけた</li>
+    <li><span class="checkbox">☐</span>モデルを <code>gpt-4o-mini</code> に設定した（コストと性能のバランスが最適）</li>
+    <li><span class="checkbox">☐</span>Max Tokensを <code>2000</code> に設定した</li>
+    <li><span class="checkbox">☐</span>設定を保存した</li>
+  </ul>
+
+  <h3>2-5. コスト上限の設定（任意・推奨）</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span><code>platform.openai.com</code> のダッシュボードを開いた</li>
+    <li><span class="checkbox">☐</span>「Billing」→「Usage limits」を開いた</li>
+    <li><span class="checkbox">☐</span>「Hard limit」を月 <code>$5</code>（約750円）に設定した（予想外の過剰課金防止）</li>
+  </ul>
+
+  <!-- PHASE 3 -->
+  <div class="phase-header">✅ PHASE 3：楽天アフィリエイトAPIキーの取得</div>
+
+  <h3>3-1. 楽天アフィリエイトへのログイン確認</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ブラウザで <code>affiliate.rakuten.co.jp</code> にアクセスした</li>
+    <li><span class="checkbox">☐</span>楽天IDでログインできた</li>
+    <li><span class="checkbox">☐</span>ダッシュボードが表示された（審査済みの場合）</li>
+  </ul>
+  <p style="font-size:14px; color:#555;">楽天アフィリエイトに未登録の場合：</p>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>「アフィリエイト申請」から媒体登録を完了した</li>
+    <li><span class="checkbox">☐</span>審査通過メールを受信した</li>
+    <li><span class="checkbox">☐</span>ダッシュボードにアクセスできることを確認した</li>
+  </ul>
+
+  <h3>3-2. 楽天デベロッパーポータルでのAPIキー取得</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ブラウザで <code>webservice.rakuten.co.jp</code> にアクセスした</li>
+    <li><span class="checkbox">☐</span>楽天IDでログインした</li>
+    <li><span class="checkbox">☐</span>「アプリID発行」ボタンをクリックした</li>
+    <li><span class="checkbox">☐</span>アプリ名を入力した（例：「楽天アフィリエイト自動化ツール」）</li>
+    <li><span class="checkbox">☐</span>アプリURLを入力した</li>
+  </ul>
+
+  <div class="warning-box">
+    <strong>⚠️ Windowsユーザーが最もよくハマるポイント②：アプリURLの記入欄</strong>
+    「公開しているWebサービスのURL」と書いてありますが、個人の副業用途の場合は <strong>XのプロフィールページURL</strong> や <strong>noteのプロフィールURL</strong> を入力するだけで問題なく登録できます。Webサービスを持っていないから登録できない、は誤解です。
+  </div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>アプリURLを入力した（XプロフィールページURL等でOK）</li>
+    <li><span class="checkbox">☐</span>アプリの説明を入力した（例：「楽天アフィリエイトリンクを含む商品紹介記事の自動作成ツール」）</li>
+    <li><span class="checkbox">☐</span>利用規約を確認してチェックを入れた</li>
+    <li><span class="checkbox">☐</span>「規約に同意して新規アプリを作成する」をクリックした</li>
+    <li><span class="checkbox">☐</span>アプリ詳細ページが表示された</li>
+  </ul>
+
+  <h3>3-3. APIキーの保存</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>アプリ詳細ページで「アプリID」を確認した</li>
+    <li><span class="checkbox">☐</span>アプリ詳細ページで「アフィリエイトID」を確認した</li>
+    <li><span class="checkbox">☐</span>両方をメモ帳にコピーして保存した</li>
+  </ul>
+  <pre>保存形式（メモ帳に以下の形式でコピー）
+================================
+楽天アプリID: xxxxxxxxxx
+楽天アフィリエイトID: xxxx.xxxx.xxxx.xxxx
+OpenAI APIキー: sk-proj-xxxxxxxxxx
+================================</pre>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>メモ帳ファイルを安全な場所に保存した</li>
+  </ul>
+
+  <!-- PHASE 4 -->
+  <div class="phase-header">✅ PHASE 4：Codexの接続テスト</div>
+
+  <h3>4-1. テスト指示書の実行</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>Codexアプリを開いた</li>
+    <li><span class="checkbox">☐</span>特典①の「指示書01：接続テスト」をコピーした</li>
+    <li><span class="checkbox">☐</span><code>YOUR_APP_ID</code> を自分の楽天アプリIDに書き換えた</li>
+    <li><span class="checkbox">☐</span><code>YOUR_AFFILIATE_ID</code> を自分の楽天アフィリエイトIDに書き換えた</li>
+    <li><span class="checkbox">☐</span>Codexのテキスト入力欄に貼り付けた</li>
+    <li><span class="checkbox">☐</span>実行ボタンを押した</li>
+  </ul>
+
+  <h3>4-2. 結果の確認</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ターミナル欄に商品データが表示された</li>
+    <li><span class="checkbox">☐</span>商品名・価格が表示されている</li>
+    <li><span class="checkbox">☐</span>アフィリエイトURLが <code>https://hb.afl.rakuten.co.jp/</code> で始まっている</li>
+  </ul>
+  <p style="font-size:14px; color:#555;">アフィリエイトURLが通常のURLになっている場合：</p>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>指示書の <code>affiliateId</code> にアフィリエイトIDが正しく記載されているか確認した</li>
+    <li><span class="checkbox">☐</span>修正後に再実行した</li>
+  </ul>
+
+  <!-- PHASE 5 -->
+  <div class="phase-header">✅ PHASE 5：Pythonスクリプトのフォルダ整備</div>
+
+  <h3>5-1. 作業フォルダの作成</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>エクスプローラーを開いた</li>
+    <li><span class="checkbox">☐</span>Cドライブのユーザーフォルダ（<code>C:\Users\ユーザー名\</code>）に「楽天アフィリエイト」フォルダを作成した</li>
+    <li><span class="checkbox">☐</span>フォルダ内に <code>main.py</code>（指示書08で生成）を配置した</li>
+    <li><span class="checkbox">☐</span>フォルダ内に <code>keywords.txt</code>（1行1キーワードで記入）を配置した</li>
+    <li><span class="checkbox">☐</span>フォルダ内に <code>run_main.bat</code>（指示書09で生成）を配置した</li>
+  </ul>
+
+  <h3>5-2. keywords.txtの作成</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>メモ帳を開いた</li>
+    <li><span class="checkbox">☐</span>紹介したい商品のキーワードを1行1件で入力した</li>
+    <li><span class="checkbox">☐</span><code>keywords.txt</code> という名前で「楽天アフィリエイト」フォルダに保存した</li>
+  </ul>
+  <pre>keywords.txtの記入例
+ロボット掃除機
+電動歯ブラシ
+プロテイン
+ヨガマット
+空気清浄機</pre>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>main.pyを手動で1回実行してエラーが出ないことを確認した</li>
+  </ul>
+
+  <!-- PHASE 6 -->
+  <div class="phase-header">✅ PHASE 6：タスクスケジューラーの設定</div>
+
+  <h3>6-1. タスクスケジューラーを開く</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>スタートメニューで「タスクスケジューラ」と検索した</li>
+    <li><span class="checkbox">☐</span>タスクスケジューラが起動した</li>
+    <li><span class="checkbox">☐</span>右側の「基本タスクの作成」をクリックした</li>
+  </ul>
+
+  <h3>6-2. タスクの設定</h3>
+
+  <div class="warning-box">
+    <strong>⚠️ Windowsユーザーが最もよくハマるポイント③：タスクスケジューラーの設定</strong>
+  </div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>タスク名に「楽天アフィリエイト自動実行」と入力して「次へ」をクリックした</li>
+    <li><span class="checkbox">☐</span>トリガーで「毎日」を選択して「次へ」をクリックした</li>
+    <li><span class="checkbox">☐</span>開始時刻を <code>06:00:00</code> に設定した（PCが起動している時間帯に設定）</li>
+    <li><span class="checkbox">☐</span>操作で「プログラムの開始」を選択して「次へ」をクリックした</li>
+    <li><span class="checkbox">☐</span>「プログラム/スクリプト」欄に <code>run_main.bat</code> のフルパスを入力した</li>
+    <li><span class="checkbox">☐</span>「完了」をクリックした</li>
+    <li><span class="checkbox">☐</span>タスクの一覧に「楽天アフィリエイト自動実行」が追加されたことを確認した</li>
+  </ul>
+
+  <h3>6-3. スリープ設定の確認（重要）</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>スタートメニュー→「設定」→「電源とスリープ」を開いた</li>
+    <li><span class="checkbox">☐</span>スリープまでの時間が実行予定時刻（06:00）を考慮した設定になっているか確認した</li>
+  </ul>
+  <p style="font-size:14px; color:#555;">または：</p>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>タスクスケジューラーでタスクのプロパティを開いた</li>
+    <li><span class="checkbox">☐</span>「条件」タブを開いた</li>
+    <li><span class="checkbox">☐</span>「このタスクを実行するためにスリープを解除する」にチェックを入れた</li>
+    <li><span class="checkbox">☐</span>OKで保存した</li>
+  </ul>
+
+  <h3>6-4. 動作テスト</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>タスクスケジューラーで「楽天アフィリエイト自動実行」を右クリックした</li>
+    <li><span class="checkbox">☐</span>「実行」をクリックして手動テスト実行した</li>
+    <li><span class="checkbox">☐</span>エラーなく実行が完了した</li>
+    <li><span class="checkbox">☐</span>「楽天アフィリエイト」フォルダ内にCSVファイルとTXTファイルが生成されていることを確認した</li>
+    <li><span class="checkbox">☐</span>log_YYYYMMDD.txtに正常終了のログが記録されていることを確認した</li>
+  </ul>
+
+  <!-- 最終確認 -->
+  <div class="final-checklist">
+    <h3>✅ 最終確認チェックリスト</h3>
+    <ul class="checklist">
+      <li><span class="checkbox">☐</span>Codexアプリが起動できる</li>
+      <li><span class="checkbox">☐</span>楽天APIの接続テストが成功した</li>
+      <li><span class="checkbox">☐</span>main.pyが手動実行でエラーなく動作した</li>
+      <li><span class="checkbox">☐</span>タスクスケジューラーに自動実行タスクが設定されている</li>
+      <li><span class="checkbox">☐</span>keywords.txtにキーワードが入力されている</li>
+      <li><span class="checkbox">☐</span>APIキー・アプリID・アフィリエイトIDをメモ帳に保存した</li>
+    </ul>
+    <p style="margin-top:12px; font-size:14px; color:#555;">全項目にチェックが入ったら完了です！翌朝6時に自動実行が行われ、「楽天アフィリエイト」フォルダにファイルが生成されているか確認してください。</p>
+  </div>
+
+  <!-- FAQ -->
+  <h2>❓ よくある質問</h2>
+  <div class="faq-section">
+    <div class="faq-item">
+      <div class="faq-q">Q: タスクスケジューラーが「タスクは正常に完了しました」と表示されるのに、ファイルが生成されていない</div>
+      <div class="faq-a">A: <code>run_main.bat</code> 内のフォルダパスが間違っている可能性があります。バッチファイルをメモ帳で開いて、<code>main.py</code> のパスが正しいか確認してください。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Q: スリープ中に自動実行させたい</div>
+      <div class="faq-a">A: タスクのプロパティ→「条件」タブ→「このタスクを実行するためにスリープを解除する」にチェックを入れてください。ただしPCの電源が完全にオフの場合は実行されません。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Q: エラーが出てタスクが失敗している</div>
+      <div class="faq-a">A: <code>log_YYYYMMDD.txt</code> を開いてエラー内容を確認してください。エラー内容をCodexに貼り付けると修正コードを生成してくれます。</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  楽天×Codex 自動アフィリエイトシステム ｜ 特典② Windows環境構築チェックリスト
+</div>
+
+</body>
+</html>

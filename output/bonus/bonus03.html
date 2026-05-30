@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【特典③】Mac環境構築チェックリスト</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #f7f7f7;
+    color: #222;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .header {
+    background: linear-gradient(135deg, #e8602c 0%, #c94a1e 100%);
+    color: white;
+    padding: 32px 20px 28px;
+    text-align: center;
+  }
+  .header .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: clamp(18px, 4vw, 26px);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  .intro-box {
+    background: #fff8f5;
+    border-left: 4px solid #e8602c;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: #555;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c94a1e;
+    border-bottom: 2px solid #e8602c;
+    padding-bottom: 6px;
+    margin: 32px 0 16px;
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    margin: 20px 0 10px;
+    padding-left: 10px;
+    border-left: 3px solid #e8602c;
+  }
+  p { margin-bottom: 12px; }
+  .phase-header {
+    background: linear-gradient(90deg, #e8602c 0%, #f07c4a 100%);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 28px 0 14px;
+  }
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 16px;
+  }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    background: #fff;
+    border: 1px solid #eee;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .checklist li:hover { background: #fff8f5; }
+  .checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border: 2px solid #e8602c;
+    border-radius: 4px;
+    margin-top: 2px;
+    background: white;
+    font-size: 13px;
+  }
+  .warning-box {
+    background: #fff9e6;
+    border: 1px solid #f0c040;
+    border-left: 4px solid #f0a500;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .warning-box strong {
+    display: block;
+    color: #d4700a;
+    margin-bottom: 6px;
+  }
+  .warning-box ol { padding-left: 20px; margin-top: 6px; }
+  .warning-box ol li { margin-bottom: 4px; }
+  pre, code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 16px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.6;
+  }
+  code {
+    background: #f0ebe6;
+    color: #c94a1e;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  .cross-ref {
+    background: #f0f7ff;
+    border: 1px solid #b0d0ff;
+    border-left: 4px solid #3a80d2;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #2255aa;
+    margin: 12px 0 16px;
+  }
+  .final-checklist {
+    background: #fff;
+    border: 2px solid #e8602c;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 24px 0;
+  }
+  .final-checklist h3 {
+    border-left: none;
+    padding-left: 0;
+    color: #c94a1e;
+    margin-top: 0;
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  .faq-item {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .faq-q { font-weight: 700; color: #e8602c; margin-bottom: 8px; font-size: 14px; }
+  .faq-a { font-size: 14px; color: #444; }
+  .footer {
+    background: #333;
+    color: #ccc;
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">特典③ / Mac版</div>
+  <h1>Mac環境構築チェックリスト</h1>
+  <p>Codexアプリ導入〜初回実行までの全工程確認リスト（Mac版）</p>
+</div>
+
+<div class="container">
+
+  <div class="intro-box">
+    WindowsとMacの差分を中心に解説します。基本的な流れはWindows版（特典②）と同じです。
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase-header">✅ PHASE 1：Codexアプリのインストール</div>
+
+  <h3>1-1. ダウンロード</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ブラウザで <code>openai.com/codex</code> にアクセスした</li>
+    <li><span class="checkbox">☐</span>「Download for Mac」ボタンをクリックしてインストーラー（.dmgファイル）をダウンロードした</li>
+    <li><span class="checkbox">☐</span>ダウンロードフォルダにファイルが保存されていることを確認した</li>
+  </ul>
+
+  <h3>1-2. インストール実行</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ダウンロードした <code>.dmg</code> ファイルをダブルクリックして開いた</li>
+    <li><span class="checkbox">☐</span>CodexのアイコンをApplications（アプリケーション）フォルダにドラッグ＆ドロップした</li>
+    <li><span class="checkbox">☐</span>Applicationsフォルダを閉じた</li>
+  </ul>
+
+  <div class="warning-box">
+    <strong>⚠️ Macユーザーが最もよくハマるポイント①：初回起動時の警告</strong>
+    「"Codex"は開発元を確認できないため開けません」と表示された場合：
+    <br><br>
+    <strong>方法A（推奨）：</strong>
+    <ol>
+      <li>Appleメニュー →「システム設定」（macOS Ventura以降）または「システム環境設定」を開く</li>
+      <li>「プライバシーとセキュリティ」を開く</li>
+      <li>「セキュリティ」セクションに「Codexは…」という表示と「このまま開く」ボタンがある</li>
+      <li>「このまま開く」をクリック</li>
+      <li>管理者パスワードを入力する</li>
+    </ol>
+    <br>
+    <strong>方法B：</strong>
+    <ol>
+      <li>Finderでアプリケーションフォルダを開く</li>
+      <li>Codexアプリを右クリック（またはControlキー+クリック）</li>
+      <li>「開く」を選択</li>
+      <li>「開く」ボタンをクリック</li>
+    </ol>
+  </div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>上記のいずれかの方法でCodexアプリを開けた</li>
+    <li><span class="checkbox">☐</span>Codexのホーム画面が表示された</li>
+  </ul>
+
+  <!-- PHASE 2 -->
+  <div class="phase-header">✅ PHASE 2：OpenAI APIキーの取得と設定</div>
+
+  <div class="cross-ref">Windows版（特典②）のPHASE 2と同じ手順です。以下のチェックのみ確認してください。</div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span><code>platform.openai.com</code> でAPIキーを発行した</li>
+    <li><span class="checkbox">☐</span>APIキーを安全な場所に保存した（Macの場合はメモアプリまたはキーチェーンを推奨）</li>
+    <li><span class="checkbox">☐</span>CodexアプリにAPIキーを設定した</li>
+    <li><span class="checkbox">☐</span>モデルを <code>gpt-4o-mini</code> に設定した</li>
+  </ul>
+
+  <!-- PHASE 3 -->
+  <div class="phase-header">✅ PHASE 3：楽天アフィリエイトAPIキーの取得</div>
+
+  <div class="cross-ref">Windows版（特典②）のPHASE 3と同じ手順です。</div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>楽天アフィリエイトに登録・審査通過済み</li>
+    <li><span class="checkbox">☐</span><code>webservice.rakuten.co.jp</code> でアプリIDを取得した</li>
+    <li><span class="checkbox">☐</span>アプリIDとアフィリエイトIDをメモに保存した</li>
+  </ul>
+
+  <!-- PHASE 4 -->
+  <div class="phase-header">✅ PHASE 4：Codexの接続テスト</div>
+
+  <div class="cross-ref">Windows版（特典②）のPHASE 4と同じ手順です。</div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>特典①の「指示書01：接続テスト」を実行した</li>
+    <li><span class="checkbox">☐</span>楽天商品データが表示された</li>
+    <li><span class="checkbox">☐</span>アフィリエイトURLが正しく付与されている</li>
+  </ul>
+
+  <!-- PHASE 5 -->
+  <div class="phase-header">✅ PHASE 5：Pythonスクリプトのフォルダ整備（Mac版）</div>
+
+  <h3>5-1. 作業フォルダの作成</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>Finderを開いた</li>
+    <li><span class="checkbox">☐</span>ホームフォルダ（<code>/Users/ユーザー名/</code>）に「楽天アフィリエイト」フォルダを作成した</li>
+    <li><span class="checkbox">☐</span>フォルダ内に <code>main.py</code>（特典①の指示書08で生成）を配置した</li>
+    <li><span class="checkbox">☐</span>フォルダ内に <code>keywords.txt</code>（1行1キーワードで記入）を配置した</li>
+  </ul>
+
+  <h3>5-2. Pythonの確認</h3>
+
+  <div class="warning-box">
+    <strong>⚠️ Macユーザーが最もよくハマるポイント②：PythonのバージョンとPATH</strong>
+    macOS はデフォルトで Python 2.x がインストールされていることがあります。Python 3 が必要です。
+  </div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ターミナルを開いた（LaunchpadまたはSpotlightで「ターミナル」と検索）</li>
+    <li><span class="checkbox">☐</span><code>python3 --version</code> とコマンドを入力してEnterを押した</li>
+    <li><span class="checkbox">☐</span><code>Python 3.x.x</code> と表示された</li>
+  </ul>
+
+  <p style="font-size:14px; color:#555;">Python 3がインストールされていない場合：</p>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span><code>python.org</code> からPython 3の最新版をダウンロードしてインストールした</li>
+    <li><span class="checkbox">☐</span>または Codexに「Python 3をmacOSにインストールする方法を教えてください」と聞いてインストールした</li>
+    <li><span class="checkbox">☐</span>再度 <code>python3 --version</code> で確認した</li>
+  </ul>
+
+  <h3>5-3. 必要なライブラリのインストール</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ターミナルで以下のコマンドを実行した：</li>
+  </ul>
+  <pre>pip3 install requests openai pandas</pre>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>インストールが完了した（エラーが出た場合はCodexに貼り付けて対処）</li>
+  </ul>
+
+  <h3>5-4. main.pyの手動実行テスト</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ターミナルで以下のコマンドを実行した：</li>
+  </ul>
+  <pre>cd /Users/（ユーザー名）/楽天アフィリエイト
+python3 main.py</pre>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>エラーなく実行が完了した</li>
+    <li><span class="checkbox">☐</span>「楽天アフィリエイト」フォルダ内にCSVファイルとTXTファイルが生成された</li>
+  </ul>
+
+  <!-- PHASE 6 -->
+  <div class="phase-header">✅ PHASE 6：launchdによる自動実行の設定（Mac版）</div>
+
+  <p style="font-size:14px; color:#555; margin-bottom:12px;">Macでは「launchd」というOSビルトインの仕組みを使って毎日自動実行を設定します。</p>
+
+  <h3>6-1. plistファイルの生成</h3>
+  <p style="font-size:14px; color:#444; margin-bottom:8px;">Codexに以下の指示書を渡してplistファイルを生成してもらいます。</p>
+  <pre>【作業の目的】
+Macで毎日06:00にPythonスクリプトを自動実行するlaunchd設定ファイル（plist）を作成してください。
+
+【やってほしいこと】
+- 以下の設定でplistファイルを作成してください：
+  - Label: "com.rakutenaffiliate.daily"
+  - ProgramArguments: ["/usr/bin/python3", "/Users/（ユーザー名）/楽天アフィリエイト/main.py"]
+  - StartCalendarInterval: 毎日 Hour=6, Minute=0
+  - WorkingDirectory: "/Users/（ユーザー名）/楽天アフィリエイト"
+  - StandardOutPath: "/Users/（ユーザー名）/楽天アフィリエイト/launchd_out.log"
+  - StandardErrorPath: "/Users/（ユーザー名）/楽天アフィリエイト/launchd_err.log"
+- ファイル名: "com.rakutenaffiliate.daily.plist"
+- plistファイルをLaunchAgentsフォルダに配置するコマンドも出力してください
+- launchdに登録するコマンドも出力してください</pre>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>Codexがplistファイルを生成した</li>
+    <li><span class="checkbox">☐</span>plistファイルの内容に自分のユーザー名・パスが正しく記載されているか確認した</li>
+  </ul>
+
+  <h3>6-2. plistファイルの配置と登録</h3>
+
+  <div class="warning-box">
+    <strong>⚠️ Macユーザーが最もよくハマるポイント③：plistの配置場所</strong>
+    plistファイルは必ず <code>~/Library/LaunchAgents/</code> フォルダに配置する必要があります。このフォルダはFinderでは通常非表示です。ターミナルを使います。
+  </div>
+
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ターミナルを開いた</li>
+    <li><span class="checkbox">☐</span>以下のコマンドでplistファイルをLaunchAgentsに配置した：</li>
+  </ul>
+  <pre>cp /Users/（ユーザー名）/楽天アフィリエイト/com.rakutenaffiliate.daily.plist ~/Library/LaunchAgents/</pre>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>以下のコマンドでlaunchdに登録した：</li>
+  </ul>
+  <pre>launchctl load ~/Library/LaunchAgents/com.rakutenaffiliate.daily.plist</pre>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>エラーメッセージが出なかった</li>
+  </ul>
+
+  <h3>6-3. 動作テスト</h3>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>ターミナルで以下のコマンドを実行して手動テストをした：</li>
+  </ul>
+  <pre>launchctl start com.rakutenaffiliate.daily</pre>
+  <ul class="checklist">
+    <li><span class="checkbox">☐</span>「楽天アフィリエイト」フォルダ内にCSVファイルとTXTファイルが生成された</li>
+    <li><span class="checkbox">☐</span><code>launchd_out.log</code> に実行結果が記録されていた</li>
+  </ul>
+
+  <!-- plist サンプル -->
+  <h2>launchd 設定ファイルのサンプル</h2>
+  <p style="font-size:14px; color:#555; margin-bottom:8px;"><code>YOUR_USERNAME</code> を自分のMacのユーザー名に書き換えてください。</p>
+  <pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+    &lt;key&gt;Label&lt;/key&gt;
+    &lt;string&gt;com.rakutenaffiliate.daily&lt;/string&gt;
+
+    &lt;key&gt;ProgramArguments&lt;/key&gt;
+    &lt;array&gt;
+        &lt;string&gt;/usr/bin/python3&lt;/string&gt;
+        &lt;string&gt;/Users/YOUR_USERNAME/楽天アフィリエイト/main.py&lt;/string&gt;
+    &lt;/array&gt;
+
+    &lt;key&gt;WorkingDirectory&lt;/key&gt;
+    &lt;string&gt;/Users/YOUR_USERNAME/楽天アフィリエイト&lt;/string&gt;
+
+    &lt;key&gt;StartCalendarInterval&lt;/key&gt;
+    &lt;dict&gt;
+        &lt;key&gt;Hour&lt;/key&gt;
+        &lt;integer&gt;6&lt;/integer&gt;
+        &lt;key&gt;Minute&lt;/key&gt;
+        &lt;integer&gt;0&lt;/integer&gt;
+    &lt;/dict&gt;
+
+    &lt;key&gt;StandardOutPath&lt;/key&gt;
+    &lt;string&gt;/Users/YOUR_USERNAME/楽天アフィリエイト/launchd_out.log&lt;/string&gt;
+
+    &lt;key&gt;StandardErrorPath&lt;/key&gt;
+    &lt;string&gt;/Users/YOUR_USERNAME/楽天アフィリエイト/launchd_err.log&lt;/string&gt;
+
+    &lt;key&gt;RunAtLoad&lt;/key&gt;
+    &lt;false/&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;</pre>
+
+  <!-- 最終確認 -->
+  <div class="final-checklist">
+    <h3>✅ 最終確認チェックリスト</h3>
+    <ul class="checklist">
+      <li><span class="checkbox">☐</span>Codexアプリが起動できる</li>
+      <li><span class="checkbox">☐</span>楽天APIの接続テストが成功した</li>
+      <li><span class="checkbox">☐</span>Python 3がインストールされている</li>
+      <li><span class="checkbox">☐</span><code>pip3 install requests openai pandas</code> が完了している</li>
+      <li><span class="checkbox">☐</span>main.pyが手動実行でエラーなく動作した</li>
+      <li><span class="checkbox">☐</span>plistファイルがLaunchAgentsに配置されている</li>
+      <li><span class="checkbox">☐</span>launchdへの登録が完了している（エラーなし）</li>
+      <li><span class="checkbox">☐</span>手動テスト実行でファイルが生成されることを確認した</li>
+    </ul>
+  </div>
+
+  <!-- FAQ -->
+  <h2>❓ Macユーザーのよくある質問</h2>
+  <div class="faq-item">
+    <div class="faq-q">Q: <code>python3</code> コマンドが見つからないと言われる</div>
+    <div class="faq-a">A: Python 3がインストールされていない可能性があります。Codexに「macOSにPython 3をインストールする方法を教えてください」と聞いてインストールしてください。Homebrewを使う方法（<code>brew install python3</code>）が一般的です。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Q: plistを登録したが毎日実行されない</div>
+    <div class="faq-a">A: ターミナルで <code>launchctl list | grep rakuten</code> を実行して、登録されているか確認してください。表示されない場合はplistの配置とloadコマンドをやり直してください。Macがスリープ中の06:00は実行されません。スリープ設定を見直すか、実行時刻をMacが起動している時間帯に変更してください。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Q: plistを削除（登録解除）したい場合</div>
+    <div class="faq-a">A: 以下のコマンドを実行してください：
+    <pre style="margin-top:8px;">launchctl unload ~/Library/LaunchAgents/com.rakutenaffiliate.daily.plist
+rm ~/Library/LaunchAgents/com.rakutenaffiliate.daily.plist</pre></div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Q: <code>launchctl load</code> でエラーが出る</div>
+    <div class="faq-a">A: plistファイルの権限設定の問題かもしれません。以下のコマンドで権限を修正してください：
+    <pre style="margin-top:8px;">chmod 644 ~/Library/LaunchAgents/com.rakutenaffiliate.daily.plist</pre></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  楽天×Codex 自動アフィリエイトシステム ｜ 特典③ Mac環境構築チェックリスト
+</div>
+
+</body>
+</html>

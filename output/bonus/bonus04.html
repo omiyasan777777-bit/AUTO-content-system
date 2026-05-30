@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【特典④】ジャンル別・稼ぎやすい楽天商品カテゴリ一覧</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #f7f7f7;
+    color: #222;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .header {
+    background: linear-gradient(135deg, #e8602c 0%, #c94a1e 100%);
+    color: white;
+    padding: 32px 20px 28px;
+    text-align: center;
+  }
+  .header .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: clamp(18px, 4vw, 26px);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  .intro-box {
+    background: #fff8f5;
+    border-left: 4px solid #e8602c;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: #555;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c94a1e;
+    border-bottom: 2px solid #e8602c;
+    padding-bottom: 6px;
+    margin: 32px 0 16px;
+  }
+  p { margin-bottom: 12px; }
+  /* Rank banners */
+  .rank-banner {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 28px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .rank-s { background: linear-gradient(90deg, #e8602c 0%, #f07c4a 100%); color: white; }
+  .rank-a { background: linear-gradient(90deg, #d4700a 0%, #e8962c 100%); color: white; }
+  .rank-b { background: linear-gradient(90deg, #8b6914 0%, #b48a2a 100%); color: white; }
+  /* Genre cards */
+  .genre-card {
+    background: #fff;
+    border: 1px solid #e8e0da;
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .genre-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #e0d8d4;
+  }
+  .genre-card h3 span {
+    font-size: 13px;
+    background: #fff0eb;
+    color: #c94a1e;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+    font-weight: 600;
+  }
+  .keywords-box {
+    background: #f7f0eb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 10px;
+  }
+  .keywords-box strong { color: #c94a1e; }
+  .genre-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .stat-item {
+    background: #faf7f5;
+    border: 1px solid #ece5e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .stat-item .label { color: #999; font-size: 11px; display: block; margin-bottom: 2px; }
+  .stat-item .value { font-weight: 700; color: #333; }
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin: 16px 0;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  th {
+    background: #e8602c;
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #f0eae6;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #fdf9f7; }
+  /* Criteria table */
+  .criteria-table th:first-child { width: 100px; }
+  /* Calendar table */
+  .cal-table td:first-child { font-weight: 700; color: #e8602c; white-space: nowrap; }
+  /* Tips section */
+  .tips-section {
+    background: #fff;
+    border: 2px solid #e8602c;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 24px 0;
+  }
+  .tips-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #c94a1e;
+    margin-bottom: 14px;
+  }
+  .tip-item {
+    padding: 8px 0;
+    border-bottom: 1px dashed #f0e0d8;
+    font-size: 14px;
+  }
+  .tip-item:last-child { border-bottom: none; }
+  .bad-tag {
+    display: inline-block;
+    background: #ffe8e8;
+    color: #cc3333;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+  .good-tag {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+  pre, code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 16px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.6;
+  }
+  code {
+    background: #f0ebe6;
+    color: #c94a1e;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  .footer {
+    background: #333;
+    color: #ccc;
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">特典④ / ジャンル一覧</div>
+  <h1>ジャンル別・稼ぎやすい楽天商品カテゴリ一覧</h1>
+  <p>アフィリエイト単価が高いジャンル30選</p>
+</div>
+
+<div class="container">
+
+  <div class="intro-box">
+    このリストを参考に <code>keywords.txt</code> にキーワードを設定してください。
+    「高単価 × 高需要 × 季節性あり」の3条件を満たすジャンルが最も稼ぎやすいです。
+  </div>
+
+  <h2>稼ぎやすさの判断基準</h2>
+  <table class="criteria-table">
+    <thead>
+      <tr><th>条件</th><th>説明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>単価</strong></td><td>商品価格が高いほどアフィリ報酬も高くなる（楽天の報酬率は概ね1〜3%）</td></tr>
+      <tr><td><strong>需要</strong></td><td>楽天での検索数・購買意欲が高いジャンル</td></tr>
+      <tr><td><strong>競合</strong></td><td>競合の多さ（少ないほど上位表示しやすい）</td></tr>
+      <tr><td><strong>季節性</strong></td><td>季節・イベントに合わせた需要の波</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:14px; background:#fff8f5; padding:12px 16px; border-radius:8px; border-left:4px solid #e8602c;">
+    <strong>推奨キーワードの選び方：</strong><br>
+    ・単価3,000円以上の商品を扱うジャンルを優先する<br>
+    ・レビュー数100件以上の商品が多いジャンルは購買意欲が高い証拠<br>
+    ・今の季節・直近のイベントに合ったジャンルを優先的に設定する
+  </p>
+
+  <!-- Sランク -->
+  <div class="rank-banner rank-s">🥇 Sランク（最も稼ぎやすい）</div>
+
+  <div class="genre-card">
+    <h3>1. 美容家電 <span>Sランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> 美顔器 / ヘアドライヤー 速乾 / 電動洗顔ブラシ / 光美容器</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">5,000〜50,000円</span></div>
+      <div class="stat-item"><span class="label">報酬目安</span><span class="value">150〜1,500円/件</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">年間安定・母の日</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">「リフトアップ」「毛穴」「シミ対策」など悩みに特化したキーワードが高CVR</p>
+  </div>
+
+  <div class="genre-card">
+    <h3>2. ロボット掃除機・家電自動化 <span>Sランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> ロボット掃除機 / 全自動洗濯機 / 食洗機 工事不要 / スマートコンセント</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">10,000〜80,000円</span></div>
+      <div class="stat-item"><span class="label">報酬目安</span><span class="value">300〜2,400円/件</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">2〜4月 / 11〜12月</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">「工事不要」「一人暮らし向け」「静音」などの絞り込みキーワードが効く</p>
+  </div>
+
+  <div class="genre-card">
+    <h3>3. フィットネス・健康器具 <span>Sランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> ホームジム 器具 / プロテイン 国産 / ヨガマット 厚手 / 有酸素運動 器具</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">3,000〜30,000円</span></div>
+      <div class="stat-item"><span class="label">報酬目安</span><span class="value">90〜900円/件</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">年始・春</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">プロテインは消耗品なのでリピート購入が多い。レビュー数が多い商品を選ぶ</p>
+  </div>
+
+  <div class="genre-card">
+    <h3>4. 睡眠・寝具 <span>Sランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> マットレス 腰痛 / 枕 首こり / 掛け布団 洗える / アイマスク 遮光</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">5,000〜100,000円</span></div>
+      <div class="stat-item"><span class="label">報酬目安</span><span class="value">150〜3,000円/件</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">年間安定・3〜4月増</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">「腰痛」「肩こり」「安眠」などの悩みキーワードが高CVR</p>
+  </div>
+
+  <div class="genre-card">
+    <h3>5. 空気清浄機・加湿器 <span>Sランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> 空気清浄機 花粉 / 加湿器 静音 / サーキュレーター 首振り / 脱臭機</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">5,000〜50,000円</span></div>
+      <div class="stat-item"><span class="label">報酬目安</span><span class="value">150〜1,500円/件</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">2〜5月 / 10〜2月</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">季節の変わり目（1〜2月前）にキーワードを設定すると先行者利益を取れる</p>
+  </div>
+
+  <!-- Aランク -->
+  <div class="rank-banner rank-a">🥈 Aランク（安定して稼ぎやすい）</div>
+
+  <div class="genre-card">
+    <h3>6. ヘルスケア・サプリメント <span>Aランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> プラセンタ サプリ / コラーゲン 飲むタイプ / ルテイン サプリ / 葉酸 妊活</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">2,000〜10,000円</span></div>
+      <div class="stat-item"><span class="label">需要</span><span class="value">年間安定・リピート多</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">「初回限定」の商品は楽天アフィリエイト対象外のことがあるため確認が必要</p>
+  </div>
+
+  <div class="genre-card">
+    <h3>7. キッチン家電 <span>Aランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> ホットクック レシピ / 電気圧力鍋 一人暮らし / コーヒーメーカー 全自動 / 電動ミル</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">5,000〜40,000円</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">年始・母の日・クリスマス</span></div>
+    </div>
+  </div>
+
+  <div class="genre-card">
+    <h3>8. ベビー・マタニティ <span>Aランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> 抱っこ紐 新生児 / ベビーカー 軽量 / 哺乳瓶 消毒 / チャイルドシート</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">3,000〜80,000円</span></div>
+      <div class="stat-item"><span class="label">需要</span><span class="value">年間安定</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">ターゲットが明確なため購買意欲が高い。「安全性」「洗いやすさ」のキーワードが刺さる</p>
+  </div>
+
+  <div class="genre-card">
+    <h3>9. ペット用品 <span>Aランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> 猫 ケージ 大型 / ペット 自動給餌器 / 犬 ハーネス 小型犬 / ペット ドライヤー</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">3,000〜30,000円</span></div>
+      <div class="stat-item"><span class="label">需要</span><span class="value">年間安定・市場拡大中</span></div>
+    </div>
+    <p style="font-size:13px; color:#666; margin-top:10px;">「猫向け」「犬向け」「大型犬向け」など種類・サイズを絞ったキーワードが効く</p>
+  </div>
+
+  <div class="genre-card">
+    <h3>10. カメラ・撮影機材 <span>Aランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> ミラーレス 初心者 / 三脚 軽量 / リングライト / アクションカメラ 防水</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">5,000〜200,000円</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">旅行・卒業入学シーズン</span></div>
+    </div>
+  </div>
+
+  <div class="genre-card">
+    <h3>11. ゲーミング・PC周辺機器 <span>Aランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> ゲーミングチェア / ゲーミングマウス 有線 / モニター アーム / メカニカルキーボード</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">3,000〜50,000円</span></div>
+      <div class="stat-item"><span class="label">需要</span><span class="value">年間安定・ゲーム新作連動</span></div>
+    </div>
+  </div>
+
+  <div class="genre-card">
+    <h3>12. アウトドア用品 <span>Aランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> テント ソロキャンプ / 焚き火台 コンパクト / 登山靴 防水 / ポータブル電源</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">3,000〜100,000円</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">3〜5月 / 9〜11月</span></div>
+    </div>
+  </div>
+
+  <!-- Bランク -->
+  <div class="rank-banner rank-b">🥉 Bランク（安定した稼ぎが見込める）</div>
+
+  <div class="genre-card">
+    <h3>13. スキンケア・コスメ <span>Bランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> 化粧水 毛穴 / 日焼け止め SPF50 / クレンジング オイル / 保湿クリーム 敏感肌</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">1,000〜10,000円</span></div>
+      <div class="stat-item"><span class="label">需要</span><span class="value">年間安定・季節変わり目</span></div>
+    </div>
+  </div>
+
+  <div class="genre-card">
+    <h3>14. 靴・バッグ <span>Bランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> スニーカー 軽量 メンズ / トートバッグ 大容量 / ビジネスシューズ 幅広 / バックパック 防水</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">3,000〜20,000円</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">春・秋の衣替え・年始セール</span></div>
+    </div>
+  </div>
+
+  <div class="genre-card">
+    <h3>15. 収納・インテリア <span>Bランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> 収納ケース 積み重ね / 突っ張り棒 強力 / ワイヤーシェルフ / チェスト 引き出し</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">1,000〜20,000円</span></div>
+      <div class="stat-item"><span class="label">需要ピーク</span><span class="value">3〜4月・年末</span></div>
+    </div>
+  </div>
+
+  <div class="genre-card">
+    <h3>16. 防災用品 <span>Bランク</span></h3>
+    <div class="keywords-box"><strong>推奨キーワード例：</strong> 防災セット 2人用 / 非常食 5年保存 / 携帯ラジオ 手回し / 防災リュック</div>
+    <div class="genre-stats">
+      <div class="stat-item"><span class="label">単価</span><span class="value">3,000〜30,000円</span></div>
+      <div class="stat-item"><span class="label">需要</span><span class="value">大規模災害後に急増</span></div>
+    </div>
+  </div>
+
+  <div class="genre-card">
+    <h3>17〜20. その他注目ジャンル <span>Bランク</span></h3>
+    <table style="margin-top:10px;">
+      <thead><tr><th>ジャンル</th><th>推奨キーワード例</th><th>単価</th></tr></thead>
+      <tbody>
+        <tr><td>文房具・事務用品</td><td>ボールペン まとめ買い / 電卓 関数</td><td>500〜5,000円</td></tr>
+        <tr><td>キッズ・おもちゃ</td><td>知育玩具 2歳 / プログラミング おもちゃ</td><td>2,000〜15,000円</td></tr>
+        <tr><td>旅行・トラベル用品</td><td>スーツケース 軽量 Lサイズ / ネックピロー</td><td>2,000〜30,000円</td></tr>
+        <tr><td>楽器・音楽機材</td><td>電子ピアノ 88鍵 初心者 / ヘッドフォン</td><td>5,000〜100,000円</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 季節別カレンダー -->
+  <h2>季節別・おすすめキーワードカレンダー</h2>
+  <table class="cal-table">
+    <thead><tr><th>月</th><th>主な需要</th><th>おすすめキーワード</th></tr></thead>
+    <tbody>
+      <tr><td>1月</td><td>新年・ダイエット初め</td><td>プロテイン・フィットネス器具・電気圧力鍋</td></tr>
+      <tr><td>2月</td><td>バレンタイン・花粉対策開始</td><td>スイーツ材料・空気清浄機・マスク</td></tr>
+      <tr><td>3月</td><td>引越し・新生活準備</td><td>家電・寝具・収納用品</td></tr>
+      <tr><td>4月</td><td>新生活スタート・GW準備</td><td>PC周辺機器・アウトドア・旅行用品</td></tr>
+      <tr><td>5月</td><td>母の日・紫外線対策</td><td>美容家電・日焼け止め・ギフト</td></tr>
+      <tr><td>6月</td><td>梅雨対策・父の日</td><td>除湿器・レインウェア・ギフト</td></tr>
+      <tr><td>7月</td><td>夏休み・帰省準備</td><td>扇風機・アウトドア・旅行用品</td></tr>
+      <tr><td>8月</td><td>夏バテ対策・お盆</td><td>健康食品・日除け・ポータブル電源</td></tr>
+      <tr><td>9月</td><td>秋キャンプ・衣替え</td><td>アウトドア・収納ケース・掃除機</td></tr>
+      <tr><td>10月</td><td>ハロウィン・冬準備開始</td><td>コスプレ・加湿器・暖房器具</td></tr>
+      <tr><td>11月</td><td>ブラックフライデー・冬準備</td><td>家電全般・スポーツ用品</td></tr>
+      <tr><td>12月</td><td>クリスマス・年末大掃除</td><td>おもちゃ・ロボット掃除機・ギフト全般</td></tr>
+    </tbody>
+  </table>
+
+  <!-- キーワード設定のコツ -->
+  <div class="tips-section">
+    <h3>💡 キーワード設定のコツ</h3>
+
+    <p style="font-size:14px; font-weight:700; color:#cc3333; margin-bottom:8px;">やってはいけないキーワード</p>
+    <div class="tip-item"><span class="bad-tag">NG</span><code>服</code>・<code>靴</code>・<code>バッグ</code> など広すぎるワード（競合が多すぎる）</div>
+    <div class="tip-item"><span class="bad-tag">NG</span><code>安い</code>・<code>激安</code>・<code>最安値</code> など価格訴求ワード（購買意欲が低い層が来る）</div>
+
+    <p style="font-size:14px; font-weight:700; color:#2e7d32; margin: 14px 0 8px;">効果的なキーワードの型</p>
+    <div class="tip-item"><span class="good-tag">OK</span><code>[商品カテゴリ] + [ターゲット属性]</code> 例：<code>電動歯ブラシ 子供用</code></div>
+    <div class="tip-item"><span class="good-tag">OK</span><code>[商品カテゴリ] + [スペック]</code> 例：<code>空気清浄機 8畳</code></div>
+    <div class="tip-item"><span class="good-tag">OK</span><code>[商品カテゴリ] + [悩み解決]</code> 例：<code>マットレス 腰痛 低反発</code></div>
+    <div class="tip-item"><span class="good-tag">OK</span><code>[商品カテゴリ] + [シーン]</code> 例：<code>プロテイン 女性 ダイエット</code></div>
+  </div>
+
+  <h2>keywords.txtへの設定例（テンプレート）</h2>
+  <pre># 通年高需要ジャンル
+ロボット掃除機
+電動歯ブラシ
+ホームジム 器具
+空気清浄機 8畳
+
+# 季節対応（月ごとに入れ替え）
+空気清浄機 花粉    # 2〜5月向け
+# 除湿器 衣類乾燥  # 6〜8月向け（コメントアウトして季節で切り替え）
+
+# 高単価狙い
+美顔器 リフトアップ
+マットレス 腰痛
+ペット 自動給餌器</pre>
+
+</div>
+
+<div class="footer">
+  楽天×Codex 自動アフィリエイトシステム ｜ 特典④ ジャンル別・稼ぎやすい楽天商品カテゴリ一覧
+</div>
+
+</body>
+</html>
