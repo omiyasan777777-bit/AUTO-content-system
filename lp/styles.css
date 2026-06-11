@@ -1,0 +1,822 @@
+/* ============================================================
+   Jizo Papa LP — styles.css
+   配色:
+     Primary   #4A5A46  深い苔緑
+     Secondary #D8C7A3  砂岩・古寺の土色
+     Accent    #B86B45  夕焼け前の銅色（CTAのみ）
+     Background #F5F1E8  和紙の生成り
+     Text      #26231F  墨に近い黒
+   ============================================================ */
+
+/* ---------- Reset & Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-primary:    #4A5A46;
+  --color-secondary:  #D8C7A3;
+  --color-accent:     #B86B45;
+  --color-bg:         #F5F1E8;
+  --color-bg-moss:    #3A4A38;
+  --color-bg-paper:   #EDE8DC;
+  --color-text:       #26231F;
+  --color-text-light: #6B6460;
+  --color-text-white: #F0EDE5;
+  --color-border:     #C8BC9E;
+
+  --font-serif:  'Noto Serif JP', 'Yu Mincho', '游明朝', serif;
+  --font-sans:   'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+
+  --spacing-xs:  0.5rem;
+  --spacing-sm:  1rem;
+  --spacing-md:  2rem;
+  --spacing-lg:  4rem;
+  --spacing-xl:  7rem;
+  --spacing-2xl: 10rem;
+
+  --max-width:        1100px;
+  --max-width-narrow: 680px;
+
+  --transition-slow: 0.8s ease;
+  --transition-base: 0.4s ease;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  line-height: 2;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* ---------- Focus ---------- */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* ---------- Utility ---------- */
+.sp-only { display: none; }
+
+.container {
+  width: 90%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+}
+
+.container--narrow {
+  max-width: var(--max-width-narrow);
+}
+
+.section {
+  padding-block: var(--spacing-xl);
+}
+
+.section--moss {
+  background-color: var(--color-bg-moss);
+}
+
+.section--paper {
+  background-color: var(--color-bg-paper);
+}
+
+/* ---------- Fade-up animation ---------- */
+.fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+
+.fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Section heading ---------- */
+.section-heading {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  line-height: 1.75;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-primary);
+}
+
+.section-heading--light {
+  color: var(--color-text-white);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block;
+  padding: 0.9em 2.2em;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity var(--transition-base), transform var(--transition-base);
+  text-align: center;
+}
+
+.btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+  opacity: 0.75;
+}
+
+.btn--primary {
+  background-color: var(--color-accent);
+  color: #fff;
+  border: 2px solid transparent;
+}
+
+.btn--large {
+  padding: 1.1em 2.8em;
+  font-size: 1.05rem;
+}
+
+.btn--header {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+  padding: 0.5em 1.4em;
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: rgba(245, 241, 232, 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--color-border);
+  padding-block: 0.8rem;
+}
+
+.header-inner {
+  width: 90%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
+}
+
+/* ============================================================
+   SECTION 1: HERO
+   ============================================================ */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding-top: 60px; /* header分 */
+}
+
+/* CSSで朝靄・石畳の参道の世界観を再現 */
+.hero__visual {
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-primary);
+  /* 石畳の参道を想起させるグラデーション */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 70% 100%, #2C3A2A 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 60% 40%, #4A5A46 0%, transparent 60%),
+    linear-gradient(180deg, #7A8F76 0%, #4A5A46 40%, #2C3A2A 100%);
+}
+
+/* 霧・朝靄の疑似表現 */
+.hero__mist {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 100% 50% at 50% 20%, rgba(245,241,232,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 30% 60%, rgba(216,199,163,0.15) 0%, transparent 50%);
+  /* ノイズテクスチャ（SVGフィルタ代用）*/
+  filter: blur(0.5px);
+}
+
+/* 石畳の道の奥行き表現 */
+.hero__path {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 70%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(58, 50, 42, 0.3) 30%,
+    rgba(38, 35, 31, 0.6) 100%
+  );
+  clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
+}
+
+.hero__content {
+  position: relative;
+  z-index: 2;
+  width: 90%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-block: var(--spacing-xl);
+  max-width: 520px;
+  margin-left: max(5%, calc(50vw - 550px + 5%));
+}
+
+.hero__eyebrow {
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  letter-spacing: 0.25em;
+  color: var(--color-secondary);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.hero__heading {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(2.2rem, 7vw, 3.6rem);
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  color: #fff;
+  margin-bottom: var(--spacing-md);
+}
+
+.hero__sub {
+  font-size: 0.95rem;
+  line-height: 2.1;
+  color: rgba(240, 237, 229, 0.85);
+  margin-bottom: var(--spacing-lg);
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   SECTION 2: EMPATHY
+   ============================================================ */
+.empathy {
+  text-align: left;
+}
+
+.empathy__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.empathy__body p {
+  font-size: 1.05rem;
+  line-height: 2.2;
+  color: var(--color-text);
+}
+
+.empathy__close {
+  margin-top: var(--spacing-md);
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  letter-spacing: 0.08em;
+  border-left: 2px solid var(--color-secondary);
+  padding-left: 1rem;
+}
+
+/* ============================================================
+   SECTION 3: REFRAME
+   ============================================================ */
+.reframe {
+  text-align: left;
+}
+
+.reframe__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.reframe__body p {
+  font-size: 1rem;
+  line-height: 2.2;
+  color: rgba(240, 237, 229, 0.88);
+}
+
+/* ============================================================
+   SECTION 4: ABOUT
+   ============================================================ */
+.about__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+  align-items: center;
+}
+
+.about__label {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--color-accent);
+  border-bottom: 1px solid var(--color-accent);
+  padding-bottom: 0.2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.about__text .section-heading {
+  margin-bottom: var(--spacing-md);
+}
+
+.about__desc {
+  font-size: 0.95rem;
+  line-height: 2.1;
+  color: var(--color-text);
+  margin-bottom: 0.8rem;
+}
+
+/* 地蔵を連想させる丸みのある石のCSSアート */
+.about__visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.about__stone {
+  width: 200px;
+  height: 260px;
+  background: radial-gradient(
+    ellipse at 40% 35%,
+    #8A9E84 0%,
+    #5A6E56 35%,
+    #3A4A38 70%,
+    #2C3828 100%
+  );
+  border-radius: 50% 50% 45% 45% / 55% 55% 45% 45%;
+  position: relative;
+  box-shadow:
+    inset -20px -30px 60px rgba(0,0,0,0.3),
+    inset 10px 15px 40px rgba(255,255,255,0.08);
+}
+
+/* 苔の質感：疑似要素 */
+.about__stone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: radial-gradient(
+    circle at 30% 30%,
+    rgba(130, 160, 120, 0.4) 0%,
+    transparent 50%
+  );
+}
+
+/* ============================================================
+   SECTION 5: WORLDVIEW（見せ場）
+   ============================================================ */
+.worldview {
+  position: relative;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* 石畳の道・朝靄のCSSビジュアル */
+.worldview__bg {
+  position: absolute;
+  inset: 0;
+  background-color: #1E2A1C;
+  background-image:
+    /* 霧の層 */
+    radial-gradient(ellipse 120% 40% at 50% 0%, rgba(90, 100, 80, 0.6) 0%, transparent 60%),
+    /* 光のすじ */
+    radial-gradient(ellipse 40% 80% at 50% 10%, rgba(216, 199, 163, 0.12) 0%, transparent 50%),
+    /* 奥の明るさ */
+    radial-gradient(ellipse 60% 50% at 50% 20%, rgba(180, 200, 160, 0.2) 0%, transparent 60%),
+    /* 地面 */
+    linear-gradient(180deg, #2E3E2C 0%, #1A2218 60%, #111810 100%);
+}
+
+/* 石畳のパターン */
+.worldview__bg::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(255,255,255,0.03) 28px,
+      rgba(255,255,255,0.03) 30px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 38px,
+      rgba(255,255,255,0.025) 38px,
+      rgba(255,255,255,0.025) 40px
+    );
+  /* 道の形 */
+  clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+}
+
+/* 霧のオーバーレイ */
+.worldview__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 100% 30% at 50% 25%,
+    rgba(216, 199, 163, 0.08) 0%,
+    transparent 70%
+  );
+}
+
+.worldview__content {
+  position: relative;
+  z-index: 2;
+  width: 90%;
+  max-width: var(--max-width-narrow);
+  margin-inline: auto;
+  text-align: left;
+  padding-block: var(--spacing-2xl);
+}
+
+.worldview__sub {
+  font-family: var(--font-serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  color: var(--color-secondary);
+  margin-bottom: var(--spacing-md);
+  opacity: 0.8;
+}
+
+.worldview__heading {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  line-height: 1.6;
+  letter-spacing: 0.12em;
+  color: #fff;
+  margin-bottom: var(--spacing-lg);
+}
+
+.worldview__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.worldview__body p {
+  font-size: 1rem;
+  line-height: 2.3;
+  color: rgba(240, 237, 229, 0.8);
+}
+
+/* ============================================================
+   SECTION 6: BENEFITS
+   ============================================================ */
+.benefits__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.benefits__item {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.benefits__item:last-child {
+  border-bottom: none;
+}
+
+/* 石を模した丸いマーカー */
+.benefits__mark {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  margin-top: 0.7rem;
+  opacity: 0.6;
+}
+
+.benefits__title {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  color: var(--color-primary);
+  margin-bottom: 0.4rem;
+}
+
+.benefits__item p {
+  font-size: 0.9rem;
+  line-height: 1.9;
+  color: var(--color-text-light);
+}
+
+.benefits__cta {
+  text-align: center;
+  padding-top: var(--spacing-sm);
+}
+
+.benefits__note {
+  margin-top: var(--spacing-sm);
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   SECTION 7: FAQ
+   ============================================================ */
+.faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.faq__item {
+  padding-block: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.faq__item:first-child {
+  border-top: 1px solid var(--color-border);
+}
+
+.faq__q {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: var(--color-primary);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.6rem;
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.faq__q::before {
+  content: 'Q';
+  position: absolute;
+  left: 0;
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  font-family: var(--font-serif);
+  top: 0.1em;
+}
+
+.faq__a {
+  font-size: 0.9rem;
+  line-height: 2;
+  color: var(--color-text-light);
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.faq__a::before {
+  content: 'A';
+  position: absolute;
+  left: 0;
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-family: var(--font-serif);
+  top: 0.15em;
+  opacity: 0.6;
+}
+
+/* ============================================================
+   SECTION 8: FINAL CTA
+   ============================================================ */
+.final-cta {
+  text-align: center;
+  background-color: var(--color-bg);
+}
+
+.final-cta__heading {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(1.4rem, 4.5vw, 2rem);
+  line-height: 1.8;
+  letter-spacing: 0.1em;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.final-cta__sub {
+  font-size: 0.95rem;
+  line-height: 2.1;
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-lg);
+}
+
+.final-cta__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.final-cta__note {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  letter-spacing: 0.08em;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.site-footer {
+  background-color: var(--color-primary);
+  padding-block: var(--spacing-lg);
+}
+
+.footer-inner {
+  width: 90%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.footer-logo {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+  color: var(--color-secondary);
+}
+
+.footer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem 1.5rem;
+}
+
+.footer-nav a {
+  font-size: 0.75rem;
+  color: rgba(216, 199, 163, 0.65);
+  letter-spacing: 0.04em;
+  transition: opacity var(--transition-base);
+}
+
+.footer-nav a:hover {
+  opacity: 0.9;
+  text-decoration: underline;
+}
+
+.footer-copy {
+  font-size: 0.7rem;
+  color: rgba(216, 199, 163, 0.4);
+  letter-spacing: 0.06em;
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile first
+   ============================================================ */
+@media (max-width: 768px) {
+  .sp-only { display: inline; }
+
+  .section {
+    padding-block: var(--spacing-lg);
+  }
+
+  /* Hero */
+  .hero {
+    align-items: flex-end;
+    padding-bottom: var(--spacing-xl);
+  }
+
+  .hero__content {
+    margin-left: 5%;
+    margin-right: 5%;
+    width: 90%;
+    padding-block: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .hero__heading {
+    font-size: clamp(2rem, 9vw, 2.8rem);
+  }
+
+  /* About */
+  .about__inner {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .about__visual {
+    order: -1;
+  }
+
+  .about__stone {
+    width: 140px;
+    height: 180px;
+  }
+
+  /* Worldview */
+  .worldview {
+    min-height: 70vh;
+  }
+
+  .worldview__content {
+    padding-block: var(--spacing-xl);
+  }
+
+  .worldview__heading {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+  }
+
+  /* FAQ */
+  .faq__q,
+  .faq__a {
+    padding-left: 1.4rem;
+  }
+
+  /* Header */
+  .btn--header {
+    font-size: 0.78rem;
+    padding: 0.45em 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero__heading {
+    font-size: 2rem;
+  }
+
+  .worldview__heading {
+    font-size: 1.7rem;
+  }
+
+  .btn--primary {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .btn--large {
+    font-size: 0.98rem;
+    padding: 1em 2em;
+  }
+}
