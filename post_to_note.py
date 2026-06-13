@@ -130,6 +130,74 @@ def extract_title(output_dir: Path) -> str:
     return ""
 
 
+def normalize_headings(text: str) -> str:
+    """見出しをnoteの2階層（大見出し=## / 小見出し=###）に正規化する。
+
+    noteのエディタは見出しが2種類（大見出し・小見出し）しかないため、
+    Markdownの#〜######を確実に2階層へマッピングする。
+      - H1〜H2（# / ##）→ 大見出し（##）
+      - H3以下（### 〜）→ 小見出し（###）
+    コードフェンス（```）内の # はコメントの可能性があるため変換しない。
+    """
+    lines = text.split("\n")
+    result = []
+    in_fence = False
+    for line in lines:
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            result.append(line)
+            continue
+        if not in_fence:
+            m = re.match(r"^(#{1,6})\s+(.*)$", line)
+            if m:
+                level = len(m.group(1))
+                prefix = "## " if level <= 2 else "### "
+                result.append(prefix + m.group(2))
+                continue
+        result.append(line)
+    return "\n".join(result)
+
+
+def convert_tables_to_lists(text: str) -> str:
+    """Markdownの表を箇条書きに変換（noteは表に対応していないため）"""
+    lines = text.split("\n")
+    result = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        # 表の開始判定: |で始まり、次行が区切り行（|---|---|）
+        if (
+            stripped.startswith("|")
+            and i + 1 < len(lines)
+            and re.match(r"^\|[\s:|-]+\|$", lines[i + 1].strip())
+        ):
+            headers = [c.strip() for c in stripped.strip("|").split("|")]
+            i += 2  # ヘッダー行 + 区切り行をスキップ
+            rows = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+                rows.append(cells)
+                i += 1
+            # 箇条書きへ変換
+            for cells in rows:
+                first = cells[0] if cells else ""
+                rest = cells[1:]
+                if len(headers) <= 2 and len(rest) == 1:
+                    # 2列の表 → 「・項目: 説明」
+                    result.append(f"・{first}: {rest[0]}")
+                else:
+                    result.append(f"■ {first}")
+                    for h, c in zip(headers[1:], rest):
+                        if c:
+                            result.append(f"・{h}: {c}" if h else f"・{c}")
+                result.append("")
+            continue
+        result.append(line)
+        i += 1
+    return "\n".join(result)
+
+
 def build_article(output_dir: Path) -> str:
     """セールスレター + 有料部分を結合"""
     letter_path = output_dir / "05_sales_letter.md"
@@ -159,6 +227,10 @@ def build_article(output_dir: Path) -> str:
         letter = "\n".join(lines)
 
     combined = f"{letter}\n\n---\n\n{content}"
+    # noteは表非対応のため、残っている表は箇条書きに変換
+    combined = convert_tables_to_lists(combined)
+    # noteの見出しは大見出し/小見出しの2階層のみ。確実にマッピングする
+    combined = normalize_headings(combined)
     return combined
 
 
@@ -212,10 +284,11 @@ def input_body(driver, body: str) -> bool:
             print("[ERROR] 本文入力欄が見つかりません")
             return False
 
-        # クリップボード経由でペースト
+        # クリップボード経由でペースト（Mac は Command+V、それ以外は Ctrl+V）
+        paste_key = Keys.COMMAND if sys.platform == "darwin" else Keys.CONTROL
         pyperclip.copy(body)
         ActionChains(driver).click(editor).pause(0.5).perform()
-        ActionChains(driver).key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
+        ActionChains(driver).key_down(paste_key).send_keys("v").key_up(paste_key).perform()
         time.sleep(2)
 
         print(f"[OK] 本文入力: {len(body):,}文字")
