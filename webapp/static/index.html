@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AUTO-content-system</title>
+<style>
+  :root {
+    /* ニューモーフィズム基調（緑→青→紫） */
+    --bg: #e7eaf0;
+    --text: #545c70;
+    --heading: #3c4357;
+    --muted: #969cb0;
+    --light: #ffffff;                 /* 左上のハイライト */
+    --dark: #c0c6d4;                  /* 右下の影 */
+    --g1: #27cf93;                    /* 緑 */
+    --g2: #2f9be0;                    /* 青 */
+    --g3: #6d6fc9;                    /* 紫 */
+    --accent: var(--g1);
+    --grad: linear-gradient(135deg, var(--g1), var(--g2));
+    --grad3: linear-gradient(135deg, var(--g1) 0%, var(--g2) 55%, var(--g3) 100%);
+    --radius: 22px;
+    --radius-sm: 14px;
+    /* 凸（浮き出し） */
+    --nm-out: -6px -6px 13px var(--light), 7px 7px 16px var(--dark);
+    --nm-out-sm: -3px -3px 7px var(--light), 4px 4px 10px var(--dark);
+    /* 凹（押し込み） */
+    --nm-in: inset -3px -3px 7px var(--light), inset 4px 4px 9px var(--dark);
+    --nm-in-deep: inset -4px -4px 9px var(--light), inset 5px 5px 11px var(--dark);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", -apple-system, sans-serif;
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  header {
+    position: relative;
+    z-index: 5;
+    padding: 14px 20px 2px;
+    background: var(--bg);
+    box-shadow: 0 6px 14px rgba(170,178,196,0.35);
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+  }
+  header h1 { font-size: 16px; font-weight: 800; letter-spacing: .2px; color: var(--heading); }
+  header .badge {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg);
+    border-radius: 999px;
+    padding: 4px 12px;
+    box-shadow: var(--nm-in);
+  }
+  .spacer { flex: 1; }
+  #model-select, #mode-select, #letter-select {
+    font-size: 12px;
+    padding: 8px 13px;
+    border: none;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+    font-family: inherit;
+    box-shadow: var(--nm-out-sm);
+    transition: box-shadow .15s;
+  }
+  #model-select:hover, #mode-select:hover, #letter-select:hover { box-shadow: var(--nm-out); }
+  #model-select:focus, #mode-select:focus, #letter-select:focus { box-shadow: var(--nm-in); }
+  #mode-select.danger { color: #d6584b; font-weight: 700; }
+
+  /* ===== セッションタブ ===== */
+  #tabbar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding: 4px 2px 14px;
+  }
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px 8px 16px;
+    font-size: 12.5px;
+    background: var(--bg);
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--muted);
+    max-width: 210px;
+    box-shadow: var(--nm-out-sm);
+    transition: box-shadow .15s, color .15s, transform .12s;
+  }
+  .tab:hover { transform: translateY(-1px); box-shadow: var(--nm-out); color: var(--text); }
+  .tab.active {
+    background: var(--grad);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.45);
+  }
+  .tab .title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+  .tab .close {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 50%;
+    opacity: .75;
+  }
+  .tab .close:hover { background: rgba(255,255,255,.3); opacity: 1; }
+  .tab.add {
+    padding: 8px 15px;
+    font-weight: 800;
+    color: var(--g2);
+  }
+  .tab.edit {
+    padding: 8px 15px;
+    font-weight: 800;
+    color: var(--g3);
+  }
+
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 26px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .msg {
+    max-width: 84%;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    line-height: 1.78;
+    font-size: 14px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    animation: rise .22s ease both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--grad);
+    color: #fff;
+    border-bottom-right-radius: 7px;
+    box-shadow: -3px -3px 7px var(--light), 5px 5px 14px rgba(47,155,224,0.40);
+  }
+  .msg.assistant {
+    align-self: flex-start;
+    background: var(--bg);
+    color: var(--text);
+    border-bottom-left-radius: 7px;
+    box-shadow: var(--nm-out);
+  }
+  .msg.assistant b { color: var(--g2); }
+  .msg.assistant pre {
+    background: var(--bg);
+    color: var(--heading);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    overflow-x: auto;
+    font-family: "SFMono-Regular", "Consolas", "Courier New", monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    margin: 9px 0;
+    white-space: pre;
+    box-shadow: var(--nm-in);
+  }
+  .msg.assistant code {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-family: "SFMono-Regular", "Consolas", monospace;
+    font-size: 13px;
+    box-shadow: var(--nm-in);
+  }
+  .msg.assistant pre code { background: none; padding: 0; box-shadow: none; }
+  .status {
+    align-self: flex-start;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 9px 15px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--bg);
+    border-radius: 999px;
+    box-shadow: var(--nm-out-sm);
+  }
+  .status .dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--grad);
+    box-shadow: 0 0 0 0 rgba(39,207,147,0.5);
+    animation: pulse 1.3s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(39,207,147,0.45); }
+    70% { box-shadow: 0 0 0 7px rgba(39,207,147,0); }
+    100% { box-shadow: 0 0 0 0 rgba(39,207,147,0); }
+  }
+
+  #quickbar {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px 12px;
+    display: flex;
+    gap: 11px;
+    flex-wrap: wrap;
+  }
+  #quickbar button {
+    font-size: 12.5px;
+    padding: 9px 17px;
+    border: none;
+    background: var(--bg);
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 700;
+    box-shadow: var(--nm-out-sm);
+    transition: box-shadow .12s, transform .12s, color .12s;
+  }
+  #quickbar button:hover { transform: translateY(-1px); box-shadow: var(--nm-out); color: var(--g2); }
+  #quickbar button:active { box-shadow: var(--nm-in); transform: none; }
+
+  #inputbar {
+    padding: 16px 20px 20px;
+    background: var(--bg);
+    box-shadow: 0 -6px 14px rgba(170,178,196,0.28);
+    position: relative;
+    z-index: 3;
+  }
+  #inputbar .inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  #input {
+    flex: 1;
+    resize: none;
+    border: none;
+    border-radius: 18px;
+    padding: 13px 17px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.5;
+    max-height: 140px;
+    outline: none;
+    color: var(--text);
+    background: var(--bg);
+    box-shadow: var(--nm-in);
+    transition: box-shadow .15s;
+  }
+  #input::placeholder { color: var(--muted); }
+  #input:focus { box-shadow: var(--nm-in-deep); }
+  #send {
+    background: var(--grad);
+    color: #fff;
+    border: none;
+    border-radius: 18px;
+    padding: 13px 26px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.42);
+    transition: box-shadow .12s, transform .12s, opacity .15s;
+  }
+  #send:hover:not(:disabled) { transform: translateY(-1px); }
+  #send:active:not(:disabled) { box-shadow: var(--nm-in); transform: none; }
+  #send:disabled { opacity: .45; cursor: not-allowed; box-shadow: var(--nm-out-sm); }
+  .ctl-btn {
+    display: none;                 /* 既定は非表示。状況に応じてJSで表示 */
+    font-size: 13px;
+    font-weight: 800;
+    border: none;
+    border-radius: 18px;
+    padding: 13px 18px;
+    cursor: pointer;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: var(--nm-out-sm);
+    transition: box-shadow .12s, color .12s;
+  }
+  .ctl-btn:hover { box-shadow: var(--nm-out); }
+  .ctl-btn:active { box-shadow: var(--nm-in); }
+  #stop { color: #d68b1e; }
+  #cancel { color: #d6584b; }
+  #resume { color: var(--g2); }
+
+  /* スクロールバー */
+  #chat::-webkit-scrollbar, #tabbar::-webkit-scrollbar { width: 9px; height: 9px; }
+  #chat::-webkit-scrollbar-thumb, #tabbar::-webkit-scrollbar-thumb {
+    background: var(--dark);
+    border-radius: 999px;
+    border: 2px solid var(--bg);
+  }
+  #chat::-webkit-scrollbar-track, #tabbar::-webkit-scrollbar-track { background: transparent; }
+
+  /* ===== 裏メニュー：ナレッジ ===== */
+  #kb-fab {
+    position: fixed;
+    right: 20px;
+    bottom: 90px;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: var(--bg);
+    box-shadow: var(--nm-out-sm);
+    opacity: 0.5;                  /* 普段は控えめ */
+    transition: opacity .2s, box-shadow .15s, transform .12s;
+    z-index: 20;
+    user-select: none;
+  }
+  #kb-fab:hover { opacity: 1; box-shadow: var(--nm-out); transform: translateY(-2px); }
+  #kb-fab:active { box-shadow: var(--nm-in); }
+  /* 📄 レターの型 FAB（📚の上に配置） */
+  #lt-fab {
+    position: fixed;
+    right: 20px;
+    bottom: 144px;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: var(--bg);
+    box-shadow: var(--nm-out-sm);
+    opacity: 0.5;
+    transition: opacity .2s, box-shadow .15s, transform .12s;
+    z-index: 20;
+    user-select: none;
+  }
+  #lt-fab:hover { opacity: 1; box-shadow: var(--nm-out); transform: translateY(-2px); }
+  #lt-fab:active { box-shadow: var(--nm-in); }
+  #lt-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 202px;
+    width: 248px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    box-shadow: var(--nm-out);
+    z-index: 21;
+    animation: rise .18s ease both;
+  }
+  #lt-panel.hidden { display: none; }
+  #lt-panel button {
+    text-align: left;
+    font-size: 13px;
+    padding: 10px 13px;
+    border: none;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text);
+    font-family: inherit;
+    box-shadow: var(--nm-out-sm);
+    transition: box-shadow .12s, color .12s;
+  }
+  #lt-panel button:hover { color: var(--g2); box-shadow: var(--nm-out); }
+  #lt-panel button:active { box-shadow: var(--nm-in); }
+  #kb-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 148px;
+    width: 248px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    box-shadow: var(--nm-out);
+    z-index: 21;
+    animation: rise .18s ease both;
+  }
+  #kb-panel.hidden { display: none; }
+  .kb-head { font-size: 13px; font-weight: 800; color: var(--heading); display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
+  .kb-head .kb-sub { font-size: 11px; font-weight: 500; color: var(--muted); }
+  #kb-panel button {
+    text-align: left;
+    font-size: 13px;
+    padding: 10px 13px;
+    border: none;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text);
+    font-family: inherit;
+    box-shadow: var(--nm-out-sm);
+    transition: box-shadow .12s, color .12s;
+  }
+  #kb-panel button:hover { color: var(--g2); box-shadow: var(--nm-out); }
+  #kb-panel button:active { box-shadow: var(--nm-in); }
+  .kb-note { font-size: 10.5px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+
+  /* ===== プレビュー＆編集モーダル ===== */
+  #pv-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(60,67,87,0.28);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+  }
+  #pv-overlay.hidden { display: none; }
+  #pv-modal {
+    width: 100%;
+    max-width: 920px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border-radius: var(--radius);
+    box-shadow: var(--nm-out);
+    overflow: hidden;
+    animation: rise .2s ease both;
+  }
+  #pv-bar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    box-shadow: 0 5px 12px rgba(170,178,196,0.28);
+  }
+  #pv-bar select {
+    font-size: 12px;
+    padding: 7px 11px;
+    border: none;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+    font-family: inherit;
+    box-shadow: var(--nm-out-sm);
+  }
+  .pv-title { font-size: 13px; font-weight: 800; color: var(--heading); margin-right: 2px; }
+  #pv-render .pv-meta {
+    font-size: 11.5px; color: #8a90a0; line-height: 1.7;
+    background: #f3f5f8; border: 1px dashed #d3d8e2; border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 16px; font-family: "Consolas", monospace;
+  }
+  .pv-toggle { display: flex; gap: 5px; background: var(--bg); border-radius: 999px; padding: 3px; box-shadow: var(--nm-in); }
+  .pv-toggle button {
+    font-size: 12px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+  }
+  .pv-toggle button.active { background: var(--bg); color: var(--g2); box-shadow: var(--nm-out-sm); }
+  #pv-bar .spacer { flex: 1; }
+  .pv-saved { font-size: 11.5px; color: var(--g1); font-weight: 700; }
+  #pv-save {
+    font-size: 12.5px; font-weight: 800; color: #fff;
+    border: none; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+    background: var(--grad);
+    box-shadow: -2px -2px 5px var(--light), 3px 3px 9px rgba(47,155,224,0.4);
+  }
+  #pv-save:active { box-shadow: var(--nm-in); }
+  #pv-close {
+    font-size: 14px; color: var(--text);
+    border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer;
+    background: var(--bg); box-shadow: var(--nm-out-sm);
+  }
+  #pv-close:active { box-shadow: var(--nm-in); }
+  #pv-body { flex: 1; overflow: hidden; display: flex; }
+  /* スマホ枠プレビュー */
+  #pv-phone {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 22px 16px;
+  }
+  #pv-render {
+    width: 100%;
+    max-width: 390px;
+    height: max-content;
+    background: #fff;
+    border-radius: 26px;
+    box-shadow: var(--nm-out);
+    padding: 26px 20px 40px;
+    color: #2b2f3a;
+    font-size: 15px;
+    line-height: 1.85;
+  }
+  #pv-render h1 { font-size: 21px; font-weight: 800; margin: 18px 0 10px; line-height: 1.4; color: #21252f; }
+  #pv-render h2 { font-size: 18px; font-weight: 800; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e7eaf0; color: #21252f; }
+  #pv-render h3 { font-size: 16px; font-weight: 700; margin: 16px 0 8px; color: var(--g2); }
+  #pv-render p { margin: 0 0 12px; }
+  #pv-render ul { margin: 4px 0 14px; padding-left: 20px; }
+  #pv-render li { margin: 3px 0; }
+  #pv-render strong { color: #16775a; font-weight: 800; }
+  #pv-render hr { border: none; border-top: 1px dashed #cdd2dd; margin: 20px 0; }
+  #pv-render blockquote { margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--g1); background: #f4f7f9; border-radius: 8px; color: #555c6e; }
+  #pv-render code { background: #eef1f5; border-radius: 5px; padding: 1px 6px; font-family: "Consolas", monospace; font-size: 13.5px; }
+  #pv-render .paywall { text-align: center; color: var(--g3); font-weight: 800; font-size: 13px; margin: 24px 0; padding: 10px; border-top: 1px dashed #cdd2dd; border-bottom: 1px dashed #cdd2dd; }
+  /* 編集テキストエリア */
+  #pv-edit {
+    flex: 1;
+    display: none;
+    resize: none;
+    border: none;
+    outline: none;
+    padding: 22px 24px;
+    font-family: "SFMono-Regular", "Consolas", monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+    box-shadow: var(--nm-in);
+    margin: 16px;
+    border-radius: var(--radius-sm);
+  }
+  #pv-modal.editing #pv-phone { display: none; }
+  #pv-modal.editing #pv-edit { display: block; }
+
+  /* ===== フェーズ進捗カード ===== */
+  #phasecards {
+    display: flex;
+    align-items: stretch;
+    gap: 9px;
+    overflow-x: auto;
+    padding: 4px 2px 12px;
+    scrollbar-width: thin;
+  }
+  #phasecards:empty { display: none; }
+  .pcard {
+    flex: 0 0 auto;
+    width: 138px;
+    min-height: 70px;
+    padding: 9px 11px;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    box-shadow: var(--nm-in);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: box-shadow .25s, transform .15s, opacity .3s;
+    opacity: .55;
+  }
+  .pcard.done {
+    opacity: 1;
+    box-shadow: var(--nm-out-sm);
+    cursor: pointer;
+  }
+  .pcard.done:hover { box-shadow: var(--nm-out); transform: translateY(-2px); }
+  .pc-top { display: flex; align-items: center; justify-content: space-between; }
+  .pc-no {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; font-weight: 800; color: var(--muted);
+    background: var(--bg); box-shadow: var(--nm-in);
+  }
+  .pcard.done .pc-no { color: #fff; background: var(--grad); box-shadow: none; }
+  .pc-check { color: var(--g1); font-weight: 800; font-size: 13px; }
+  .pc-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dark); }
+  .pcard:not(.done) .pc-dot { animation: dotpulse 1.4s infinite; }
+  @keyframes dotpulse { 0%,100%{opacity:.35} 50%{opacity:1} }
+  .pc-label { font-size: 12px; font-weight: 800; color: var(--heading); }
+  .pcard:not(.done) .pc-label { color: var(--muted); }
+  .pc-excerpt {
+    font-size: 10.5px; color: var(--muted); line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .pc-wait { font-style: italic; opacity: .7; }
+  .pc-open { font-size: 9.5px; color: var(--g2); font-weight: 700; margin-top: auto; }
+  /* 完了した瞬間のポップアニメーション */
+  .pcard.pop { animation: pcpop .55s cubic-bezier(.2,1.3,.4,1) both; }
+  @keyframes pcpop {
+    0%   { transform: scale(.7) translateY(10px); opacity: 0; }
+    60%  { transform: scale(1.06) translateY(0); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* チャット上部のナレーション（一瞬流れる） */
+  .narrator {
+    align-self: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--g2);
+    background: var(--bg);
+    border-radius: 999px;
+    padding: 6px 16px;
+    box-shadow: var(--nm-out-sm);
+    transition: opacity .6s;
+    animation: rise .3s ease both;
+  }
+
+  /* ===== 殴り書きモーダル ===== */
+  #bd-overlay {
+    position: fixed; inset: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background: rgba(60,67,87,0.28);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  }
+  #bd-overlay.hidden { display: none; }
+  #bd-modal {
+    width: 100%; max-width: 680px;
+    display: flex; flex-direction: column; gap: 14px;
+    background: var(--bg); border-radius: var(--radius);
+    box-shadow: var(--nm-out); padding: 22px;
+    animation: rise .2s ease both;
+  }
+  .bd-head { font-size: 15px; font-weight: 800; color: var(--heading); display: flex; flex-direction: column; gap: 4px; }
+  .bd-head .bd-sub { font-size: 12px; font-weight: 500; color: var(--muted); }
+  #bd-text {
+    width: 100%; height: 260px; resize: vertical;
+    border: none; outline: none; border-radius: var(--radius-sm);
+    padding: 16px; font-family: inherit; font-size: 14px; line-height: 1.7;
+    color: var(--text); background: var(--bg); box-shadow: var(--nm-in);
+  }
+  #bd-text::placeholder { color: var(--muted); }
+  .bd-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  #bd-cancel {
+    font-size: 13px; padding: 10px 18px; border: none; border-radius: 14px;
+    background: var(--bg); color: var(--text); cursor: pointer; box-shadow: var(--nm-out-sm); font-family: inherit;
+  }
+  #bd-cancel:active { box-shadow: var(--nm-in); }
+  #bd-go {
+    font-size: 13px; font-weight: 800; padding: 10px 22px; border: none; border-radius: 14px;
+    background: var(--grad); color: #fff; cursor: pointer; font-family: inherit;
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.42);
+  }
+  #bd-go:active { box-shadow: var(--nm-in); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <h1>📝 AUTO-content-system</h1>
+    <span class="badge" id="session-badge">新規セッション</span>
+    <div class="spacer"></div>
+    <select id="mode-select" title="Claude Codeの動作モード">
+      <option value="restricted">モード: 制限（推奨）</option>
+      <option value="auto">モード: 自動（auto）</option>
+      <option value="full">モード: フルオート⚠</option>
+      <option value="plan">モード: 計画（plan）</option>
+    </select>
+    <select id="letter-select" title="セールスレターの型（Phase 5で使用）">
+      <option value="">レターの型: デフォルト</option>
+    </select>
+    <select id="model-select" title="使用するClaudeモデル">
+      <option value="">モデル: デフォルト</option>
+      <option value="claude-fable-5">Fable 5（最高性能）</option>
+      <option value="claude-opus-4-8">Opus 4.8（高性能）</option>
+      <option value="claude-sonnet-4-6">Sonnet 4.6（バランス）</option>
+      <option value="claude-haiku-4-5">Haiku 4.5（高速）</option>
+    </select>
+  </div>
+  <div id="tabbar"></div>
+  <div id="phasecards"></div>
+</header>
+
+<div id="chat"></div>
+
+<div id="quickbar">
+  <button onclick="quick('メニュー')">📋 メニュー</button>
+  <button onclick="openBraindump()">🖊️ 殴り書きで始める</button>
+  <button onclick="quick('セットアップ')">⚙ セットアップ</button>
+  <button onclick="quick('noteに投稿して')">📮 noteに投稿</button>
+  <button onclick="quick('多視点レビュー')">🔍 レビュー</button>
+  <button onclick="quick('離脱診断')">📉 離脱診断</button>
+  <button onclick="openPreview()">👁 プレビュー</button>
+  <button onclick="openFolder('')">📂 フォルダを開く</button>
+</div>
+
+<div id="inputbar">
+  <div class="inner">
+    <textarea id="input" rows="1" placeholder="メッセージを入力（Enterで送信 / Shift+Enterで改行）"></textarea>
+    <button id="resume" class="ctl-btn" onclick="resumeGen()" title="中断した続きから再開">▶ 再開</button>
+    <button id="stop" class="ctl-btn" onclick="stopGen()" title="実行を中断（途中まで残す）">⏹ 中断</button>
+    <button id="cancel" class="ctl-btn" onclick="cancelGen()" title="実行中は中断して取り消し／待機中は入力をクリア">✕ キャンセル</button>
+    <button id="send" onclick="send()">送信</button>
+  </div>
+</div>
+
+<!-- 裏メニュー：ナレッジ管理（普段は目立たない隠しボタン） -->
+<div id="kb-fab" title="ナレッジ（秘伝ノウハウ）" onclick="toggleKb()">📚</div>
+<div id="kb-panel" class="hidden">
+  <div class="kb-head">📚 ナレッジ管理<span class="kb-sub">あなただけの秘伝ノウハウ</span></div>
+  <button onclick="openKnowledge()">📖 確認・編集（一覧＋プレビュー）</button>
+  <button onclick="kbAdd()">➕ ノウハウを追加</button>
+  <button onclick="kbAction('ナレッジ削除')">🗑️ 削除する</button>
+  <div class="kb-note">本文の中身には反映されますが、ノウハウの存在は note 出力に出しません。</div>
+</div>
+
+<!-- 裏メニュー：セールスレターの型 -->
+<div id="lt-fab" title="セールスレターの型" onclick="toggleLt()">📄</div>
+<div id="lt-panel" class="hidden">
+  <div class="kb-head">📄 セールスレターの型<span class="kb-sub">型を選んで・編集・追加</span></div>
+  <button onclick="openLetterTemplates()">📖 確認・編集（一覧＋プレビュー）</button>
+  <button onclick="ltAdd()">➕ 型を追加（お手本レターを逆解析）</button>
+  <div class="kb-note">お手本レターを貼ると型を自動生成。型は右上のプルダウンで切替できます。</div>
+</div>
+
+<!-- 殴り書きモード モーダル -->
+<div id="bd-overlay" class="hidden" onclick="if(event.target===this)closeBraindump()">
+  <div id="bd-modal">
+    <div class="bd-head">🖊️ 殴り書きで始める
+      <span class="bd-sub">思いつくまま自由に書いてOK。AIが整理してコンテンツの土台にします。</span>
+    </div>
+    <textarea id="bd-text" spellcheck="false" placeholder="例）30代で婚活、アプリで50人会った。最初ボロボロだったけど、ファッションと会話を変えたら『また会いたい』と言われるように。年齢は不利じゃなく武器だと気づいた。同年代の婚活女性に届けたい…"></textarea>
+    <div class="bd-actions">
+      <button id="bd-cancel" onclick="closeBraindump()">閉じる</button>
+      <button id="bd-go" onclick="submitBraindump()">この内容で作り始める →</button>
+    </div>
+  </div>
+</div>
+
+<!-- プレビュー＆その場編集モーダル -->
+<div id="pv-overlay" class="hidden" onclick="if(event.target===this)closePreview()">
+  <div id="pv-modal">
+    <div id="pv-bar">
+      <span id="pv-title" class="pv-title">プレビュー</span>
+      <select id="pv-folder" onchange="pvLoadFolder()"></select>
+      <select id="pv-file" onchange="pvLoadFile()"></select>
+      <div class="pv-toggle">
+        <button id="pv-tab-view" class="active" onclick="pvSetMode('view')">👁 プレビュー</button>
+        <button id="pv-tab-edit" onclick="pvSetMode('edit')">✏️ 編集</button>
+      </div>
+      <span class="spacer"></span>
+      <span id="pv-saved" class="pv-saved"></span>
+      <button id="pv-save" onclick="pvSave()">💾 保存</button>
+      <button id="pv-close" onclick="closePreview()">✕</button>
+    </div>
+    <div id="pv-body">
+      <div id="pv-phone"><div id="pv-render"></div></div>
+      <textarea id="pv-edit" spellcheck="false" placeholder="本文を編集…"></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// セッション（タブ）管理 — localStorage に保存
+// ============================================================
+const STORE_KEY = "acs_sessions_v1";
+let state = loadState();   // { sessions: [{key, claudeId, title, createdAt, messages:[{role,text}]}], activeKey }
+let busy = false;
+let currentAbort = null;       // 実行中リクエストの中断用
+let cancelRequested = false;   // キャンセル（取り消し）フラグ
+let stepperPoll = null;        // 実行中のフェーズ進捗ポーリング
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+const badge = document.getElementById("session-badge");
+const tabbar = document.getElementById("tabbar");
+const modelSelect = document.getElementById("model-select");
+const modeSelect = document.getElementById("mode-select");
+const letterSelect = document.getElementById("letter-select");
+
+// セールスレターの型プルダウンを読み込み（サーバーの型一覧＋現在選択）
+async function refreshLetterSelect() {
+  try {
+    const [tplRes, curRes] = await Promise.all([
+      fetch("/api/letter-templates"),
+      fetch("/api/letter-current"),
+    ]);
+    const tpls = (await tplRes.json()).files || [];
+    const cur = (await curRes.json()).current || "";
+    letterSelect.innerHTML =
+      '<option value="">レターの型: デフォルト</option>' +
+      tpls.map(t => `<option value="${t.name}">レターの型: ${t.title}${t.builtin ? "（標準）" : ""}</option>`).join("");
+    // builtin デフォルトは value="" 扱い。現在選択が builtin なら "" のまま
+    const curIsBuiltin = tpls.some(t => t.name === cur && t.builtin);
+    letterSelect.value = (cur && !curIsBuiltin) ? cur : "";
+  } catch (e) { /* サーバー未起動などは無視 */ }
+}
+letterSelect.addEventListener("change", async () => {
+  // value="" は「型を明示しない＝デフォルト」。サーバーへ現在型を保存
+  let name = letterSelect.value;
+  if (!name) {
+    // デフォルト（builtin）を現在型にする
+    try {
+      const tpls = (await (await fetch("/api/letter-templates")).json()).files || [];
+      const b = tpls.find(t => t.builtin);
+      name = b ? b.name : "";
+    } catch {}
+  }
+  if (name) {
+    fetch("/api/letter-current", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }).catch(() => {});
+  }
+});
+
+// モデル選択を復元・保存
+modelSelect.value = localStorage.getItem("acs_model") || "";
+if (modelSelect.value !== (localStorage.getItem("acs_model") || "")) modelSelect.value = ""; // 不明な値はデフォルトへ
+modelSelect.addEventListener("change", () => {
+  localStorage.setItem("acs_model", modelSelect.value);
+});
+
+// モード選択を復元・保存（フルオートは警告表示＋初回確認）
+const MODE_NOTES = {
+  restricted: "制限モード：制作に必要なツールだけを許可します（安全）。",
+  auto: "自動モード：Claudeがよしなに権限を判断して進めます。",
+  full: "⚠ フルオートモード：確認なしで全コマンドを実行します。パイプラインを一気に回せますが、ローカル環境への変更も無確認です。",
+  plan: "計画モード：実行はせず、計画の提示だけを行います（読み取り専用）。",
+};
+function applyModeStyle() {
+  modeSelect.classList.toggle("danger", modeSelect.value === "full");
+}
+modeSelect.value = localStorage.getItem("acs_mode") || "full";
+if (!MODE_NOTES[modeSelect.value]) modeSelect.value = "full";
+applyModeStyle();
+modeSelect.addEventListener("change", () => {
+  if (modeSelect.value === "full") {
+    const ok = confirm(
+      "⚠ フルオートモードに切り替えます。\n\n" +
+      "Claudeが確認なしであらゆるコマンドを実行できるようになります" +
+      "（ファイル削除・note投稿・外部通信を含む）。\n" +
+      "信頼できる作業のみで使用してください。\n\n切り替えますか？"
+    );
+    if (!ok) { modeSelect.value = localStorage.getItem("acs_mode") || "restricted"; applyModeStyle(); return; }
+  }
+  localStorage.setItem("acs_mode", modeSelect.value);
+  applyModeStyle();
+  addBubble("assistant", MODE_NOTES[modeSelect.value]);
+});
+
+const TOOL_LABELS = {
+  Bash: "コマンド実行中",
+  Write: "ファイル作成中",
+  Edit: "ファイル編集中",
+  Read: "ファイル読込中",
+  Grep: "検索中",
+  Glob: "ファイル探索中",
+  WebSearch: "Web検索中",
+  WebFetch: "Webページ取得中",
+  Agent: "サブエージェント実行中",
+  Task: "サブエージェント実行中",
+  TodoWrite: "タスク整理中",
+};
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (s && Array.isArray(s.sessions) && s.sessions.length) return s;
+  } catch {}
+  const key = String(Date.now());
+  return { sessions: [{ key, claudeId: null, title: "新しい会話", createdAt: Date.now(), messages: [] }], activeKey: key };
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  } catch (e) {
+    // 容量オーバー時は最古のセッションを削って再試行
+    if (state.sessions.length > 1) {
+      state.sessions.shift();
+      saveState();
+    }
+  }
+}
+
+function activeSession() {
+  return state.sessions.find(s => s.key === state.activeKey) || state.sessions[0];
+}
+
+function renderTabs() {
+  tabbar.innerHTML = "";
+  for (const s of state.sessions) {
+    const tab = document.createElement("div");
+    tab.className = "tab" + (s.key === state.activeKey ? " active" : "");
+    tab.onclick = () => switchTab(s.key);
+    tab.title = "ダブルクリックで名前を変更";
+    tab.ondblclick = (e) => { e.stopPropagation(); renameTab(s.key); };
+    const title = document.createElement("span");
+    title.className = "title";
+    title.textContent = s.title;
+    tab.appendChild(title);
+    const close = document.createElement("button");
+    close.className = "close";
+    close.textContent = "×";
+    close.title = "このタブを閉じる（履歴も削除）";
+    close.onclick = (e) => { e.stopPropagation(); closeTab(s.key); };
+    tab.appendChild(close);
+    tabbar.appendChild(tab);
+  }
+  const add = document.createElement("div");
+  add.className = "tab add";
+  add.textContent = "＋ 新規";
+  add.title = "新しいセッションを開始（output枝番フォルダを作成）";
+  add.onclick = newSession;
+  tabbar.appendChild(add);
+
+  const edit = document.createElement("div");
+  edit.className = "tab edit";
+  edit.textContent = "✏️ 編集";
+  edit.title = "既存の output フォルダを選んで成果物を編集";
+  edit.onclick = openEdit;
+  tabbar.appendChild(edit);
+}
+
+function renderChat() {
+  chat.innerHTML = "";
+  const s = activeSession();
+  if (!s.messages.length) {
+    addBubble("assistant", "ようこそ！👋\n\n**noteへのログインがまだの方** → 「⚙ セットアップ」を押してください。\n**ログイン済みの方** → 「📋 メニュー」を押してください。", false);
+  }
+  for (const m of s.messages) addBubble(m.role, m.text, false);
+  badge.textContent = s.claudeId ? "セッション: " + s.claudeId.slice(0, 8) : "新規セッション";
+  chat.scrollTop = chat.scrollHeight;
+  updateControls();
+}
+
+function switchTab(key) {
+  if (busy) { alert("実行中はタブを切り替えられません。完了までお待ちください。"); return; }
+  state.activeKey = key;
+  saveState();
+  renderTabs();
+  renderChat();
+  resetPhases();
+}
+
+async function newSession() {
+  if (busy) { alert("実行中は新規セッションを開始できません。完了までお待ちください。"); return; }
+  const name = prompt("セッション名を入力してください\n（空欄でOKすると、作成したフォルダ名がタブ名になります）", "");
+  if (name === null) return; // キャンセル → 作成しない
+  // 新しい枝番ワーキングフォルダを作成（完全に新規スタート）
+  let workdir = null;
+  try {
+    const res = await fetch("/api/new-workfolder", { method: "POST" });
+    const d = await res.json();
+    if (res.ok) workdir = d.folder;
+  } catch (e) { /* サーバー未起動時はフォルダ無しで続行 */ }
+  const trimmed = name.trim();
+  const key = String(Date.now());
+  state.sessions.push({
+    key,
+    claudeId: null,
+    title: trimmed || (workdir || "新しい会話"),
+    customTitle: !!trimmed,
+    workdir: workdir,        // このセッション専用のワーキングフォルダ
+    workdirSent: false,      // 初回メッセージでAIに伝えたか
+    createdAt: Date.now(),
+    messages: [],
+  });
+  state.activeKey = key;
+  saveState();
+  renderTabs();
+  renderChat();
+  resetPhases();
+  if (workdir) log(`📁 ワーキングフォルダ ${workdir}/ を作成しました（完全に新規スタート）`);
+  input.focus();
+}
+
+function renameTab(key) {
+  const s = state.sessions.find(x => x.key === key);
+  if (!s) return;
+  const name = prompt("新しいセッション名を入力してください", s.title);
+  if (name === null) return; // キャンセル → 変更しない
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  s.title = trimmed;
+  s.customTitle = true;
+  saveState();
+  renderTabs();
+}
+
+function closeTab(key) {
+  if (busy) { alert("実行中はタブを閉じられません。"); return; }
+  const s = state.sessions.find(x => x.key === key);
+  if (s && s.messages.length && !confirm(`「${s.title}」を閉じますか？\nこのタブのチャット履歴は削除されます。`)) return;
+  state.sessions = state.sessions.filter(x => x.key !== key);
+  if (!state.sessions.length) {
+    const k = String(Date.now());
+    state.sessions.push({ key: k, claudeId: null, title: "新しい会話", createdAt: Date.now(), messages: [] });
+  }
+  if (state.activeKey === key) state.activeKey = state.sessions[state.sessions.length - 1].key;
+  saveState();
+  renderTabs();
+  renderChat();
+  resetPhases();
+}
+
+// ============================================================
+// チャット描画
+// ============================================================
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderMarkdown(s) {
+  let html = escapeHtml(s);
+  html = html.replace(/```[a-z]*\n([\s\S]*?)```/g, (_, code) => `<pre>${code}</pre>`);
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+  html = html.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  return html;
+}
+
+function addBubble(cls, text, scroll = true) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  if (cls === "assistant") div.innerHTML = renderMarkdown(text);
+  else div.textContent = text;
+  chat.appendChild(div);
+  if (scroll) chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function setStatus(text) {
+  let st = document.getElementById("status-line");
+  if (!text) { if (st) st.remove(); return; }
+  if (!st) {
+    st = document.createElement("div");
+    st.id = "status-line";
+    st.className = "status";
+    st.innerHTML = `<span class="dot"></span><span id="status-text"></span>`;
+  }
+  st.querySelector("#status-text").textContent = text;
+  chat.appendChild(st); // 常に最下部へ
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function quick(text) {
+  if (busy) return;
+  input.value = text;
+  send();
+}
+
+// ===== フェーズ進捗カード（完了ごとにカードが出現） =====
+let phaseDone = {};   // 既に「完了」描画済みのフェーズ key → true（再アニメ防止）
+
+function esc(s) { return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function resetPhases() {
+  phaseDone = {};
+  document.getElementById("phasecards").innerHTML = "";
+  refreshPhases(false);   // 切替時はポップさせず即時表示
+}
+
+async function refreshPhases(animate = true) {
+  const session = activeSession();
+  const q = (session && session.workdir) ? ("?dir=" + encodeURIComponent(session.workdir)) : "";
+  let data;
+  try { data = await (await fetch("/api/phase-status" + q)).json(); }
+  catch (e) { return; }
+  const el = document.getElementById("phasecards");
+  if (!data.folder) { el.innerHTML = ""; phaseDone = {}; return; }
+
+  data.phases.forEach((ph, i) => {
+    const id = "pc-" + ph.key;
+    let card = document.getElementById(id);
+    const wasDone = !!phaseDone[ph.key];
+    if (!card) {
+      card = document.createElement("div");
+      card.id = id;
+      card.className = "pcard";
+      el.appendChild(card);
+    }
+    const num = i + 1;
+    if (ph.done) {
+      const doPop = animate && !wasDone;
+      const clickable = ph.path ? ` onclick="pvOpenPath('${ph.path}','${esc(ph.label)}',${ph.editable})"` : "";
+      card.outerHTML =
+        `<div id="${id}" class="pcard done${doPop ? " pop" : ""}"${clickable}>` +
+          `<div class="pc-top"><span class="pc-no">${num}</span><span class="pc-check">✓</span></div>` +
+          `<div class="pc-label">${esc(ph.label)}</div>` +
+          `<div class="pc-excerpt">${esc(ph.excerpt)}</div>` +
+          `<div class="pc-open">クリックで開く</div>` +
+        `</div>`;
+      if (!wasDone) {
+        phaseDone[ph.key] = true;
+        // narrator を出す（実行中に完了した時だけ）
+        if (busy) log(`✅ ${ph.label} が完成しました`);
+      }
+    } else {
+      card.className = "pcard";
+      card.removeAttribute("onclick");
+      card.innerHTML =
+        `<div class="pc-top"><span class="pc-no">${num}</span><span class="pc-dot"></span></div>` +
+        `<div class="pc-label">${esc(ph.label)}</div>` +
+        `<div class="pc-excerpt pc-wait">待機中…</div>`;
+    }
+  });
+}
+
+// チャット上部に一瞬だけ流れるナレーション
+function log(msg) {
+  const n = document.createElement("div");
+  n.className = "narrator";
+  n.textContent = msg;
+  chat.appendChild(n);
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(() => { n.style.opacity = "0"; setTimeout(() => n.remove(), 600); }, 4000);
+}
+
+// 旧名の互換（既存呼び出し用）
+const refreshStepper = refreshPhases;
+
+// ===== 殴り書きモード =====
+function openBraindump() {
+  if (busy) { alert("実行中です。完了までお待ちください。"); return; }
+  document.getElementById("bd-overlay").classList.remove("hidden");
+  setTimeout(() => document.getElementById("bd-text").focus(), 50);
+}
+function closeBraindump() {
+  document.getElementById("bd-overlay").classList.add("hidden");
+}
+function submitBraindump() {
+  const text = document.getElementById("bd-text").value.trim();
+  if (!text) { alert("内容を入力してください。"); return; }
+  closeBraindump();
+  document.getElementById("bd-text").value = "";
+  input.value = "殴り書きモード\n---ここから殴り書き---\n" + text;
+  send();
+}
+
+// ===== エクスプローラーでフォルダを開く =====
+async function openFolder(path) {
+  try {
+    const res = await fetch("/api/open-folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: path || "" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) addBubble("assistant", "⚠️ フォルダを開けませんでした: " + (data.error || res.status));
+  } catch (e) {
+    addBubble("assistant", "⚠️ 通信エラー: " + e.message + "\nサーバーが起動しているか確認してください。");
+  }
+}
+
+// ===== プレビュー＆その場編集（本文 / ナレッジ共用） =====
+let pvCurrentPath = null;
+let pvDirty = false;
+let pvSource = "content";   // "content"（output本文） | "knowledge"（ノウハウ）
+
+function pvMd(src) {
+  // プレビュー用の軽量Markdown→HTML
+  const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const inline = (s) => esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  // 先頭の frontmatter（--- … ---）はメタ情報ボックスとして表示
+  let meta = "";
+  if (src.startsWith("---")) {
+    const end = src.indexOf("\n---", 3);
+    if (end !== -1) {
+      const fm = src.slice(3, end).replace(/^\n/, "").trim();
+      meta = '<div class="pv-meta">' + fm.split("\n").map(l => esc(l)).join("<br>") + "</div>";
+      src = src.slice(end + 4).replace(/^\n+/, "");
+    }
+  }
+  const lines = src.split("\n");
+  let html = "", inList = false, inCode = false, code = "";
+  const closeList = () => { if (inList) { html += "</ul>"; inList = false; } };
+  for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      if (inCode) { html += "<pre><code>" + esc(code) + "</code></pre>"; code = ""; inCode = false; }
+      else { closeList(); inCode = true; }
+      continue;
+    }
+    if (inCode) { code += line + "\n"; continue; }
+    const t = line.trim();
+    if (/有料エリア/.test(t) && t.startsWith("#")) { closeList(); html += '<div class="paywall">↓ ここから有料エリア ↓</div>'; continue; }
+    if (/^###\s+/.test(t)) { closeList(); html += "<h3>" + inline(t.replace(/^###\s+/, "")) + "</h3>"; }
+    else if (/^##\s+/.test(t)) { closeList(); html += "<h2>" + inline(t.replace(/^##\s+/, "")) + "</h2>"; }
+    else if (/^#\s+/.test(t)) { closeList(); html += "<h1>" + inline(t.replace(/^#\s+/, "")) + "</h1>"; }
+    else if (/^---+$/.test(t)) { closeList(); html += "<hr>"; }
+    else if (/^>\s?/.test(t)) { closeList(); html += "<blockquote>" + inline(t.replace(/^>\s?/, "")) + "</blockquote>"; }
+    else if (/^[-・*]\s+/.test(t)) { if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + inline(t.replace(/^[-・*]\s+/, "")) + "</li>"; }
+    else if (t === "") { closeList(); }
+    else { closeList(); html += "<p>" + inline(line) + "</p>"; }
+  }
+  if (inCode) html += "<pre><code>" + esc(code) + "</code></pre>";
+  closeList();
+  return meta + html;
+}
+
+// 「✏️ 編集」ボタン：outputフォルダを選んで編集モードで開く
+function openEdit() { openPreview(true); }
+
+async function openPreview(startInEdit = false) {
+  pvSource = "content";
+  pvResetChrome();
+  document.getElementById("pv-folder").style.display = "";
+  document.getElementById("pv-title").textContent = startInEdit ? "✏️ 成果物を編集" : "本文プレビュー";
+  document.getElementById("pv-overlay").classList.remove("hidden");
+  pvSetMode(startInEdit ? "edit" : "view");
+  const folderSel = document.getElementById("pv-folder");
+  try {
+    const res = await fetch("/api/content-files");
+    const data = await res.json();
+    const folders = data.folders || [];
+    if (!folders.length) {
+      document.getElementById("pv-render").innerHTML =
+        '<p style="color:#888">まだ生成物がありません。<br>制作（メニュー1〜）を実行すると output/ に保存され、ここで編集できます。</p>';
+      document.getElementById("pv-edit").value = "";
+      folderSel.innerHTML = ""; document.getElementById("pv-file").innerHTML = "";
+      return;
+    }
+    folderSel.innerHTML = folders.map(f => `<option value="${f.folder}">${f.folder}</option>`).join("");
+    folderSel.dataset.json = JSON.stringify(folders);
+    folderSel.value = folders[folders.length - 1].folder; // 最新フォルダ
+    pvLoadFolder();
+  } catch (e) {
+    document.getElementById("pv-render").innerHTML = "<p>読み込みエラー: " + e.message + "</p>";
+  }
+}
+async function openKnowledge() {
+  closeKb();
+  pvSource = "knowledge";
+  pvResetChrome();
+  document.getElementById("pv-folder").style.display = "none";
+  document.getElementById("pv-title").textContent = "📚 ナレッジ（確認・編集）";
+  document.getElementById("pv-overlay").classList.remove("hidden");
+  pvSetMode("view");
+  const fileSel = document.getElementById("pv-file");
+  try {
+    const res = await fetch("/api/knowledge-files");
+    const data = await res.json();
+    const files = data.files || [];
+    if (!files.length) {
+      document.getElementById("pv-render").innerHTML =
+        '<p style="color:#888">まだノウハウがありません。<br>📚 →「➕ ノウハウを追加」から登録してください。</p>';
+      fileSel.innerHTML = "";
+      return;
+    }
+    fileSel.innerHTML = files.map(f => `<option value="${f.name}">${f.title}</option>`).join("");
+    pvLoadFile();
+  } catch (e) {
+    document.getElementById("pv-render").innerHTML = "<p>読み込みエラー: " + e.message + "</p>";
+  }
+}
+async function openLetterTemplates() {
+  closeLt();
+  pvSource = "template";
+  pvResetChrome();
+  document.getElementById("pv-folder").style.display = "none";
+  document.getElementById("pv-title").textContent = "📄 セールスレターの型";
+  document.getElementById("pv-overlay").classList.remove("hidden");
+  pvSetMode("view");
+  const fileSel = document.getElementById("pv-file");
+  try {
+    const res = await fetch("/api/letter-templates");
+    const data = await res.json();
+    const files = data.files || [];
+    if (!files.length) {
+      document.getElementById("pv-render").innerHTML =
+        '<p style="color:#888">型がありません。📄 →「➕ 型を追加」から登録してください。</p>';
+      fileSel.innerHTML = "";
+      return;
+    }
+    fileSel.innerHTML = files.map(f =>
+      `<option value="${f.name}">${f.title}${f.builtin ? "（標準）" : ""}</option>`).join("");
+    pvLoadFile();
+  } catch (e) {
+    document.getElementById("pv-render").innerHTML = "<p>読み込みエラー: " + e.message + "</p>";
+  }
+}
+// モーダル上部の表示要素を既定状態に戻す（ファイル選択・編集タブ・保存を表示）
+function pvResetChrome() {
+  document.getElementById("pv-file").style.display = "";
+  document.getElementById("pv-tab-edit").style.display = "";
+  document.getElementById("pv-save").style.display = "";
+}
+// 特定ファイルを直接プレビュー（ステッパーから呼ぶ）。editable=false は読み取り専用
+async function pvOpenPath(path, title, editable) {
+  pvSource = "direct";
+  document.getElementById("pv-folder").style.display = "none";
+  document.getElementById("pv-file").style.display = "none";
+  document.getElementById("pv-tab-edit").style.display = editable ? "" : "none";
+  document.getElementById("pv-save").style.display = editable ? "" : "none";
+  document.getElementById("pv-title").textContent = title || "プレビュー";
+  document.getElementById("pv-overlay").classList.remove("hidden");
+  pvSetMode("view");
+  pvCurrentPath = path;
+  try {
+    const res = await fetch("/api/read-file?path=" + encodeURIComponent(path));
+    const data = await res.json();
+    const text = data.content || "";
+    document.getElementById("pv-edit").value = text;
+    document.getElementById("pv-render").innerHTML = pvMd(text);
+    document.getElementById("pv-phone").scrollTop = 0;
+    pvDirty = false;
+    document.getElementById("pv-saved").textContent = "";
+  } catch (e) {
+    document.getElementById("pv-render").innerHTML = "<p>読み込みエラー: " + e.message + "</p>";
+  }
+}
+function closePreview() {
+  if (pvDirty && !confirm("保存していない編集があります。閉じますか？")) return;
+  document.getElementById("pv-overlay").classList.add("hidden");
+  pvDirty = false;
+}
+function pvLoadFolder() {
+  const folderSel = document.getElementById("pv-folder");
+  const fileSel = document.getElementById("pv-file");
+  const folders = JSON.parse(folderSel.dataset.json || "[]");
+  const f = folders.find(x => x.folder === folderSel.value);
+  const labels = {
+    "00a_self_analysis.md": "自己分析",
+    "01_research.md": "競合リサーチ",
+    "02_concept.md": "コンセプト設計",
+    "03_product_design.md": "商品設計",
+    "04_paid_content.md": "有料本文",
+    "05_sales_letter.md": "セールスレター（無料部分）",
+  };
+  fileSel.innerHTML = (f ? f.files : []).map(n => `<option value="${n}">${labels[n] || n}</option>`).join("");
+  pvLoadFile();
+}
+async function pvLoadFile() {
+  const file = document.getElementById("pv-file").value;
+  if (!file) return;
+  if (pvSource === "knowledge") {
+    pvCurrentPath = "knowledge/" + file;
+  } else if (pvSource === "template") {
+    pvCurrentPath = "sales_templates/" + file;
+  } else {
+    const folder = document.getElementById("pv-folder").value;
+    if (!folder) return;
+    pvCurrentPath = folder + "/" + file;
+  }
+  try {
+    const res = await fetch("/api/read-file?path=" + encodeURIComponent(pvCurrentPath));
+    const data = await res.json();
+    const text = data.content || "";
+    document.getElementById("pv-edit").value = text;
+    document.getElementById("pv-render").innerHTML = pvMd(text);
+    document.getElementById("pv-phone").scrollTop = 0;
+    pvDirty = false;
+    document.getElementById("pv-saved").textContent = "";
+  } catch (e) {
+    document.getElementById("pv-render").innerHTML = "<p>読み込みエラー: " + e.message + "</p>";
+  }
+}
+function pvSetMode(mode) {
+  const modal = document.getElementById("pv-modal");
+  modal.classList.toggle("editing", mode === "edit");
+  document.getElementById("pv-tab-view").classList.toggle("active", mode === "view");
+  document.getElementById("pv-tab-edit").classList.toggle("active", mode === "edit");
+  if (mode === "view") document.getElementById("pv-render").innerHTML = pvMd(document.getElementById("pv-edit").value);
+}
+async function pvSave() {
+  if (!pvCurrentPath) return;
+  const content = document.getElementById("pv-edit").value;
+  const btn = document.getElementById("pv-save");
+  btn.disabled = true;
+  try {
+    const res = await fetch("/api/save-file", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: pvCurrentPath, content }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert("保存に失敗: " + (data.error || res.status)); return; }
+    pvDirty = false;
+    document.getElementById("pv-render").innerHTML = pvMd(content);
+    const tag = document.getElementById("pv-saved");
+    tag.textContent = "✓ 保存しました";
+    setTimeout(() => { tag.textContent = ""; }, 2500);
+  } catch (e) {
+    alert("通信エラー: " + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+document.getElementById("pv-edit").addEventListener("input", () => { pvDirty = true; });
+
+// ===== 裏メニュー：セールスレターの型 =====
+function toggleLt() {
+  document.getElementById("lt-panel").classList.toggle("hidden");
+}
+function closeLt() {
+  document.getElementById("lt-panel").classList.add("hidden");
+}
+function ltAdd() {
+  closeLt();
+  if (busy) { alert("実行中です。完了までお待ちください。"); return; }
+  const text = prompt("お手本にしたいセールスレターの全文を貼り付けてください。\n（noteの無料部分など）。AIが逆解析して『型』を自動生成・保存します。");
+  if (text === null) return;
+  const body = text.trim();
+  if (!body) return;
+  input.value = "レターの型を追加\n---ここからお手本レター全文---\n" + body;
+  send();
+}
+
+// ===== 裏メニュー：ナレッジ =====
+function toggleKb() {
+  document.getElementById("kb-panel").classList.toggle("hidden");
+}
+function closeKb() {
+  document.getElementById("kb-panel").classList.add("hidden");
+}
+function kbAction(cmd) {
+  closeKb();
+  if (busy) { alert("実行中です。完了までお待ちください。"); return; }
+  quick(cmd);
+}
+function kbAdd() {
+  closeKb();
+  if (busy) { alert("実行中です。完了までお待ちください。"); return; }
+  const text = prompt("追加するノウハウを貼り付けてください。\nAIがジャンルを判定して保存します（箇条書き・メモでもOK）。");
+  if (text === null) return;
+  const body = text.trim();
+  if (!body) return;
+  // チャットに「ナレッジ追加」コマンド＋本文を流す
+  input.value = "ナレッジ追加\n---ここから貼り付けたノウハウ---\n" + body;
+  send();
+}
+// パネル外クリックで閉じる（ナレッジ・レターの型）
+document.addEventListener("click", (e) => {
+  for (const [panelId, fabId, close] of [
+    ["kb-panel", "kb-fab", closeKb],
+    ["lt-panel", "lt-fab", closeLt],
+  ]) {
+    const panel = document.getElementById(panelId);
+    const fab = document.getElementById(fabId);
+    if (!panel.classList.contains("hidden") &&
+        !panel.contains(e.target) && !fab.contains(e.target)) {
+      close();
+    }
+  }
+});
+
+// ============================================================
+// 送信・ストリーミング受信
+// ============================================================
+async function send() {
+  const message = input.value.trim();
+  if (!message || busy) return;
+
+  const session = activeSession();
+  busy = true;
+  cancelRequested = false;
+  currentAbort = new AbortController();
+  updateControls();
+  clearInterval(stepperPoll);
+  stepperPoll = setInterval(refreshStepper, 6000);   // 実行中は進捗を定期更新
+  input.value = "";
+  input.style.height = "auto";
+
+  // ユーザー発言を保存・描画
+  session.messages.push({ role: "user", text: message });
+  if (!session.customTitle && session.title === "新しい会話") {
+    session.title = message.length > 14 ? message.slice(0, 14) + "…" : message;
+    renderTabs();
+  }
+  saveState();
+  addBubble("user", message);   // 画面にはユーザーのクリーンな文だけ表示
+  setStatus("考え中...");
+
+  // このセッション専用フォルダがあれば、初回だけAIに伝える（表示はしない）
+  let outbound = message;
+  if (session.workdir && !session.workdirSent) {
+    outbound = `【このセッションのワーキングフォルダは ${session.workdir}/ です。`
+      + `Phase 0〜5 の制作物はすべて ${session.workdir}/ に保存し、`
+      + `新しい output フォルダは作らないでください。】\n\n` + message;
+    session.workdirSent = true;
+    saveState();
+  }
+
+  let currentBubble = null;
+  let currentText = "";
+
+  try {
+    const res = await fetch("/api/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: currentAbort.signal,
+      body: JSON.stringify({
+        message: outbound,
+        session_id: session.claudeId,
+        model: modelSelect.value || null,
+        mode: modeSelect.value || "restricted",
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      let msg = err.error || ("HTTP " + res.status);
+      if (res.status === 403 && /フルオート/.test(msg)) {
+        msg = "⚠️ フルオートは、今の起動方法では無効です。\n\n" +
+              "**start_webapp.bat をダブルクリック**で起動し直すと有効になります。\n" +
+              "今すぐ使いたい場合は、右上のモードを「自動（auto）」または「制限」に切り替えてください。";
+      } else {
+        msg = "⚠️ エラー: " + msg;
+      }
+      currentText += (currentText ? "\n\n" : "") + msg;
+      if (!currentBubble) currentBubble = addBubble("assistant", "");
+      currentBubble.innerHTML = renderMarkdown(currentText);
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+
+      const lines = buf.split("\n");
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        let ev;
+        try { ev = JSON.parse(line); } catch { continue; }
+
+        if (ev.type === "session") {
+          session.claudeId = ev.session_id;
+          badge.textContent = "セッション: " + ev.session_id.slice(0, 8);
+        } else if (ev.type === "text") {
+          currentText += (currentText ? "\n\n" : "") + ev.text;
+          if (!currentBubble) currentBubble = addBubble("assistant", "");
+          currentBubble.innerHTML = renderMarkdown(currentText);
+          setStatus("生成中...");
+          chat.scrollTop = chat.scrollHeight;
+        } else if (ev.type === "tool") {
+          setStatus("🔧 " + (TOOL_LABELS[ev.name] || ev.name + " 実行中"));
+        } else if (ev.type === "done") {
+          session.claudeId = ev.session_id || session.claudeId;
+          session.interrupted = false;
+        } else if (ev.type === "error") {
+          let msg = ev.message;
+          if (/No conversation found|session/i.test(msg) && session.claudeId) {
+            msg += "\n\n💡 このセッションはCLI側で期限切れの可能性があります（デフォルト30日で削除）。「＋ 新規」から新しいセッションを開始してください。";
+          }
+          currentText += (currentText ? "\n\n" : "") + "⚠️ エラー:\n" + msg;
+          if (!currentBubble) currentBubble = addBubble("assistant", "");
+          currentBubble.innerHTML = renderMarkdown(currentText);
+        }
+      }
+    }
+  } catch (e) {
+    if (e.name === "AbortError") {
+      if (!cancelRequested) {
+        currentText += (currentText ? "\n\n" : "") + "⏹ 中断しました。「▶ 再開」で続きから再開できます。";
+        session.interrupted = true;
+        if (!currentBubble) currentBubble = addBubble("assistant", "");
+        currentBubble.innerHTML = renderMarkdown(currentText);
+      }
+    } else {
+      currentText += (currentText ? "\n\n" : "") + "⚠️ 通信エラー: " + e.message + "\nサーバー（start_webapp.bat）が起動しているか確認してください。";
+      if (!currentBubble) currentBubble = addBubble("assistant", "");
+      currentBubble.innerHTML = renderMarkdown(currentText);
+    }
+  } finally {
+    currentAbort = null;
+    if (cancelRequested) {
+      // キャンセル：直前のユーザー発言と途中の返信を破棄して元に戻す
+      if (session.messages.length && session.messages[session.messages.length - 1].role === "user") {
+        session.messages.pop();
+      }
+      renderChat();
+    } else if (currentText) {
+      session.messages.push({ role: "assistant", text: currentText });
+    }
+    saveState();
+    busy = false;
+    setStatus(null);
+    updateControls();
+    clearInterval(stepperPoll);
+    refreshStepper();   // フェーズ進捗を更新
+    refreshLetterSelect();  // 型が追加された場合に反映
+    if (!cancelRequested) input.focus();
+  }
+}
+
+// ===== 中断 / 再開 / キャンセル =====
+function updateControls() {
+  const session = activeSession();
+  const interrupted = !!(session && session.interrupted);
+  // 送信は常に表示（実行中は無効化）。中断は送信の横に並べる
+  sendBtn.style.display = "";
+  sendBtn.disabled = busy;
+  // 表示は明示的に "inline-block"（"" だと .ctl-btn の display:none に戻ってしまう）
+  document.getElementById("stop").style.display = busy ? "inline-block" : "none";
+  document.getElementById("cancel").style.display = "inline-block";   // 常に送信の隣に表示
+  document.getElementById("resume").style.display = (!busy && interrupted) ? "inline-block" : "none";
+}
+function stopGen() {
+  if (currentAbort) currentAbort.abort();
+}
+function cancelGen() {
+  if (busy) {
+    // 実行中：中断して直前のやり取りを取り消す
+    cancelRequested = true;
+    if (currentAbort) currentAbort.abort();
+  } else {
+    // 待機中：入力欄をクリア
+    input.value = "";
+    input.style.height = "auto";
+    input.focus();
+  }
+}
+function resumeGen() {
+  if (busy) return;
+  const session = activeSession();
+  if (session) session.interrupted = false;
+  input.value = "中断したところから続けて、最後まで完了させてください。";
+  send();
+}
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    send();
+  }
+});
+
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 140) + "px";
+});
+
+// 初期描画
+renderTabs();
+renderChat();
+refreshStepper();
+refreshLetterSelect();
+input.focus();
+</script>
+</body>
+</html>
