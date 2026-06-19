@@ -24,7 +24,7 @@ from pathlib import Path
 
 from flask import Flask, Response, request, send_from_directory
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent  # claude の作業ディレクトリ = プロジェクトルート
 
 HOST = "127.0.0.1"  # ローカル専用。外部公開しないこと
