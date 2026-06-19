@@ -434,6 +434,85 @@
   #kb-panel button:active { box-shadow: var(--nm-in); }
   .kb-note { font-size: 10.5px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
 
+  /* ===== セットアップ画面 ===== */
+  #setup-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background: rgba(60,67,87,0.36);
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  }
+  #setup-overlay.hidden { display: none; }
+  #setup-modal {
+    width: 100%; max-width: 560px;
+    display: flex; flex-direction: column; gap: 20px;
+    background: var(--bg); border-radius: var(--radius);
+    box-shadow: var(--nm-out); padding: 26px;
+    animation: rise .22s ease both;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .setup-head {
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .setup-icon { font-size: 32px; line-height: 1; flex-shrink: 0; }
+  .setup-title { font-size: 17px; font-weight: 800; color: var(--heading); }
+  .setup-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  #setup-close {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 14px; color: var(--text);
+    border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer;
+    background: var(--bg); box-shadow: var(--nm-out-sm);
+  }
+  #setup-close:active { box-shadow: var(--nm-in); }
+  #setup-checklist {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .sc-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    background: var(--bg); box-shadow: var(--nm-in);
+  }
+  .sc-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
+  .sc-body { flex: 1; min-width: 0; }
+  .sc-label { font-size: 13px; font-weight: 700; color: var(--heading); }
+  .sc-detail { font-size: 11px; color: var(--muted); margin-top: 2px; word-break: break-all; }
+  .sc-fix {
+    font-size: 12px; font-weight: 700; padding: 7px 13px;
+    border: none; border-radius: 999px; cursor: pointer;
+    background: var(--grad); color: #fff; white-space: nowrap; flex-shrink: 0;
+    box-shadow: -2px -2px 5px var(--light), 3px 3px 9px rgba(47,155,224,0.4);
+    transition: opacity .15s;
+  }
+  .sc-fix:disabled { opacity: .45; cursor: not-allowed; }
+  .sc-fix.installing { opacity: .6; }
+  #setup-actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+  .setup-btn-secondary {
+    font-size: 13px; padding: 10px 18px; border: none; border-radius: 14px;
+    background: var(--bg); color: var(--text); cursor: pointer;
+    box-shadow: var(--nm-out-sm); font-family: inherit; font-weight: 700;
+  }
+  .setup-btn-secondary:active { box-shadow: var(--nm-in); }
+  .setup-btn-primary {
+    font-size: 13px; font-weight: 800; padding: 10px 22px; border: none; border-radius: 14px;
+    background: var(--grad); color: #fff; cursor: pointer; font-family: inherit;
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.42);
+  }
+  .setup-btn-primary:active { box-shadow: var(--nm-in); }
+  .setup-hint {
+    font-size: 12.5px; line-height: 1.8; color: var(--text);
+    background: var(--bg); border-radius: var(--radius-sm);
+    padding: 14px 16px; box-shadow: var(--nm-in);
+  }
+  .setup-hint.hidden { display: none; }
+  .setup-hint a { color: var(--g2); }
+  .setup-hint code {
+    background: var(--bg); border-radius: 5px; padding: 1px 7px;
+    font-family: "Consolas", monospace; font-size: 12px; box-shadow: var(--nm-in);
+    user-select: all; cursor: text;
+  }
+
   /* ===== プレビュー＆編集モーダル ===== */
   #pv-overlay {
     position: fixed;
@@ -757,6 +836,41 @@
     <div class="bd-actions">
       <button id="bd-cancel" onclick="closeBraindump()">閉じる</button>
       <button id="bd-go" onclick="submitBraindump()">この内容で作り始める →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== セットアップ画面 ===== -->
+<div id="setup-overlay" class="hidden" onclick="">
+  <div id="setup-modal">
+    <div class="setup-head">
+      <span class="setup-icon">⚙️</span>
+      <div>
+        <div class="setup-title">環境チェック</div>
+        <div class="setup-sub">必要なソフトウェアがすべて揃っているか確認します</div>
+      </div>
+      <button id="setup-close" onclick="closeSetup()" title="閉じる">✕</button>
+    </div>
+
+    <div id="setup-checklist"></div>
+
+    <div id="setup-actions">
+      <button id="setup-recheck" onclick="runSetupCheck()" class="setup-btn-secondary">🔄 再チェック</button>
+      <button id="setup-login" onclick="closeSetup();quick('セットアップ')" class="setup-btn-primary" style="display:none">
+        次へ: note.com にログイン →
+      </button>
+    </div>
+
+    <div id="setup-claude-hint" class="setup-hint hidden">
+      <b>Claude CLI のインストール方法:</b><br>
+      1. <a href="https://nodejs.org/" target="_blank">Node.js</a> をインストール<br>
+      2. コマンドプロンプトで実行: <code>npm install -g @anthropic-ai/claude-code</code><br>
+      3. 「🔄 再チェック」を押してください
+    </div>
+    <div id="setup-chrome-hint" class="setup-hint hidden">
+      <b>Google Chrome のインストール方法:</b><br>
+      <a href="https://www.google.com/chrome/" target="_blank">https://www.google.com/chrome/</a> からダウンロードしてください<br>
+      ※ note.com への自動投稿に必要です（閲覧・執筆だけなら不要）
     </div>
   </div>
 </div>
@@ -1664,6 +1778,110 @@ input.addEventListener("input", () => {
   input.style.height = "auto";
   input.style.height = Math.min(input.scrollHeight, 140) + "px";
 });
+
+// ===== セットアップ画面 =====
+const SETUP_DONE_KEY = "acs_setup_done_v1";
+
+async function runSetupCheck() {
+  const list = document.getElementById("setup-checklist");
+  list.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">チェック中...</div>';
+  document.getElementById("setup-login").style.display = "none";
+  document.getElementById("setup-claude-hint").classList.add("hidden");
+  document.getElementById("setup-chrome-hint").classList.add("hidden");
+
+  let data;
+  try {
+    const res = await fetch("/api/setup/check");
+    data = await res.json();
+  } catch (e) {
+    list.innerHTML = '<div style="padding:14px;color:#d6584b;font-size:13px">⚠ サーバーに接続できません: ' + e.message + '</div>';
+    return;
+  }
+
+  list.innerHTML = "";
+  let allRequiredOk = true;
+
+  for (const c of data.checks) {
+    const row = document.createElement("div");
+    row.className = "sc-row";
+    const icon = c.ok ? "✅" : (c.required ? "❌" : "⚠️");
+    if (!c.ok && c.required) allRequiredOk = false;
+
+    let fixBtn = "";
+    if (!c.ok && c.fix && c.fix !== "claude_cli" && c.fix !== "chrome") {
+      fixBtn = `<button class="sc-fix" onclick="installPkg('${c.fix}',this)">インストール</button>`;
+    } else if (!c.ok && c.fix === "claude_cli") {
+      fixBtn = `<button class="sc-fix" onclick="showClaudeHint()">方法を見る</button>`;
+    } else if (!c.ok && c.fix === "chrome") {
+      fixBtn = `<button class="sc-fix" onclick="showChromeHint()">方法を見る</button>`;
+    }
+
+    row.innerHTML =
+      `<span class="sc-icon">${icon}</span>` +
+      `<div class="sc-body"><div class="sc-label">${c.label}</div><div class="sc-detail">${c.detail}</div></div>` +
+      fixBtn;
+    list.appendChild(row);
+  }
+
+  if (allRequiredOk) {
+    document.getElementById("setup-login").style.display = "";
+    localStorage.setItem(SETUP_DONE_KEY, "1");
+  }
+}
+
+async function installPkg(pkg, btn) {
+  btn.disabled = true;
+  btn.textContent = "インストール中…";
+  btn.classList.add("installing");
+  try {
+    const res = await fetch("/api/setup/install", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ package: pkg }),
+    });
+    const d = await res.json();
+    if (!res.ok) {
+      alert("インストール失敗: " + (d.error || res.status));
+      btn.disabled = false; btn.textContent = "インストール"; btn.classList.remove("installing");
+      return;
+    }
+    await runSetupCheck();
+  } catch (e) {
+    alert("通信エラー: " + e.message);
+    btn.disabled = false; btn.textContent = "インストール"; btn.classList.remove("installing");
+  }
+}
+
+function showClaudeHint() {
+  document.getElementById("setup-claude-hint").classList.remove("hidden");
+  document.getElementById("setup-claude-hint").scrollIntoView({ behavior: "smooth" });
+}
+function showChromeHint() {
+  document.getElementById("setup-chrome-hint").classList.remove("hidden");
+  document.getElementById("setup-chrome-hint").scrollIntoView({ behavior: "smooth" });
+}
+function openSetup() {
+  document.getElementById("setup-overlay").classList.remove("hidden");
+  runSetupCheck();
+}
+function closeSetup() {
+  document.getElementById("setup-overlay").classList.add("hidden");
+}
+
+// 「⚙ セットアップ」ボタンでも開けるようにquickをフック
+const _origQuick = quick;
+window.quick = function(text) {
+  if (text === "セットアップ" || text === "setup") {
+    openSetup();
+    return;
+  }
+  _origQuick(text);
+};
+
+// 初回起動時（セットアップ未完了）は自動でセットアップ画面を表示
+if (!localStorage.getItem(SETUP_DONE_KEY)) {
+  setTimeout(openSetup, 400);
+}
 
 // 初期描画
 renderTabs();

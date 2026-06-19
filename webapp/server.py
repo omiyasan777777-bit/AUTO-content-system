@@ -447,11 +447,100 @@ def api_send():
     return Response(generate(), mimetype="application/x-ndjson")
 
 
+@app.get("/api/setup/check")
+def api_setup_check():
+    """環境チェック: Python / 必要パッケージ / Claude CLI / Chrome を検査して結果を返す。"""
+    import importlib
+
+    checks = []
+
+    # Python バージョン
+    v = sys.version_info
+    checks.append({
+        "id": "python",
+        "label": "Python 3.8+",
+        "ok": v >= (3, 8),
+        "detail": f"{v.major}.{v.minor}.{v.micro}",
+        "fix": None,
+        "required": True,
+    })
+
+    # pip パッケージ
+    for pkg, label, pip_name, required in [
+        ("flask",            "Flask",              "flask",              True),
+        ("selenium",         "Selenium",           "selenium",           True),
+        ("webdriver_manager","WebDriver Manager",  "webdriver-manager",  True),
+        ("psutil",           "psutil（任意）",      "psutil",             False),
+    ]:
+        try:
+            mod = importlib.import_module(pkg)
+            ver = getattr(mod, "__version__", "OK")
+            checks.append({"id": pkg, "label": label, "ok": True,
+                            "detail": ver, "fix": None, "required": required})
+        except ImportError:
+            checks.append({"id": pkg, "label": label, "ok": False,
+                            "detail": "未インストール", "fix": pip_name, "required": required})
+
+    # Claude CLI
+    checks.append({
+        "id": "claude",
+        "label": "Claude CLI",
+        "ok": bool(CLAUDE_BIN),
+        "detail": CLAUDE_BIN or "見つかりません",
+        "fix": "claude_cli" if not CLAUDE_BIN else None,
+        "required": True,
+    })
+
+    # Chrome（note投稿に必要）
+    chrome_paths = [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium",
+    ]
+    chrome_found = next((p for p in chrome_paths if Path(p).exists()), None)
+    checks.append({
+        "id": "chrome",
+        "label": "Google Chrome（note投稿用）",
+        "ok": bool(chrome_found),
+        "detail": chrome_found or "見つかりません",
+        "fix": "chrome" if not chrome_found else None,
+        "required": False,
+    })
+
+    all_required_ok = all(c["ok"] for c in checks if c["required"])
+    return {"ok": all_required_ok, "checks": checks}
+
+
+@app.post("/api/setup/install")
+def api_setup_install():
+    """pip パッケージを自動インストールする（flask / selenium / webdriver-manager / psutil のみ）。"""
+    ALLOWED_PKGS = {"flask", "selenium", "webdriver-manager", "psutil"}
+    data = request.get_json(force=True, silent=True) or {}
+    pkg = (data.get("package") or "").strip()
+    if pkg not in ALLOWED_PKGS:
+        return {"error": f"インストールできないパッケージです: {pkg}"}, 400
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", pkg, "--quiet", "--disable-pip-version-check"],
+            capture_output=True, text=True, timeout=120,
+        )
+        if result.returncode != 0:
+            return {"error": result.stderr[-500:] or "インストールに失敗しました"}, 500
+        return {"ok": True, "package": pkg}
+    except subprocess.TimeoutExpired:
+        return {"error": "インストールがタイムアウトしました（120秒）"}, 500
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 if __name__ == "__main__":
     print("=" * 60)
-    print("  AUTO-content-system Web UI")
+    print("  note-article-system  v3")
     print(f"  http://{HOST}:{PORT} をブラウザで開いてください")
     print(f"  作業ディレクトリ: {PROJECT_DIR}")
-    print(f"  claude CLI: {CLAUDE_BIN}")
+    print(f"  claude CLI: {CLAUDE_BIN or '未検出（要インストール）'}")
     print("=" * 60)
     app.run(host=HOST, port=PORT, threaded=True)
