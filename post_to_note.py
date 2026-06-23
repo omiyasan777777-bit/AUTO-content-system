@@ -75,12 +75,25 @@ def create_driver(profile_dir: str = None):
     options = webdriver.ChromeOptions()
     options.add_argument(f"--user-data-dir={chrome_data}")
     options.add_argument(f"--profile-directory={profile_dir or 'Profile 1'}")
+    import shutil
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--start-maximized")
+    # Use Playwright-bundled Chromium if system Chrome not found
+    _chrome_bin = shutil.which("google-chrome") or shutil.which("chromium") or "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+    if os.path.exists(_chrome_bin):
+        options.binary_location = _chrome_bin
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
 
-    service = ChromeService(ChromeDriverManager().install())
+    # Use system chromedriver if available, otherwise fall back to ChromeDriverManager
+    _sys_chromedriver = shutil.which("chromedriver") or "/opt/node22/bin/chromedriver"
+    if os.path.exists(_sys_chromedriver):
+        service = ChromeService(_sys_chromedriver)
+    else:
+        service = ChromeService(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
         "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
