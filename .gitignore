@@ -1,0 +1,4 @@
+cloned_chrome_data/
+cloned_chrome_data_pw/
+__pycache__/
+*.pyc
