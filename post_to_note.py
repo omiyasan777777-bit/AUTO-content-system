@@ -80,7 +80,18 @@ def create_driver(profile_dir: str = None):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
 
-    service = ChromeService(ChromeDriverManager().install())
+    # 環境内のchromatriverを直接使う（webdriver_managerのDL不要）
+    import shutil
+    chromedriver_path = shutil.which("chromedriver") or "/opt/node22/bin/chromedriver"
+    # Playwright同梱のChromiumバイナリを使用
+    chrome_binary = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+    if not os.path.exists(chrome_binary):
+        chrome_binary = "/opt/pw-browsers/chromium"
+    if os.path.exists(chrome_binary):
+        options.binary_location = chrome_binary
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    service = ChromeService(executable_path=chromedriver_path)
     driver = webdriver.Chrome(service=service, options=options)
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
         "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
