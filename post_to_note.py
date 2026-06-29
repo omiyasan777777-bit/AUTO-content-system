@@ -23,98 +23,13 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from webdriver_manager.chrome import ChromeDriverManager
-
 # ==============================
 # 設定
 # ==============================
 BASE_DIR = Path(__file__).parent
 NOTE_NEW_URL = "https://note.com/new"
-
-
-def create_driver(profile_dir: str = None):
-    """Selenium Chrome ドライバーを作成"""
-    # ロックファイル解放
-    try:
-        import psutil
-        killed = set()
-        for proc in psutil.process_iter(["pid", "name", "open_files"]):
-            try:
-                for f in (proc.info["open_files"] or []):
-                    if "cloned_chrome_data" in f.path and f.path.endswith("lockfile"):
-                        p = psutil.Process(proc.info["pid"])
-                        for child in p.children(recursive=True):
-                            if child.pid not in killed:
-                                try:
-                                    child.kill()
-                                except Exception:
-                                    pass
-                                killed.add(child.pid)
-                        if proc.info["pid"] not in killed:
-                            try:
-                                p.kill()
-                            except Exception:
-                                pass
-                            killed.add(proc.info["pid"])
-                        break
-            except Exception:
-                pass
-        if killed:
-            time.sleep(4)
-    except ImportError:
-        pass
-
-    chrome_data = str(BASE_DIR / "cloned_chrome_data")
-    os.makedirs(chrome_data, exist_ok=True)
-
-    options = webdriver.ChromeOptions()
-    options.add_argument(f"--user-data-dir={chrome_data}")
-    options.add_argument(f"--profile-directory={profile_dir or 'Profile 1'}")
-    options.add_argument("--start-maximized")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-
-    service = ChromeService(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-        "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-    })
-    return driver
-
-
-def wait_for_login(driver, timeout=180):
-    """note.com のログインを待つ"""
-    current = driver.current_url
-    if "login" not in current and "signup" not in current:
-        return
-
-    print("\n" + "=" * 60)
-    print("  note.com にログインしてください！")
-    print(f"  （最大 {timeout}秒 待機します）")
-    print("=" * 60)
-
-    waited = 0
-    while waited < timeout:
-        time.sleep(5)
-        waited += 5
-        try:
-            url = driver.current_url
-            if "login" not in url and "signup" not in url:
-                print("[OK] ログイン完了！")
-                time.sleep(3)
-                return
-        except Exception:
-            pass
-        if waited % 30 == 0:
-            print(f"[INFO] ログイン待機中... ({waited}/{timeout}秒)")
-
-    raise RuntimeError("ログインがタイムアウトしました")
+CHROMIUM_EXECUTABLE = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+CHROME_USER_DATA = str(BASE_DIR / "cloned_chrome_data")
 
 
 def extract_title(output_dir: Path) -> str:
@@ -131,14 +46,7 @@ def extract_title(output_dir: Path) -> str:
 
 
 def normalize_headings(text: str) -> str:
-    """見出しをnoteの2階層（大見出し=## / 小見出し=###）に正規化する。
-
-    noteのエディタは見出しが2種類（大見出し・小見出し）しかないため、
-    Markdownの#〜######を確実に2階層へマッピングする。
-      - H1〜H2（# / ##）→ 大見出し（##）
-      - H3以下（### 〜）→ 小見出し（###）
-    コードフェンス（```）内の # はコメントの可能性があるため変換しない。
-    """
+    """見出しをnoteの2階層（大見出し=## / 小見出し=###）に正規化する。"""
     lines = text.split("\n")
     result = []
     in_fence = False
@@ -166,25 +74,22 @@ def convert_tables_to_lists(text: str) -> str:
     while i < len(lines):
         line = lines[i]
         stripped = line.strip()
-        # 表の開始判定: |で始まり、次行が区切り行（|---|---|）
         if (
             stripped.startswith("|")
             and i + 1 < len(lines)
             and re.match(r"^\|[\s:|-]+\|$", lines[i + 1].strip())
         ):
             headers = [c.strip() for c in stripped.strip("|").split("|")]
-            i += 2  # ヘッダー行 + 区切り行をスキップ
+            i += 2
             rows = []
             while i < len(lines) and lines[i].strip().startswith("|"):
                 cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
                 rows.append(cells)
                 i += 1
-            # 箇条書きへ変換
             for cells in rows:
                 first = cells[0] if cells else ""
                 rest = cells[1:]
                 if len(headers) <= 2 and len(rest) == 1:
-                    # 2列の表 → 「・項目: 説明」
                     result.append(f"・{first}: {rest[0]}")
                 else:
                     result.append(f"■ {first}")
@@ -211,14 +116,12 @@ def build_article(output_dir: Path) -> str:
     letter = letter_path.read_text(encoding="utf-8")
     content = content_path.read_text(encoding="utf-8")
 
-    # メタ情報セクションを除去
     for marker in ["## メタ情報", "## このラインより下が有料エリアです"]:
         if marker in letter:
             letter = letter[:letter.index(marker)].rstrip()
         if marker in content:
             content = content[:content.index(marker)].rstrip()
 
-    # 先頭の Markdown タイトル行を除去（note側でタイトル入力するため）
     lines = letter.split("\n")
     if lines and lines[0].startswith("# "):
         lines = lines[1:]
@@ -227,119 +130,18 @@ def build_article(output_dir: Path) -> str:
         letter = "\n".join(lines)
 
     combined = f"{letter}\n\n---\n\n{content}"
-    # noteは表非対応のため、残っている表は箇条書きに変換
     combined = convert_tables_to_lists(combined)
-    # noteの見出しは大見出し/小見出しの2階層のみ。確実にマッピングする
     combined = normalize_headings(combined)
     return combined
 
 
-def input_title(driver, title: str) -> bool:
-    """note の記事タイトルを入力"""
-    try:
-        textarea = None
-        for sel in [
-            "textarea[placeholder*='タイトル']",
-            "textarea.p-editor__title",
-            "textarea",
-        ]:
-            try:
-                textarea = driver.find_element(By.CSS_SELECTOR, sel)
-                break
-            except Exception:
-                pass
-
-        if textarea is None:
-            print("[ERROR] タイトル入力欄が見つかりません")
-            return False
-
-        textarea.clear()
-        textarea.send_keys(title)
-        print(f"[OK] タイトル入力: {title[:50]}")
-        return True
-    except Exception as e:
-        print(f"[ERROR] タイトル入力失敗: {e}")
-        return False
-
-
-def input_body(driver, body: str) -> bool:
-    """note の記事本文を入力（クリップボード経由）"""
-    try:
-        import pyperclip
-
-        # 本文入力エリアを探す
-        editor = None
-        for sel in [
-            "div.ProseMirror",
-            "div[contenteditable='true']",
-            "div.p-editor__body",
-        ]:
-            try:
-                editor = driver.find_element(By.CSS_SELECTOR, sel)
-                break
-            except Exception:
-                pass
-
-        if editor is None:
-            print("[ERROR] 本文入力欄が見つかりません")
-            return False
-
-        # クリップボード経由でペースト（Mac は Command+V、それ以外は Ctrl+V）
-        paste_key = Keys.COMMAND if sys.platform == "darwin" else Keys.CONTROL
-        pyperclip.copy(body)
-        ActionChains(driver).click(editor).pause(0.5).perform()
-        ActionChains(driver).key_down(paste_key).send_keys("v").key_up(paste_key).perform()
-        time.sleep(2)
-
-        print(f"[OK] 本文入力: {len(body):,}文字")
-        return True
-    except ImportError:
-        print("[ERROR] pyperclip が必要です: pip install pyperclip")
-        return False
-    except Exception as e:
-        print(f"[ERROR] 本文入力失敗: {e}")
-        return False
-
-
-def save_draft(driver) -> bool:
-    """下書き保存ボタンをクリック"""
-    time.sleep(2)
-
-    # 下書き保存ボタンを探す
-    for sel in [
-        "button[data-testid='save-draft']",
-        "button.o-navPublish__draftButton",
-    ]:
-        try:
-            btn = driver.find_element(By.CSS_SELECTOR, sel)
-            btn.click()
-            time.sleep(3)
-            print("[OK] 下書き保存しました！")
-            return True
-        except Exception:
-            pass
-
-    # テキストで探す
-    for btn in driver.find_elements(By.TAG_NAME, "button"):
-        txt = btn.text.strip()
-        if "下書き" in txt:
-            btn.click()
-            time.sleep(3)
-            print("[OK] 下書き保存しました！")
-            return True
-
-    print("[WARN] 下書き保存ボタンが見つかりません。手動で保存してください")
-    return False
-
-
 def post(output_dir: Path, title: str = None, profile_dir: str = None, auto_save: bool = False):
-    """メイン処理: note.com に下書き投稿"""
+    """メイン処理: note.com に下書き投稿（Playwright使用）"""
     print(f"\n{'='*60}")
     print(f"  note.com 下書き投稿")
     print(f"  出力フォルダ: {output_dir}")
     print(f"{'='*60}")
 
-    # タイトル取得
     if not title:
         title = extract_title(output_dir)
     if not title:
@@ -348,60 +150,137 @@ def post(output_dir: Path, title: str = None, profile_dir: str = None, auto_save
         print("[ERROR] タイトルが必要です")
         return
 
-    # 記事本文を構築
     body = build_article(output_dir)
     print(f"[INFO] タイトル: {title}")
     print(f"[INFO] 本文: {len(body):,}文字")
 
-    # Chrome 起動
-    driver = create_driver(profile_dir)
+    from playwright.sync_api import sync_playwright
 
-    try:
-        # note.com へアクセス
-        driver.get(NOTE_NEW_URL)
-        time.sleep(5)
+    os.makedirs(CHROME_USER_DATA, exist_ok=True)
 
-        # ログイン待ち
-        wait_for_login(driver)
+    with sync_playwright() as p:
+        context = p.chromium.launch_persistent_context(
+            user_data_dir=CHROME_USER_DATA,
+            executable_path=CHROMIUM_EXECUTABLE,
+            headless=False,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+            ],
+        )
 
-        # 記事作成ページに再アクセス（ログイン後のリダイレクト対応）
-        if "new" not in driver.current_url:
-            driver.get(NOTE_NEW_URL)
-            time.sleep(5)
+        page = context.new_page()
+
+        try:
+            page.goto(NOTE_NEW_URL, wait_until="networkidle", timeout=30000)
+        except Exception:
+            page.goto(NOTE_NEW_URL, timeout=30000)
+
+        # ログイン待機
+        if "login" in page.url or "signup" in page.url:
+            print("\n" + "=" * 60)
+            print("  note.com にログインしてください！")
+            print("  （最大180秒 待機します）")
+            print("=" * 60)
+            for _ in range(36):
+                time.sleep(5)
+                if "login" not in page.url and "signup" not in page.url:
+                    print("[OK] ログイン完了！")
+                    break
+            else:
+                raise RuntimeError("ログインがタイムアウトしました")
+
+        if "new" not in page.url:
+            try:
+                page.goto(NOTE_NEW_URL, wait_until="networkidle", timeout=30000)
+            except Exception:
+                page.goto(NOTE_NEW_URL, timeout=30000)
+
+        time.sleep(3)
 
         # タイトル入力
-        if not input_title(driver, title):
+        try:
+            title_sel = "textarea[placeholder*='タイトル'], textarea.p-editor__title, textarea"
+            title_el = page.locator(title_sel).first
+            title_el.click()
+            title_el.fill(title)
+            print(f"[OK] タイトル入力: {title[:50]}")
+        except Exception as e:
+            print(f"[ERROR] タイトル入力失敗: {e}")
+            context.close()
             return
 
         time.sleep(1)
 
-        # 本文入力
-        if not input_body(driver, body):
+        # 本文入力（クリップボード経由）
+        try:
+            editor_sel = "div.ProseMirror, div[contenteditable='true'], div.p-editor__body"
+            editor = page.locator(editor_sel).first
+            editor.click()
+            time.sleep(0.5)
+            # JavaScriptでクリップボードに設定してペースト
+            page.evaluate(f"navigator.clipboard.writeText({json.dumps(body)})")
+            time.sleep(0.3)
+            page.keyboard.press("Control+a")
+            time.sleep(0.2)
+            page.keyboard.press("Control+v")
+            time.sleep(3)
+            print(f"[OK] 本文入力: {len(body):,}文字")
+        except Exception as e:
+            print(f"[ERROR] 本文入力失敗: {e}")
+            context.close()
             return
 
         time.sleep(2)
 
         # 下書き保存
+        def do_save():
+            saved = False
+            for sel in [
+                "button[data-testid='save-draft']",
+                "button.o-navPublish__draftButton",
+            ]:
+                try:
+                    btn = page.locator(sel).first
+                    if btn.is_visible():
+                        btn.click()
+                        time.sleep(3)
+                        print("[OK] 下書き保存しました！")
+                        saved = True
+                        break
+                except Exception:
+                    pass
+
+            if not saved:
+                for btn in page.locator("button").all():
+                    try:
+                        if "下書き" in btn.inner_text():
+                            btn.click()
+                            time.sleep(3)
+                            print("[OK] 下書き保存しました！")
+                            saved = True
+                            break
+                    except Exception:
+                        pass
+
+            if not saved:
+                print("[WARN] 下書き保存ボタンが見つかりません。手動で保存してください")
+
         if auto_save:
-            save_draft(driver)
+            do_save()
         else:
             try:
                 ans = input("\n下書き保存しますか？ [Y/n]: ").strip().lower()
                 if ans in ("", "y", "yes"):
-                    save_draft(driver)
+                    do_save()
                 else:
                     print("[INFO] 手動で保存してください。ブラウザは開いたままです")
                     input("Enterを押すと終了します...")
             except EOFError:
-                save_draft(driver)
+                do_save()
 
-    except KeyboardInterrupt:
-        print("\n[INFO] 中断しました")
-    finally:
-        try:
-            driver.quit()
-        except Exception:
-            pass
+        context.close()
 
     print(f"\n[完了] note.com への投稿処理が終わりました")
 
