@@ -80,7 +80,15 @@ def create_driver(profile_dir: str = None):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
 
-    service = ChromeService(ChromeDriverManager().install())
+    # ローカル環境のChromium/chromedriverを優先使用
+    local_chromedriver = "/opt/node22/bin/chromedriver"
+    local_chromium = "/opt/pw-browsers/chromium"
+    if os.path.exists(local_chromium):
+        options.binary_location = local_chromium
+    if os.path.exists(local_chromedriver):
+        service = ChromeService(executable_path=local_chromedriver)
+    else:
+        service = ChromeService(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
         "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
