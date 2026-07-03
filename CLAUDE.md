@@ -18,6 +18,9 @@ AUTO-content-system/
 │   ├── server.py          ← Flaskサーバー（127.0.0.1:8787）
 │   └── static/index.html  ← チャットUI
 ├── knowledge/             ← あなただけの秘伝ノウハウ（裏メニューで管理・執筆時に注入）
+├── Market-Lens/           ← note市場リサーチアプリ（`npm start` → 127.0.0.1:4173）
+│   ├── server.mjs         ← 検索/24h購入判定/穴場ジャンル/人気ワードAPI
+│   └── public/            ← フロントエンド（検索・分析UI）
 ├── prompts/               ← 各フェーズのプロンプト定義書
 │   ├── 00_master_orchestrator.md  ← 全体統括
 │   ├── 00a_self_analysis.md       ← Phase 0: 自己分析・棚卸し
