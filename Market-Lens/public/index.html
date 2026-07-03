@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Market Lens — note市場リサーチ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#" aria-label="Market Lens ホーム">
+      <span class="brand-mark"><i></i><i></i><i></i></span>
+      <span>Market Lens</span>
+    </a>
+    <p class="side-label">WORKSPACE</p>
+    <nav class="side-nav" aria-label="メインナビゲーション">
+      <button class="nav-item active" data-view="research"><span class="nav-icon">⌁</span> リサーチ</button>
+      <button class="nav-item" data-view="analysis"><span class="nav-icon">⌗</span> 市場分析</button>
+      <button class="nav-item" data-view="gap"><span class="nav-icon">◎</span> 穴場ジャンル</button>
+      <button class="nav-item" data-view="trends"><span class="nav-icon">✦</span> 人気ワード</button>
+      <button class="nav-item" data-view="saved"><span class="nav-icon">◇</span> 保存済み <b id="savedCount">0</b></button>
+    </nav>
+    <div class="side-bottom">
+      <div class="truth-card">
+        <span>DATA POLICY</span>
+        <strong>事実と推測を<br>混ぜない。</strong>
+        <p>販売数は非公開です。公開指標から「注目度」を算出します。</p>
+      </div>
+      <button class="nav-item" id="openGuide"><span class="nav-icon">?</span> 使い方</button>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">NOTE MARKET INTELLIGENCE</p>
+        <h1>市場の「今」を、見つける。</h1>
+      </div>
+      <div class="top-actions">
+        <button class="button ghost" id="importButton">＋ URLから追加</button>
+        <button class="button dark" id="exportButton">⇩ CSVを書き出す</button>
+      </div>
+    </header>
+
+    <section class="search-panel" aria-label="検索条件">
+      <form class="search-row" id="searchForm">
+        <label class="search-box">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="例：AI副業、恋愛、子育て" autocomplete="off" required>
+          <kbd>⌘ K</kbd>
+        </label>
+        <button class="search-submit" id="searchSubmit" type="submit">noteを検索</button>
+        <select id="limitFilter" aria-label="取得件数">
+          <option value="30">30件</option>
+          <option value="50">50件</option>
+          <option value="100">100件</option>
+        </select>
+        <select id="periodFilter" aria-label="期間">
+          <option value="all">すべての期間</option>
+          <option value="24">24時間以内</option>
+          <option value="168">7日以内</option>
+          <option value="720">30日以内</option>
+        </select>
+        <select id="sortFilter" aria-label="並び順">
+          <option value="popular">note 人気</option>
+          <option value="hot">note 急上昇</option>
+          <option value="new">note 新着</option>
+        </select>
+      </form>
+      <div class="search-meta" id="searchMeta"><span class="live-dot"></span> キーワードを入力すると、noteの公開タグページから実際の記事を探します。</div>
+      <div class="genre-presets" aria-label="ジャンルから探す"><span>ジャンル</span><button type="button" data-genre="副業">副業</button><button type="button" data-genre="ビジネス">ビジネス</button><button type="button" data-genre="恋愛">恋愛</button><button type="button" data-genre="投資">投資</button><button type="button" data-genre="子育て">子育て</button><button type="button" data-genre="美容">美容</button><button type="button" data-genre="AI">AI</button><button type="button" data-genre="ライティング">文章</button></div>
+      <div class="filter-row">
+        <div class="categories" id="categories"></div>
+        <div class="filter-actions"><label class="sold-toggle"><input id="soldOnly" type="checkbox"><i></i><span>24h購入のみ</span></label><button class="filter-button" id="refreshButton" title="キャッシュを使わずに最新の結果を取得します">🔄 <span>最新に更新</span></button><button class="filter-button" id="priceButton">価格帯 <span id="priceLabel">すべて</span>⌄</button></div>
+      </div>
+      <div class="price-popover" id="pricePopover" hidden>
+        <label>最低価格 <input id="minPrice" type="number" min="0" step="100" value="0"></label>
+        <label>最高価格 <input id="maxPrice" type="number" min="0" step="100" value="1000000"></label>
+        <button class="button dark small" id="applyPrice">適用</button>
+      </div>
+    </section>
+
+    <section id="researchView" class="view active">
+      <div class="section-heading">
+        <div><h2>注目の記事</h2><p id="resultSummary">公開情報をもとにしたリサーチ結果</p></div>
+        <div class="view-toggle" aria-label="表示切替">
+          <button class="active" data-layout="grid" aria-label="カード表示">▦</button>
+          <button data-layout="table" aria-label="表表示">☷</button>
+        </div>
+      </div>
+      <div class="article-grid" id="articleGrid"></div>
+      <div class="table-wrap" id="tableWrap" hidden>
+        <table><thead><tr><th>記事</th><th>ジャンル</th><th>価格</th><th>スキ</th><th>注目度</th><th></th></tr></thead><tbody id="articleTable"></tbody></table>
+      </div>
+      <div class="load-more-row" id="loadMoreRow" hidden><button class="button ghost" id="loadMore">さらに読み込む（+30件）</button></div>
+      <div class="empty" id="emptyState"><span>⌕</span><h3>noteを検索してみましょう</h3><p>上の検索欄にジャンルやキーワードを入力してください。</p></div>
+    </section>
+
+    <section id="analysisView" class="view">
+      <div class="section-heading"><div><h2>市場分析</h2><p>表示中のデータから、傾向を読み解きます</p></div></div>
+      <div class="metric-grid" id="metrics"></div>
+      <div class="analysis-grid">
+        <article class="chart-card"><div class="chart-title"><h3>ジャンル別 注目度</h3><span>平均スコア</span></div><div id="categoryChart" class="bar-chart"></div></article>
+        <article class="chart-card"><div class="chart-title"><h3>価格帯の分布</h3><span>記事数</span></div><div id="priceChart" class="price-chart"></div></article>
+        <article class="chart-card wide"><div class="chart-title"><h3>伸びているキーワード</h3><span>タイトル・タグ出現数 × 注目度</span></div><div id="keywordCloud" class="keyword-cloud"></div></article>
+      </div>
+    </section>
+
+    <section id="gapView" class="view">
+      <div class="section-heading"><div><h2>穴場ジャンルを探す</h2><p>需要（スキ・有料化）と供給（記事数・投稿量）を比較し、新作noteの狙い目を探します</p></div></div>
+      <div class="tool-run-row">
+        <input id="gapGenres" type="text" placeholder="調べたいジャンルをカンマ区切りで入力（空欄ならおすすめ14ジャンルを調査）" autocomplete="off">
+        <button class="button dark" id="gapRun">穴場を調査する</button>
+      </div>
+      <div class="search-meta" id="gapStatus"><span class="live-dot"></span> 「穴場を調査する」を押すと、各ジャンルの人気記事と新着投稿を取得して穴場度を採点します（30〜60秒ほどかかります）。</div>
+      <div class="gap-list" id="gapResults"></div>
+    </section>
+
+    <section id="trendsView" class="view">
+      <div class="section-heading"><div><h2>人気ワード</h2><p>複数ジャンルの人気・新着記事のタイトルとタグから、いま読まれているワードを集計します</p></div></div>
+      <div class="tool-run-row">
+        <input id="trendsGenres" type="text" placeholder="集計対象のジャンルをカンマ区切りで入力（空欄ならおすすめ10ジャンル）" autocomplete="off">
+        <button class="button dark" id="trendsRun">人気ワードを集計する</button>
+      </div>
+      <div class="search-meta" id="trendsStatus"><span class="live-dot"></span> 「人気ワードを集計する」を押すと、noteの公開記事からワードを重み付き集計します。ワードをクリックするとそのまま検索できます。</div>
+      <div id="trendsResults"></div>
+    </section>
+
+    <section id="savedView" class="view">
+      <div class="section-heading"><div><h2>保存済み</h2><p>あとで比較したい記事をまとめて確認</p></div></div>
+      <div class="article-grid" id="savedGrid"></div>
+      <div class="empty" id="savedEmpty"><span>◇</span><h3>保存した記事はまだありません</h3><p>記事カードのブックマークを押すと、ここに追加されます。</p></div>
+    </section>
+  </main>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+  <aside class="drawer" id="detailDrawer" aria-label="記事詳細" aria-hidden="true">
+    <button class="icon-button drawer-close" id="drawerClose" aria-label="閉じる">×</button>
+    <div id="drawerContent"></div>
+  </aside>
+
+  <dialog id="importDialog">
+    <form method="dialog" class="dialog-card" id="importForm">
+      <button class="icon-button dialog-close" value="cancel" aria-label="閉じる">×</button>
+      <p class="eyebrow">ADD SOURCE</p><h2>記事URLから追加</h2>
+      <p>noteの公開記事URLから、タイトル・著者・画像・公開日・スキ数などを取得します。</p>
+      <label class="dialog-label">note記事URL<input id="urlInput" type="url" placeholder="https://note.com/creator/n/n..." required></label>
+      <p class="form-error" id="importError"></p>
+      <button class="button dark full" id="importSubmit" value="default">公開情報を取得</button>
+      <small>販売数・購入数は公開されていないため取得しません。24h購入検索では、有料候補の記事ページにある公開判定値を確認します。</small>
+    </form>
+  </dialog>
+
+  <dialog id="guideDialog"><div class="dialog-card guide"><button class="icon-button dialog-close" data-close="guide" aria-label="閉じる">×</button><p class="eyebrow">QUICK GUIDE</p><h2>3分で市場を見る</h2><ol><li><b>気になる記事を追加</b><span>noteの公開記事URLを貼り付けます。</span></li><li><b>条件で絞り込む</b><span>ジャンル・期間・価格・キーワードで比較します。</span></li><li><b>共通点を見つける</b><span>市場分析でタイトル、タグ、価格帯の傾向を確認します。</span></li><li><b>CSVで深掘りする</b><span>現在の絞り込み結果をそのまま保存できます。</span></li></ol><button class="button dark full" data-close="guide">はじめる</button></div></dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
