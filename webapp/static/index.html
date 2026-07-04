@@ -675,6 +675,88 @@
     box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(201,139,208,0.42);
   }
   #bd-go:active { box-shadow: var(--nm-in); }
+
+  /* ===== Threads 連携モーダル ===== */
+  #th-overlay {
+    position: fixed; inset: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background: rgba(74,53,64,0.28);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  }
+  #th-overlay.hidden { display: none; }
+  #th-modal {
+    width: 100%; max-width: 720px; max-height: 88vh;
+    display: flex; flex-direction: column; gap: 14px;
+    background: var(--bg); border-radius: var(--radius);
+    box-shadow: var(--nm-out); padding: 22px;
+    animation: rise .2s ease both;
+  }
+  .th-head { display: flex; align-items: center; gap: 10px; }
+  .th-head .th-title { font-size: 15px; font-weight: 800; color: var(--heading); }
+  .th-head .th-user { font-size: 12px; color: var(--muted); }
+  .th-tabs { display: flex; gap: 5px; background: var(--bg); border-radius: 999px; padding: 3px; box-shadow: var(--nm-in); }
+  .th-tabs button {
+    font-size: 12px; padding: 6px 14px; border: none; border-radius: 999px;
+    background: transparent; color: var(--muted); cursor: pointer;
+    font-family: inherit; font-weight: 700;
+  }
+  .th-tabs button.active { background: var(--bg); color: var(--g2); box-shadow: var(--nm-out-sm); }
+  #th-close {
+    font-size: 14px; color: var(--text); margin-left: auto;
+    border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer;
+    background: var(--bg); box-shadow: var(--nm-out-sm);
+  }
+  #th-close:active { box-shadow: var(--nm-in); }
+  .th-controls { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+  .th-controls select {
+    font-size: 12px; padding: 7px 11px; border: none; border-radius: 999px;
+    background: var(--bg); color: var(--text); cursor: pointer; outline: none;
+    font-family: inherit; box-shadow: var(--nm-out-sm);
+  }
+  #th-reload {
+    font-size: 12px; font-weight: 700; padding: 7px 14px; border: none; border-radius: 999px;
+    background: var(--bg); color: var(--g2); cursor: pointer; font-family: inherit;
+    box-shadow: var(--nm-out-sm);
+  }
+  #th-reload:active { box-shadow: var(--nm-in); }
+  #th-rank-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px; }
+  .th-card {
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    background: var(--bg); box-shadow: var(--nm-out-sm);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .th-card .th-rank-no { font-size: 11px; font-weight: 800; color: var(--g1); }
+  .th-card .th-text { font-size: 13px; color: var(--text); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .th-card .th-meta { font-size: 11.5px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+  .th-card .th-meta b { color: var(--heading); font-weight: 800; }
+  .th-card a { color: var(--g2); font-size: 11.5px; text-decoration: none; font-weight: 700; }
+  .th-note { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  #th-compose { display: none; flex-direction: column; gap: 10px; }
+  #th-modal.composing #th-rank { display: none; }
+  #th-modal.composing #th-compose { display: flex; }
+  #th-rank { display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  #th-text {
+    width: 100%; height: 180px; resize: vertical;
+    border: none; outline: none; border-radius: var(--radius-sm);
+    padding: 14px; font-family: inherit; font-size: 14px; line-height: 1.7;
+    color: var(--text); background: var(--bg); box-shadow: var(--nm-in);
+  }
+  #th-text::placeholder { color: var(--muted); }
+  .th-compose-foot { display: flex; align-items: center; gap: 10px; }
+  #th-count { font-size: 11.5px; color: var(--muted); }
+  #th-count.over { color: var(--g1); font-weight: 800; }
+  #th-post-btn {
+    margin-left: auto;
+    font-size: 13px; font-weight: 800; padding: 10px 22px; border: none; border-radius: 14px;
+    background: var(--grad); color: #fff; cursor: pointer; font-family: inherit;
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(201,139,208,0.42);
+  }
+  #th-post-btn:active { box-shadow: var(--nm-in); }
+  #th-post-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .th-setup { font-size: 13px; color: var(--text); line-height: 1.9; padding: 6px 4px; }
+  .th-setup code { background: var(--bg); border-radius: 6px; padding: 1px 7px; box-shadow: var(--nm-in); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -712,6 +794,7 @@
   <button onclick="openBraindump()">🖊️ 殴り書きで始める</button>
   <button onclick="quick('セットアップ')">⚙ セットアップ</button>
   <button onclick="quick('noteに投稿して')">📮 noteに投稿</button>
+  <button onclick="openThreads()">🧵 Threads</button>
   <button onclick="quick('多視点レビュー')">🔍 レビュー</button>
   <button onclick="quick('離脱診断')">📉 離脱診断</button>
   <button onclick="openPreview()">👁 プレビュー</button>
@@ -757,6 +840,48 @@
     <div class="bd-actions">
       <button id="bd-cancel" onclick="closeBraindump()">閉じる</button>
       <button id="bd-go" onclick="submitBraindump()">この内容で作り始める →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Threads 連携モーダル（人気投稿ランキング＋投稿） -->
+<div id="th-overlay" class="hidden" onclick="if(event.target===this)closeThreads()">
+  <div id="th-modal">
+    <div class="th-head">
+      <span class="th-title">🧵 Threads</span>
+      <span class="th-user" id="th-user"></span>
+      <div class="th-tabs">
+        <button id="th-tab-rank" class="active" onclick="thSetTab('rank')">📈 人気投稿</button>
+        <button id="th-tab-post" onclick="thSetTab('post')">✍️ 投稿する</button>
+      </div>
+      <button id="th-close" onclick="closeThreads()">✕</button>
+    </div>
+
+    <div id="th-rank">
+      <div class="th-controls">
+        <select id="th-days" onchange="thLoadRanking()">
+          <option value="7">直近7日</option>
+          <option value="30" selected>直近30日</option>
+          <option value="90">直近90日</option>
+        </select>
+        <select id="th-sort" onchange="thLoadRanking()">
+          <option value="views" selected>インプレッション順</option>
+          <option value="likes">いいね順</option>
+          <option value="reposts">リポスト順</option>
+        </select>
+        <button id="th-reload" onclick="thLoadRanking()">↻ 更新</button>
+      </div>
+      <div id="th-rank-list"></div>
+      <div class="th-note">伸びた投稿の「テーマ・書き出し・型」は、次の投稿や有料noteのコンセプトに再利用できます。</div>
+    </div>
+
+    <div id="th-compose">
+      <textarea id="th-text" spellcheck="false" placeholder="Threadsに投稿する本文…&#10;（500字を超えると自動でツリー連投になります）"></textarea>
+      <div class="th-compose-foot">
+        <span id="th-count">0字</span>
+        <button id="th-post-btn" onclick="thPost()">投稿する →</button>
+      </div>
+      <div class="th-note">投稿前に内容をよく確認してください。投稿はすぐに公開されます。</div>
     </div>
   </div>
 </div>
@@ -1162,6 +1287,114 @@ function submitBraindump() {
   document.getElementById("bd-text").value = "";
   input.value = "殴り書きモード\n---ここから殴り書き---\n" + text;
   send();
+}
+
+// ===== Threads 連携（人気投稿ランキング＋投稿） =====
+async function openThreads() {
+  document.getElementById("th-overlay").classList.remove("hidden");
+  thSetTab("rank");
+  try {
+    const st = await (await fetch("/api/threads/status")).json();
+    document.getElementById("th-user").textContent = st.username ? "@" + st.username : "";
+    if (!st.configured) { thShowSetup(); return; }
+    thLoadRanking();
+  } catch (e) {
+    document.getElementById("th-rank-list").innerHTML =
+      '<div class="th-setup">⚠️ サーバーに接続できません: ' + esc(e.message) + "</div>";
+  }
+}
+function closeThreads() {
+  document.getElementById("th-overlay").classList.add("hidden");
+}
+function thSetTab(tab) {
+  document.getElementById("th-modal").classList.toggle("composing", tab === "post");
+  document.getElementById("th-tab-rank").classList.toggle("active", tab === "rank");
+  document.getElementById("th-tab-post").classList.toggle("active", tab === "post");
+  if (tab === "post") setTimeout(() => document.getElementById("th-text").focus(), 50);
+}
+function thShowSetup() {
+  document.getElementById("th-rank-list").innerHTML =
+    '<div class="th-setup">🧵 <b>Threads連携はまだ未設定です</b>（初回のみ・約5分）<br><br>' +
+    "1. <b>developers.facebook.com</b> でアプリを作成（ユースケース: Threads APIにアクセス）<br>" +
+    "2. アプリ設定 → Threads API → <b>アクセストークンを生成</b><br>" +
+    "3. ターミナルで <code>python3 setup_threads.py</code>（Windowsは <code>python setup_threads.py</code>）を実行してトークンを貼り付け<br><br>" +
+    "設定が終わったら「↻ 更新」を押してください。</div>";
+}
+async function thLoadRanking() {
+  const list = document.getElementById("th-rank-list");
+  list.innerHTML = '<div class="th-setup">読み込み中…（投稿数によって少し時間がかかります）</div>';
+  const days = document.getElementById("th-days").value;
+  const sort = document.getElementById("th-sort").value;
+  try {
+    const res = await fetch(`/api/threads/insights?days=${days}&sort=${sort}&top=10`);
+    const data = await res.json();
+    if (!res.ok) {
+      if (/未設定/.test(data.error || "")) { thShowSetup(); return; }
+      list.innerHTML = '<div class="th-setup">⚠️ ' + esc(data.error || "取得に失敗しました") + "</div>";
+      return;
+    }
+    if (data.username) document.getElementById("th-user").textContent = "@" + data.username;
+    const posts = data.posts || [];
+    if (!posts.length) {
+      list.innerHTML = '<div class="th-setup">この期間の投稿がありません。</div>';
+      return;
+    }
+    list.innerHTML = posts.map((p, i) => {
+      const ins = p.insights || {};
+      const when = (p.timestamp || "").slice(0, 16).replace("T", " ");
+      const link = p.permalink ? `<a href="${esc(p.permalink)}" target="_blank" rel="noopener">投稿を開く ↗</a>` : "";
+      return `<div class="th-card">
+        <span class="th-rank-no">No.${i + 1}</span>
+        <div class="th-text">${esc(p.text || "(本文なし)")}</div>
+        <div class="th-meta">
+          <span>👁 <b>${(ins.views || 0).toLocaleString()}</b></span>
+          <span>❤ <b>${(ins.likes || 0).toLocaleString()}</b></span>
+          <span>💬 <b>${(ins.replies || 0).toLocaleString()}</b></span>
+          <span>🔁 <b>${(ins.reposts || 0).toLocaleString()}</b></span>
+          <span>${esc(when)}</span>
+          ${link}
+        </div>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    list.innerHTML = '<div class="th-setup">⚠️ 通信エラー: ' + esc(e.message) + "</div>";
+  }
+}
+const thText = document.getElementById("th-text");
+thText.addEventListener("input", () => {
+  const n = thText.value.length;
+  const counter = document.getElementById("th-count");
+  const parts = Math.max(1, Math.ceil(n / 500));
+  counter.textContent = n + "字" + (n > 500 ? `（自動で${parts}連投に分割）` : "（500字まで1投稿）");
+  counter.classList.toggle("over", n > 500);
+});
+async function thPost() {
+  const text = thText.value.trim();
+  if (!text) { alert("投稿する本文を入力してください。"); return; }
+  if (!confirm("Threadsに投稿します。投稿はすぐに公開されます。よろしいですか？")) return;
+  const btn = document.getElementById("th-post-btn");
+  btn.disabled = true;
+  btn.textContent = "投稿中…";
+  try {
+    const res = await fetch("/api/threads/post", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert("投稿に失敗しました: " + (data.error || res.status)); return; }
+    thText.value = "";
+    thText.dispatchEvent(new Event("input"));
+    closeThreads();
+    addBubble("assistant",
+      `🧵 Threadsに投稿しました！（${data.count}件）` +
+      (data.permalink ? `\n${data.permalink}` : ""));
+  } catch (e) {
+    alert("通信エラー: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "投稿する →";
+  }
 }
 
 // ===== エクスプローラーでフォルダを開く =====

@@ -27,6 +27,11 @@ from flask import Flask, Response, request, send_from_directory
 BASE_DIR = Path(__file__).parent
 PROJECT_DIR = BASE_DIR.parent  # claude の作業ディレクトリ = プロジェクトルート
 
+# プロジェクト直下のモジュール（threads_api 等）を import できるようにする
+sys.path.insert(0, str(PROJECT_DIR))
+import threads_api  # noqa: E402
+from threads_api import ThreadsError  # noqa: E402
+
 HOST = "127.0.0.1"  # ローカル専用。外部公開しないこと
 PORT = 8787
 
@@ -328,6 +333,63 @@ def api_save_file():
     return {"ok": True, "saved": str(target)}
 
 
+# ==============================
+# Threads 連携（人気投稿分析・自動投稿）
+# ==============================
+
+@app.get("/api/threads/status")
+def api_threads_status():
+    """Threadsの設定状況（未設定なら手順を案内するためのフラグ）"""
+    try:
+        cfg = threads_api.load_config()
+        return {"configured": True, "username": cfg.get("username", "")}
+    except ThreadsError:
+        return {"configured": False}
+
+
+@app.get("/api/threads/insights")
+def api_threads_insights():
+    """自分の投稿をインプレッション/いいね順で返す"""
+    try:
+        days = min(max(int(request.args.get("days", 30)), 1), 365)
+        top = min(max(int(request.args.get("top", 10)), 1), 25)
+    except ValueError:
+        return {"error": "days / top は数値で指定してください"}, 400
+    sort = request.args.get("sort", "views")
+    if sort not in ("views", "likes", "replies", "reposts", "quotes"):
+        return {"error": f"未対応の並び順です: {sort}"}, 400
+    try:
+        cfg = threads_api.load_config()
+        posts = threads_api.fetch_ranked_posts(cfg, days=days, top=top, sort=sort)
+    except ThreadsError as e:
+        return {"error": str(e)}, 400
+    return {
+        "username": cfg.get("username", ""),
+        "posts": [{
+            "text": p.get("text", ""),
+            "timestamp": p.get("timestamp", ""),
+            "permalink": p.get("permalink", ""),
+            "insights": p.get("insights", {}),
+        } for p in posts],
+    }
+
+
+@app.post("/api/threads/post")
+def api_threads_post():
+    """テキストをThreadsに投稿（500字超は自動でツリー連投）"""
+    data = request.get_json(force=True, silent=True) or {}
+    text = (data.get("text") or "").strip()
+    if not text:
+        return {"error": "投稿する本文が空です"}, 400
+    try:
+        cfg = threads_api.load_config()
+        ids = threads_api.publish_thread(cfg, text)
+        permalink = threads_api.get_permalink(cfg, ids[0])
+    except ThreadsError as e:
+        return {"error": str(e)}, 400
+    return {"ok": True, "count": len(ids), "permalink": permalink}
+
+
 @app.post("/api/send")
 def api_send():
     data = request.get_json(force=True)
@@ -367,7 +429,7 @@ def api_send():
             "Read", "Write", "Edit", "Glob", "Grep",      # プロジェクト内のファイル操作
             "WebSearch", "WebFetch",                       # 競合リサーチ
             "Task", "TodoWrite",                           # 章執筆のサブエージェント・進捗
-            "Bash(python:*)",                              # count_chars.py / post_to_note.py 等
+            "Bash(python:*)", "Bash(python3:*)",           # count_chars.py / post_to_note.py 等（Macはpython3）
             "Bash(mkdir:*)", "Bash(ls:*)", "Bash(cat:*)",  # フォルダ作成・確認・章結合
         ])
         cmd += ["--allowedTools", allowed_tools]

@@ -7,3 +7,5 @@ __pycache__/
 
 # ローカル環境のみのデータ
 cloned_chrome_data/
+threads_config.json    # Threads APIトークン（秘密情報）
+threads_report.md      # Threads分析レポート（生成物）

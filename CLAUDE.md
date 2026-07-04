@@ -12,6 +12,10 @@ AUTO-content-system/
 ├── CLAUDE.md              ← このファイル（プロジェクト設定）
 ├── README.md              ← プロジェクト説明
 ├── post_to_note.py        ← note.com 下書き投稿（Selenium）
+├── threads_api.py         ← Threads API 共通クライアント（公式API）
+├── setup_threads.py       ← Threads 初期設定（アクセストークン登録）
+├── threads_insights.py    ← Threads 人気投稿分析（インプレッション/いいねランキング）
+├── post_to_threads.py     ← Threads 自動投稿（500字超は自動ツリー連投）
 ├── count_chars.py         ← 文字数カウント（wc -m はバイト数を返すため使用禁止）
 ├── start_webapp.bat       ← Web UI 起動（Windows / ダブルクリック）
 ├── start_webapp.command   ← Web UI 起動（Mac / ダブルクリック）
@@ -60,6 +64,24 @@ AUTO-content-system/
   - 実行: `python post_to_note.py --dir {ワーキングフォルダ} --title "{タイトル}" --profile "{accounts.jsonのcurrent}" --auto-save`
   - 05_sales_letter.md（無料部分）+ 04_paid_content.md（有料部分）を結合して投稿
   - タイトルは 03_product_design.md から自動取得（明示推奨）。`--auto-save` で確認なし下書き保存
+
+## Threads連携（人気投稿分析・自動投稿）
+
+Meta公式の Threads API を使用（設定は `python setup_threads.py`、Macは `python3`）。
+Web UI のクイックバー「🧵 Threads」からも操作できる。
+
+- **「Threads分析」「Threadsの人気投稿」** → `python threads_insights.py` を**AIがBashで実行**し、
+  インプレッション（views）・いいねの高い自分の投稿ランキングを表示。
+  結果は `threads_report.md` に保存される。オプション: `--days 90 --top 20 --sort likes`
+- **「Threadsに投稿して」** → `python post_to_threads.py --text "本文"` を**AIがBashで実行**。
+  500字超は自動でツリー連投になる。投稿はすぐ公開されるため、**投稿前に本文をユーザーへ提示して確認を取る**
+  （フルオートモードでも、Threadsへの公開投稿だけは本文の確認を挟むこと。note下書きと違い取り消せないため）
+- **「Threadsで宣伝して」** → 完成した note の `05_sales_letter.md` のフックと
+  `threads_report.md` の伸びた投稿の型を参考に、宣伝ポスト（500字以内×1〜3案）を作成 →
+  ユーザーが選んだ案を `post_to_threads.py` で投稿
+- **分析結果のコンテンツ制作への活用**: Phase 0〜2 で `threads_report.md` が存在すれば参照し、
+  伸びたテーマ・フックをジャンル選定やコンセプトの参考にする（存在しなければ黙ってスキップ）
+- トークン期限切れエラーが出たら `python setup_threads.py --refresh` を実行して更新する
 
 
 ## 統合知識ベース

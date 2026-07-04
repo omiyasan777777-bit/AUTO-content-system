@@ -153,3 +153,42 @@ start_webapp.bat をダブルクリック
 
 Google Chrome がインストールされていれば、`python3 setup_note.py`（Windows は `python`）で
 ログイン設定後、Web UI の「📮 noteに投稿」からそのまま下書き投稿できます。
+
+---
+
+## Threads 連携（人気投稿分析・自動投稿）
+
+Meta公式の Threads API を使って、以下ができます（Mac / Windows 共通・追加ライブラリ不要）。
+
+- **人気投稿分析**: 自分の投稿をインプレッション（views）・いいね順にランキング表示
+- **自動投稿**: テキストを投稿（500字を超えると自動でツリー連投に分割）
+
+### 初期設定（初回のみ・約5分）
+
+1. https://developers.facebook.com/ でアプリを作成（ユースケース:「Threads APIにアクセス」）
+2. アプリ設定 > Threads API >「アクセストークンを生成」
+   （権限: threads_basic / threads_content_publish / threads_manage_insights）
+3. ターミナルで実行してトークンを貼り付け:
+
+```bash
+python3 setup_threads.py        # Windows は python
+```
+
+### 使い方
+
+```bash
+# 人気投稿ランキング（threads_report.md に保存）
+python3 threads_insights.py                    # 直近30日・views順・Top10
+python3 threads_insights.py --sort likes       # いいね順
+python3 threads_insights.py --days 90 --top 20
+
+# 自動投稿
+python3 post_to_threads.py --text "投稿する本文"
+python3 post_to_threads.py --file promo.md --dry-run   # 分割の確認だけ
+
+# トークン更新（期限切れのとき / 60日延長）
+python3 setup_threads.py --refresh
+```
+
+Web UI のクイックバー「🧵 Threads」からも、ランキング表示と投稿ができます。
+チャットで「Threads分析」「Threadsで宣伝して」と話しかけてもOKです。
