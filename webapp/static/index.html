@@ -6,16 +6,16 @@
 <title>AUTO-content-system</title>
 <style>
   :root {
-    /* ニューモーフィズム基調（緑→青→紫） */
-    --bg: #e7eaf0;
-    --text: #545c70;
-    --heading: #3c4357;
-    --muted: #969cb0;
+    /* ニューモーフィズム基調（ローズ→ラベンダー）— 柔らかいフェミニンデザイン */
+    --bg: #f7eef2;                    /* 桜色がかった生成り */
+    --text: #6b5560;                  /* モーヴグレー */
+    --heading: #4a3540;               /* 深いローズブラウン */
+    --muted: #b39aa6;
     --light: #ffffff;                 /* 左上のハイライト */
-    --dark: #c0c6d4;                  /* 右下の影 */
-    --g1: #27cf93;                    /* 緑 */
-    --g2: #2f9be0;                    /* 青 */
-    --g3: #6d6fc9;                    /* 紫 */
+    --dark: #e4cbd7;                  /* 右下の影（ロージーシャドウ） */
+    --g1: #ec7fa9;                    /* ローズピンク */
+    --g2: #c98bd0;                    /* ラベンダー */
+    --g3: #9f92e8;                    /* すみれ */
     --accent: var(--g1);
     --grad: linear-gradient(135deg, var(--g1), var(--g2));
     --grad3: linear-gradient(135deg, var(--g1) 0%, var(--g2) 55%, var(--g3) 100%);
@@ -46,7 +46,7 @@
     z-index: 5;
     padding: 14px 20px 2px;
     background: var(--bg);
-    box-shadow: 0 6px 14px rgba(170,178,196,0.35);
+    box-shadow: 0 6px 14px rgba(214,182,197,0.35);
   }
   .header-row {
     display: flex;
@@ -110,7 +110,7 @@
     background: var(--grad);
     color: #fff;
     font-weight: 700;
-    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.45);
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(201,139,208,0.45);
   }
   .tab .title {
     overflow: hidden;
@@ -167,7 +167,7 @@
     background: var(--grad);
     color: #fff;
     border-bottom-right-radius: 7px;
-    box-shadow: -3px -3px 7px var(--light), 5px 5px 14px rgba(47,155,224,0.40);
+    box-shadow: -3px -3px 7px var(--light), 5px 5px 14px rgba(201,139,208,0.40);
   }
   .msg.assistant {
     align-self: flex-start;
@@ -215,13 +215,13 @@
     width: 9px; height: 9px;
     border-radius: 50%;
     background: var(--grad);
-    box-shadow: 0 0 0 0 rgba(39,207,147,0.5);
+    box-shadow: 0 0 0 0 rgba(236,127,169,0.5);
     animation: pulse 1.3s infinite;
   }
   @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(39,207,147,0.45); }
-    70% { box-shadow: 0 0 0 7px rgba(39,207,147,0); }
-    100% { box-shadow: 0 0 0 0 rgba(39,207,147,0); }
+    0% { box-shadow: 0 0 0 0 rgba(236,127,169,0.45); }
+    70% { box-shadow: 0 0 0 7px rgba(236,127,169,0); }
+    100% { box-shadow: 0 0 0 0 rgba(236,127,169,0); }
   }
 
   #quickbar {
@@ -251,7 +251,7 @@
   #inputbar {
     padding: 16px 20px 20px;
     background: var(--bg);
-    box-shadow: 0 -6px 14px rgba(170,178,196,0.28);
+    box-shadow: 0 -6px 14px rgba(214,182,197,0.28);
     position: relative;
     z-index: 3;
   }
@@ -289,7 +289,7 @@
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.42);
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(201,139,208,0.42);
     transition: box-shadow .12s, transform .12s, opacity .15s;
   }
   #send:hover:not(:disabled) { transform: translateY(-1px); }
@@ -443,7 +443,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: rgba(60,67,87,0.28);
+    background: rgba(74,53,64,0.28);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
   }
@@ -466,7 +466,7 @@
     gap: 9px;
     padding: 12px 14px;
     flex-wrap: wrap;
-    box-shadow: 0 5px 12px rgba(170,178,196,0.28);
+    box-shadow: 0 5px 12px rgba(214,182,197,0.28);
   }
   #pv-bar select {
     font-size: 12px;
@@ -482,8 +482,8 @@
   }
   .pv-title { font-size: 13px; font-weight: 800; color: var(--heading); margin-right: 2px; }
   #pv-render .pv-meta {
-    font-size: 11.5px; color: #8a90a0; line-height: 1.7;
-    background: #f3f5f8; border: 1px dashed #d3d8e2; border-radius: 10px;
+    font-size: 11.5px; color: #a58b97; line-height: 1.7;
+    background: #f9f2f6; border: 1px dashed #e6d0dc; border-radius: 10px;
     padding: 10px 12px; margin-bottom: 16px; font-family: "Consolas", monospace;
   }
   .pv-toggle { display: flex; gap: 5px; background: var(--bg); border-radius: 999px; padding: 3px; box-shadow: var(--nm-in); }
@@ -505,7 +505,7 @@
     font-size: 12.5px; font-weight: 800; color: #fff;
     border: none; border-radius: 999px; padding: 8px 16px; cursor: pointer;
     background: var(--grad);
-    box-shadow: -2px -2px 5px var(--light), 3px 3px 9px rgba(47,155,224,0.4);
+    box-shadow: -2px -2px 5px var(--light), 3px 3px 9px rgba(201,139,208,0.4);
   }
   #pv-save:active { box-shadow: var(--nm-in); }
   #pv-close {
@@ -531,21 +531,21 @@
     border-radius: 26px;
     box-shadow: var(--nm-out);
     padding: 26px 20px 40px;
-    color: #2b2f3a;
+    color: #4a3a42;
     font-size: 15px;
     line-height: 1.85;
   }
-  #pv-render h1 { font-size: 21px; font-weight: 800; margin: 18px 0 10px; line-height: 1.4; color: #21252f; }
-  #pv-render h2 { font-size: 18px; font-weight: 800; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e7eaf0; color: #21252f; }
+  #pv-render h1 { font-size: 21px; font-weight: 800; margin: 18px 0 10px; line-height: 1.4; color: #3f2e36; }
+  #pv-render h2 { font-size: 18px; font-weight: 800; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #f3e0e9; color: #3f2e36; }
   #pv-render h3 { font-size: 16px; font-weight: 700; margin: 16px 0 8px; color: var(--g2); }
   #pv-render p { margin: 0 0 12px; }
   #pv-render ul { margin: 4px 0 14px; padding-left: 20px; }
   #pv-render li { margin: 3px 0; }
-  #pv-render strong { color: #16775a; font-weight: 800; }
-  #pv-render hr { border: none; border-top: 1px dashed #cdd2dd; margin: 20px 0; }
-  #pv-render blockquote { margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--g1); background: #f4f7f9; border-radius: 8px; color: #555c6e; }
-  #pv-render code { background: #eef1f5; border-radius: 5px; padding: 1px 6px; font-family: "Consolas", monospace; font-size: 13.5px; }
-  #pv-render .paywall { text-align: center; color: var(--g3); font-weight: 800; font-size: 13px; margin: 24px 0; padding: 10px; border-top: 1px dashed #cdd2dd; border-bottom: 1px dashed #cdd2dd; }
+  #pv-render strong { color: #c2557f; font-weight: 800; }
+  #pv-render hr { border: none; border-top: 1px dashed #e6cfda; margin: 20px 0; }
+  #pv-render blockquote { margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--g1); background: #faf3f6; border-radius: 8px; color: #6d5a63; }
+  #pv-render code { background: #f5eaf0; border-radius: 5px; padding: 1px 6px; font-family: "Consolas", monospace; font-size: 13.5px; }
+  #pv-render .paywall { text-align: center; color: var(--g3); font-weight: 800; font-size: 13px; margin: 24px 0; padding: 10px; border-top: 1px dashed #e6cfda; border-bottom: 1px dashed #e6cfda; }
   /* 編集テキストエリア */
   #pv-edit {
     flex: 1;
@@ -643,7 +643,7 @@
     position: fixed; inset: 0; z-index: 40;
     display: flex; align-items: center; justify-content: center;
     padding: 24px;
-    background: rgba(60,67,87,0.28);
+    background: rgba(74,53,64,0.28);
     -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   }
   #bd-overlay.hidden { display: none; }
@@ -672,7 +672,7 @@
   #bd-go {
     font-size: 13px; font-weight: 800; padding: 10px 22px; border: none; border-radius: 14px;
     background: var(--grad); color: #fff; cursor: pointer; font-family: inherit;
-    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.42);
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(201,139,208,0.42);
   }
   #bd-go:active { box-shadow: var(--nm-in); }
 </style>
@@ -681,7 +681,7 @@
 
 <header>
   <div class="header-row">
-    <h1>📝 AUTO-content-system</h1>
+    <h1>🌸 AUTO-content-system</h1>
     <span class="badge" id="session-badge">新規セッション</span>
     <div class="spacer"></div>
     <select id="mode-select" title="Claude Codeの動作モード">
@@ -1530,7 +1530,7 @@ async function send() {
       let msg = err.error || ("HTTP " + res.status);
       if (res.status === 403 && /フルオート/.test(msg)) {
         msg = "⚠️ フルオートは、今の起動方法では無効です。\n\n" +
-              "**start_webapp.bat をダブルクリック**で起動し直すと有効になります。\n" +
+              "**Mac: start_webapp.command / Windows: start_webapp.bat をダブルクリック**で起動し直すと有効になります。\n" +
               "今すぐ使いたい場合は、右上のモードを「自動（auto）」または「制限」に切り替えてください。";
       } else {
         msg = "⚠️ エラー: " + msg;
@@ -1592,7 +1592,7 @@ async function send() {
         currentBubble.innerHTML = renderMarkdown(currentText);
       }
     } else {
-      currentText += (currentText ? "\n\n" : "") + "⚠️ 通信エラー: " + e.message + "\nサーバー（start_webapp.bat）が起動しているか確認してください。";
+      currentText += (currentText ? "\n\n" : "") + "⚠️ 通信エラー: " + e.message + "\nサーバー（Mac: start_webapp.command / Windows: start_webapp.bat）が起動しているか確認してください。";
       if (!currentBubble) currentBubble = addBubble("assistant", "");
       currentBubble.innerHTML = renderMarkdown(currentText);
     }

@@ -121,3 +121,35 @@ AUTO-content-system/
 1. このフォルダをデスクトップ等に配置
 2. Claude Code でこのフォルダを開く
 3. `メニュー` と入力してスタート
+
+---
+
+## Web UI の起動（Mac / Windows）
+
+チャット型のWeb UI（🌸 ローズ×ラベンダーのデザイン）から全機能を操作できます。
+
+### Mac
+
+```bash
+# 必要なパッケージ（初回のみ）
+pip3 install flask selenium webdriver-manager pyperclip psutil
+
+# 起動（どちらでもOK）
+./start_webapp.command          # Finderからダブルクリックでも起動可
+ACS_ALLOW_FULL=1 python3 webapp/server.py
+```
+
+- 初回にダブルクリックで開けない場合は、右クリック →「開く」を選択してください
+- ターミナルから一度 `chmod +x start_webapp.command` を実行すると実行権限が付きます
+- ブラウザで `http://127.0.0.1:8787` が自動的に開きます
+
+### Windows
+
+```
+start_webapp.bat をダブルクリック
+```
+
+### note.com への投稿（Mac / Windows 共通）
+
+Google Chrome がインストールされていれば、`python3 setup_note.py`（Windows は `python`）で
+ログイン設定後、Web UI の「📮 noteに投稿」からそのまま下書き投稿できます。

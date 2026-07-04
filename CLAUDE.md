@@ -13,7 +13,8 @@ AUTO-content-system/
 ├── README.md              ← プロジェクト説明
 ├── post_to_note.py        ← note.com 下書き投稿（Selenium）
 ├── count_chars.py         ← 文字数カウント（wc -m はバイト数を返すため使用禁止）
-├── start_webapp.bat       ← Web UI 起動（ダブルクリック）
+├── start_webapp.bat       ← Web UI 起動（Windows / ダブルクリック）
+├── start_webapp.command   ← Web UI 起動（Mac / ダブルクリック）
 ├── webapp/                ← ローカルWebアプリ（claude CLI をヘッドレス起動）
 │   ├── server.py          ← Flaskサーバー（127.0.0.1:8787）
 │   └── static/index.html  ← チャットUI

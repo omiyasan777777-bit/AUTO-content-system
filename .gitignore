@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# ローカル環境のみのデータ
+cloned_chrome_data/

@@ -347,7 +347,9 @@ def api_send():
         return {"error": (
             "フルオートモードは既定で無効です。有効化するには、サーバーを "
             "ACS_ALLOW_FULL=1 を設定して起動してください"
-            "（例: PowerShell で `$env:ACS_ALLOW_FULL=1; python webapp\\server.py`）。"
+            "（Mac: ターミナルで `ACS_ALLOW_FULL=1 python3 webapp/server.py`、"
+            "または start_webapp.command をダブルクリック。"
+            "Windows: PowerShell で `$env:ACS_ALLOW_FULL=1; python webapp\\server.py`）。"
             "※確認なしで全コマンドを実行するため、信頼できる作業のみで使用してください。"
         )}, 403
     if not CLAUDE_BIN:
