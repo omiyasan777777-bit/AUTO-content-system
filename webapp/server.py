@@ -24,7 +24,7 @@ from pathlib import Path
 
 from flask import Flask, Response, request, send_from_directory
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent  # Python3.8では__file__が相対パスのためresolve必須
 PROJECT_DIR = BASE_DIR.parent  # claude の作業ディレクトリ = プロジェクトルート
 
 # プロジェクト直下のモジュール（threads_api 等）を import できるようにする

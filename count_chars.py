@@ -23,7 +23,7 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
-def count_file(path: Path) -> tuple[int, int]:
+def count_file(path: Path) -> "tuple[int, int]":  # 文字列注釈（Python3.8互換）
     """(本文文字数, 全文字数) を返す。本文文字数は空白・改行・タブを除く"""
     text = path.read_text(encoding="utf-8")
     total = len(text)

@@ -33,7 +33,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # ==============================
 # 設定
 # ==============================
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent
 NOTE_NEW_URL = "https://note.com/new"
 
 

@@ -22,7 +22,7 @@ if sys.platform == "win32":
 import threads_api
 from threads_api import ThreadsError
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent
 
 SORT_LABELS = {
     "views": "インプレッション",

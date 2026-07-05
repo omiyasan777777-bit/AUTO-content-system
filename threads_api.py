@@ -17,7 +17,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "threads_config.json"
 API_BASE = "https://graph.threads.net/v1.0"
 
