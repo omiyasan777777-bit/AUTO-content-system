@@ -757,6 +757,20 @@
   #th-post-btn:disabled { opacity: .45; cursor: not-allowed; }
   .th-setup { font-size: 13px; color: var(--text); line-height: 1.9; padding: 6px 4px; }
   .th-setup code { background: var(--bg); border-radius: 6px; padding: 1px 7px; box-shadow: var(--nm-in); font-size: 12px; }
+  .th-setup a { color: var(--g2); font-weight: 700; }
+  .th-setup input {
+    width: 100%; margin: 6px 0 10px; border: none; outline: none;
+    border-radius: 12px; padding: 11px 14px; font-size: 13px; font-family: inherit;
+    color: var(--text); background: var(--bg); box-shadow: var(--nm-in);
+  }
+  .th-setup input::placeholder { color: var(--muted); }
+  .th-setup-btn {
+    font-size: 13px; font-weight: 800; padding: 10px 20px; border: none; border-radius: 14px;
+    background: var(--grad); color: #fff; cursor: pointer; font-family: inherit;
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(201,139,208,0.42);
+  }
+  .th-setup-btn:active { box-shadow: var(--nm-in); }
+  .th-setup-btn:disabled { opacity: .45; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -1314,11 +1328,41 @@ function thSetTab(tab) {
 }
 function thShowSetup() {
   document.getElementById("th-rank-list").innerHTML =
-    '<div class="th-setup">🧵 <b>Threads連携はまだ未設定です</b>（初回のみ・約5分）<br><br>' +
-    "1. <b>developers.facebook.com</b> でアプリを作成（ユースケース: Threads APIにアクセス）<br>" +
-    "2. アプリ設定 → Threads API → <b>アクセストークンを生成</b><br>" +
-    "3. ターミナルで <code>python3 setup_threads.py</code>（Windowsは <code>python setup_threads.py</code>）を実行してトークンを貼り付け<br><br>" +
-    "設定が終わったら「↻ 更新」を押してください。</div>";
+    '<div class="th-setup">🧵 <b>Threads連携の初期設定</b>（初回のみ・約5分）<br><br>' +
+    '1. <a href="https://developers.facebook.com/" target="_blank" rel="noopener">developers.facebook.com</a> でアプリを作成（ユースケース:「Threads APIにアクセス」）<br>' +
+    "2. 左メニュー「Threads API」→ <b>Threadsテスターに自分を追加</b> → スマホのThreadsアプリ側で承認（設定 → アカウント → ウェブサイトの権限 → 招待を承認）<br>" +
+    "3. 「<b>アクセストークンを生成</b>」で表示された文字列をコピーして、下に貼り付け:<br>" +
+    '<input type="password" id="th-token" placeholder="アクセストークンをここに貼り付け（●●●で隠れます）">' +
+    '<button class="th-setup-btn" id="th-setup-btn" onclick="thSetup()">保存して接続 →</button>' +
+    '<div class="th-note" style="margin-top:10px">トークンはこのPCの中（threads_config.json）にだけ保存され、外部には送信されません。</div></div>';
+}
+async function thSetup() {
+  const token = (document.getElementById("th-token").value || "").trim();
+  if (!token) { alert("アクセストークンを貼り付けてください。"); return; }
+  const btn = document.getElementById("th-setup-btn");
+  btn.disabled = true;
+  btn.textContent = "確認中…";
+  try {
+    const res = await fetch("/api/threads/setup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert("接続できませんでした:\n" + (data.error || res.status) +
+            "\n\nトークンのコピー漏れ、またはThreadsテスター承認（手順2）を確認してください。");
+      return;
+    }
+    document.getElementById("th-user").textContent = data.username ? "@" + data.username : "";
+    addBubble("assistant", "🧵 Threads連携が完了しました！（@" + data.username + "）\n「🧵 Threads」ボタンから人気投稿ランキングと投稿が使えます。");
+    thLoadRanking();
+  } catch (e) {
+    alert("通信エラー: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "保存して接続 →";
+  }
 }
 async function thLoadRanking() {
   const list = document.getElementById("th-rank-list");

@@ -20,6 +20,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from flask import Flask, Response, request, send_from_directory
@@ -345,6 +346,37 @@ def api_threads_status():
         return {"configured": True, "username": cfg.get("username", "")}
     except ThreadsError:
         return {"configured": False}
+
+
+@app.post("/api/threads/setup")
+def api_threads_setup():
+    """Web UIからのトークン登録（ターミナル不要）。検証して threads_config.json に保存する。
+    サーバーは 127.0.0.1 専用のため、トークンがこのPCの外に出ることはない。"""
+    data = request.get_json(force=True, silent=True) or {}
+    token = (data.get("token") or "").strip()
+    secret = (data.get("secret") or "").strip()
+    if not token:
+        return {"error": "アクセストークンが空です"}, 400
+    expires_in = None
+    if secret:
+        try:
+            d = threads_api.exchange_long_lived_token(token, secret)
+            token = d["access_token"]
+            expires_in = d.get("expires_in")
+        except ThreadsError:
+            pass  # 交換に失敗したら貼り付けたトークンをそのまま使う
+    try:
+        me = threads_api.get_me(token)
+    except ThreadsError as e:
+        return {"error": f"トークンを確認できませんでした: {e}"}, 400
+    threads_api.save_config({
+        "access_token": token,
+        "user_id": me["id"],
+        "username": me.get("username", ""),
+        "expires_in": expires_in,
+        "obtained_at": int(time.time()),
+    })
+    return {"ok": True, "username": me.get("username", "")}
 
 
 @app.get("/api/threads/insights")
