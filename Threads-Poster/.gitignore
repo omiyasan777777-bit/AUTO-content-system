@@ -1,2 +1,3 @@
 # 個人データ（APIキー・予約・短縮URL）は配布物に含めない
 data/*.json
+data/*.pid
