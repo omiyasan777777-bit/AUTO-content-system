@@ -139,6 +139,13 @@ pip3 install flask selenium webdriver-manager pyperclip psutil
 ACS_ALLOW_FULL=1 python3 webapp/server.py
 ```
 
+#### おすすめ: 常駐化（毎回ターミナルを開かずURLだけで使う）
+
+`setup_autostart.command` を**一度ダブルクリック**すると、Macログイン時にサーバーが
+裏で自動起動するようになる。以降はブラウザで `http://127.0.0.1:8787` を開くだけ
+（ブックマーク推奨）。ターミナル画面は表示されず、予約投稿も常時実行される。
+解除は `remove_autostart.command` をダブルクリック。ログは `webapp/server.log`。
+
 - 初回にダブルクリックで開けない場合は、右クリック →「開く」を選択してください
 - ターミナルから一度 `chmod +x start_webapp.command` を実行すると実行権限が付きます
 - ブラウザで `http://127.0.0.1:8787` が自動的に開きます

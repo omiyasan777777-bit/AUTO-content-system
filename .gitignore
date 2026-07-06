@@ -10,4 +10,5 @@ cloned_chrome_data/
 threads_config.json    # Threads APIトークン（秘密情報）
 threads_report.md      # Threads分析レポート（生成物）
 threads_schedule.json  # 予約投稿データ（ローカル）
+webapp/server.log      # 常駐サーバーのログ
 threads_trend*.md      # 話題検索レポート（生成物）
