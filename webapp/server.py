@@ -693,7 +693,7 @@ if __name__ == "__main__":
     # 予約投稿の実行スレッド（サーバー起動中のみ動く）
     threading.Thread(target=_schedule_worker, daemon=True).start()
     print("=" * 60)
-    print("  AUTO-content-system Web UI")
+    print("  🌙 深夜のThreads (AUTO-content-system) Web UI")
     print(f"  http://{HOST}:{PORT} をブラウザで開いてください")
     print(f"  作業ディレクトリ: {PROJECT_DIR}")
     print(f"  claude CLI: {CLAUDE_BIN}")

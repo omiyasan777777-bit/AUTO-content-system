@@ -126,7 +126,7 @@ AUTO-content-system/
 
 ## Web UI の起動（Mac / Windows）
 
-チャット型のWeb UI（🌸 ローズ×ラベンダーのデザイン）から全機能を操作できます。
+チャット型のWeb UI「🌙 深夜のThreads」（ローズ×ラベンダーのデザイン）から全機能を操作できます。
 
 ### Mac
 
