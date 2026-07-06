@@ -694,7 +694,11 @@
   }
   .th-head { display: flex; align-items: center; gap: 10px; }
   .th-head .th-title { font-size: 15px; font-weight: 800; color: var(--heading); }
-  .th-head .th-user { font-size: 12px; color: var(--muted); }
+  #th-account {
+    font-size: 12px; padding: 7px 11px; border: none; border-radius: 999px;
+    background: var(--bg); color: var(--g2); font-weight: 700; cursor: pointer;
+    outline: none; font-family: inherit; box-shadow: var(--nm-out-sm); max-width: 180px;
+  }
   .th-tabs { display: flex; gap: 5px; background: var(--bg); border-radius: 999px; padding: 3px; box-shadow: var(--nm-in); }
   .th-tabs button {
     font-size: 12px; padding: 6px 14px; border: none; border-radius: 999px;
@@ -900,7 +904,7 @@
   <div id="th-modal">
     <div class="th-head">
       <span class="th-title">🧵 Threads</span>
-      <span class="th-user" id="th-user"></span>
+      <select id="th-account" title="アカウントの切替・追加・削除（最大10個）" onchange="thAccountChange()"></select>
       <div class="th-tabs">
         <button id="th-tab-rank" class="active" onclick="thSetTab('rank')">📈 人気投稿</button>
         <button id="th-tab-growth" onclick="thSetTab('growth')">✦ Growth Hub</button>
@@ -952,10 +956,11 @@
     </div>
 
     <div id="th-compose">
-      <textarea id="th-text" spellcheck="false" placeholder="Threadsに投稿する本文…&#10;（500字を超えると自動でツリー連投になります）"></textarea>
+      <textarea id="th-text" spellcheck="false" placeholder="Threadsに投稿する本文…&#10;「---」だけの行を入れると、そこでツリーの区切りを自由に指定できます（各500字まで／超えた分は自動分割）"></textarea>
       <div class="th-compose-foot">
         <span id="th-count">0字</span>
         <span class="spacer" style="flex:1"></span>
+        <button class="th-mini-btn" onclick="thInsertBreak()" title="カーソル位置にツリーの区切り（---）を挿入">➕ 区切り</button>
         <input type="datetime-local" id="th-when">
         <button class="th-mini-btn" onclick="thSchedule()">⏰ 予約する</button>
         <button id="th-post-btn" onclick="thPost()">今すぐ投稿 →</button>
@@ -1386,7 +1391,7 @@ async function openThreads() {
   thSetTab("rank");
   try {
     const st = await (await fetch("/api/threads/status")).json();
-    document.getElementById("th-user").textContent = st.username ? "@" + st.username : "";
+    thRenderAccounts(st);
     if (!st.configured) { thShowSetup(); return; }
     thLoadRanking();
     thLoadGrowth();
@@ -1398,6 +1403,59 @@ async function openThreads() {
 }
 function closeThreads() {
   document.getElementById("th-overlay").classList.add("hidden");
+}
+// ===== アカウント切替・追加・削除（最大10個） =====
+let thCurrentUid = "";
+function thRenderAccounts(st) {
+  const sel = document.getElementById("th-account");
+  thCurrentUid = st.user_id || "";
+  const accs = st.accounts || [];
+  let html = accs.map(a =>
+    `<option value="${esc(a.user_id)}">@${esc(a.username || a.user_id)}</option>`).join("");
+  if (accs.length < (st.max_accounts || 10)) html += '<option value="__add">➕ アカウントを追加…</option>';
+  if (accs.length) html += '<option value="__del">🗑 選択中を削除…</option>';
+  sel.innerHTML = html;
+  if (thCurrentUid) sel.value = thCurrentUid;
+}
+async function thAccountChange() {
+  const sel = document.getElementById("th-account");
+  const v = sel.value;
+  if (v === "__add") {
+    sel.value = thCurrentUid;
+    thSetTab("rank");
+    thShowSetup(true);
+    return;
+  }
+  if (v === "__del") {
+    sel.value = thCurrentUid;
+    if (!thCurrentUid) return;
+    const name = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : "";
+    if (!confirm(`${name} を削除しますか？\n（このPCに保存されたトークンが削除されます。予約済みの投稿は失敗になります）`)) return;
+    try {
+      await fetch("/api/threads/account-remove", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: thCurrentUid }),
+      });
+    } catch (e) {}
+    openThreads();
+    return;
+  }
+  // アカウント切替
+  try {
+    const res = await fetch("/api/threads/account-switch", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: v }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || "切替に失敗しました"); sel.value = thCurrentUid; return; }
+    thCurrentUid = v;
+    thLoadRanking();
+    thLoadGrowth();
+    thLoadSchedule();
+  } catch (e) {
+    alert("通信エラー: " + e.message);
+    sel.value = thCurrentUid;
+  }
 }
 function thSetTab(tab) {
   const modal = document.getElementById("th-modal");
@@ -1449,8 +1507,9 @@ async function thLoadSchedule() {
     const fmtAt = (at) => (at || "").replace("T", " ");
     const rows = [];
     for (const it of pending) {
+      const who = it.username ? `<span class="th-uname">@${esc(it.username)}</span>` : "";
       rows.push(`<div class="th-sched-item">
-        <span class="when">⏰ ${esc(fmtAt(it.at))}</span>
+        <span class="when">⏰ ${esc(fmtAt(it.at))}</span>${who}
         <span class="t">${esc((it.text || "").replace(/\n/g, " "))}</span>
         <button class="del" title="予約を取消" onclick="thCancelSchedule('${esc(it.id)}')">✕</button>
       </div>`);
@@ -1542,15 +1601,19 @@ async function thSearch() {
     list.innerHTML = '<div class="th-setup">⚠️ 通信エラー: ' + esc(e.message) + "</div>";
   }
 }
-function thShowSetup() {
+function thShowSetup(isAdd) {
+  const title = isAdd ? "Threadsアカウントを追加（最大10個まで）" : "Threads連携の初期設定（初回のみ・約5分）";
+  const hint = isAdd
+    ? "2. 左メニュー「Threads API」→ <b>追加したいThreadsアカウントをテスターに追加</b> → そのアカウントのThreadsアプリ側で承認（設定 → アカウント → ウェブサイトの権限 → 招待を承認）<br>"
+    : "2. 左メニュー「Threads API」→ <b>Threadsテスターに自分を追加</b> → スマホのThreadsアプリ側で承認（設定 → アカウント → ウェブサイトの権限 → 招待を承認）<br>";
   document.getElementById("th-rank-list").innerHTML =
-    '<div class="th-setup">🧵 <b>Threads連携の初期設定</b>（初回のみ・約5分）<br><br>' +
-    '1. <a href="https://developers.facebook.com/" target="_blank" rel="noopener">developers.facebook.com</a> でアプリを作成（ユースケース:「Threads APIにアクセス」）<br>' +
-    "2. 左メニュー「Threads API」→ <b>Threadsテスターに自分を追加</b> → スマホのThreadsアプリ側で承認（設定 → アカウント → ウェブサイトの権限 → 招待を承認）<br>" +
+    '<div class="th-setup">🧵 <b>' + title + "</b><br><br>" +
+    '1. <a href="https://developers.facebook.com/" target="_blank" rel="noopener">developers.facebook.com</a> でアプリを作成済みならそれを使用（ユースケース:「Threads APIにアクセス」）<br>' +
+    hint +
     "3. 「<b>アクセストークンを生成</b>」で表示された文字列をコピーして、下に貼り付け:<br>" +
     '<input type="password" id="th-token" placeholder="アクセストークンをここに貼り付け（●●●で隠れます）">' +
     '<button class="th-setup-btn" id="th-setup-btn" onclick="thSetup()">保存して接続 →</button>' +
-    '<div class="th-note" style="margin-top:10px">トークンはこのPCの中（threads_config.json）にだけ保存され、外部には送信されません。</div></div>';
+    '<div class="th-note" style="margin-top:10px">トークンはこのPCの中（threads_config.json）にだけ保存され、外部には送信されません。アカウントは上のプルダウンでいつでも切替できます。</div></div>';
 }
 async function thSetup() {
   const token = (document.getElementById("th-token").value || "").trim();
@@ -1570,9 +1633,8 @@ async function thSetup() {
             "\n\nトークンのコピー漏れ、またはThreadsテスター承認（手順2）を確認してください。");
       return;
     }
-    document.getElementById("th-user").textContent = data.username ? "@" + data.username : "";
-    addBubble("assistant", "🧵 Threads連携が完了しました！（@" + data.username + "）\n「🧵 Threads」ボタンから人気投稿ランキングと投稿が使えます。");
-    thLoadRanking();
+    addBubble("assistant", "🧵 Threadsアカウント @" + data.username + " を登録しました！上のプルダウンで切替できます。");
+    openThreads();
   } catch (e) {
     alert("通信エラー: " + e.message);
   } finally {
@@ -1593,7 +1655,6 @@ async function thLoadRanking() {
       list.innerHTML = '<div class="th-setup">⚠️ ' + esc(data.error || "取得に失敗しました") + "</div>";
       return;
     }
-    if (data.username) document.getElementById("th-user").textContent = "@" + data.username;
     const posts = data.posts || [];
     if (!posts.length) {
       list.innerHTML = '<div class="th-setup">この期間の投稿がありません。</div>';
@@ -1621,13 +1682,47 @@ async function thLoadRanking() {
   }
 }
 const thText = document.getElementById("th-text");
+// 「---」だけの行で手動分割（サーバー側 split_text と同じルール）
+function thSplitPreview(text) {
+  const parts = [];
+  let cur = [];
+  for (const line of (text || "").trim().split("\n")) {
+    if (line.trim() === "---") { parts.push(cur.join("\n").trim()); cur = []; }
+    else cur.push(line);
+  }
+  parts.push(cur.join("\n").trim());
+  return parts.filter(p => p);
+}
+const TH_NUMS = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];
 thText.addEventListener("input", () => {
-  const n = thText.value.length;
+  const text = thText.value;
   const counter = document.getElementById("th-count");
-  const parts = Math.max(1, Math.ceil(n / 500));
-  counter.textContent = n + "字" + (n > 500 ? `（自動で${parts}連投に分割）` : "（500字まで1投稿）");
-  counter.classList.toggle("over", n > 500);
+  const chunks = thSplitPreview(text);
+  if (chunks.length <= 1) {
+    const n = text.length;
+    const auto = Math.max(1, Math.ceil(n / 500));
+    counter.textContent = n + "字" + (n > 500 ? `（自動で${auto}連投に分割）` : "（500字まで1投稿）");
+    counter.classList.toggle("over", n > 500);
+    return;
+  }
+  const anyOver = chunks.some(c => c.length > 500);
+  counter.textContent = `ツリー${chunks.length}投稿: ` +
+    chunks.map((c, i) => `${TH_NUMS[i] || "(" + (i + 1) + ")"}${c.length}字${c.length > 500 ? "⚠" : ""}`).join(" ") +
+    (anyOver ? "（⚠500字超の投稿はさらに自動分割されます）" : "");
+  counter.classList.toggle("over", anyOver);
 });
+// カーソル位置にツリーの区切り（---）を挿入
+function thInsertBreak() {
+  const pos = thText.selectionStart != null ? thText.selectionStart : thText.value.length;
+  const before = thText.value.slice(0, pos);
+  const after = thText.value.slice(pos);
+  const ins = (before && !before.endsWith("\n") ? "\n" : "") + "---\n";
+  thText.value = before + ins + after;
+  const np = (before + ins).length;
+  thText.focus();
+  thText.setSelectionRange(np, np);
+  thText.dispatchEvent(new Event("input"));
+}
 async function thPost() {
   const text = thText.value.trim();
   if (!text) { alert("投稿する本文を入力してください。"); return; }

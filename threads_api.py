@@ -32,25 +32,117 @@ class ThreadsError(RuntimeError):
 
 
 # ==============================
-# 設定ファイル
+# 設定ファイル（複数アカウント対応・最大10個）
 # ==============================
+# 新形式: {"current": "<user_id>", "accounts": [{access_token, user_id, username, ...}]}
+# 旧形式（単一アカウント）は読み込み時に自動で移行する。
+
+MAX_ACCOUNTS = 10
+_CFG_LOCK = threading.Lock()
+
+
+def _read_config_file() -> dict:
+    if not CONFIG_PATH.exists():
+        return {}
+    try:
+        return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _write_config_file(data: dict):
+    CONFIG_PATH.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _migrated() -> dict:
+    """設定を新形式（複数アカウント）で返す。旧形式なら変換する。"""
+    data = _read_config_file()
+    if "accounts" in data:
+        return data
+    if data.get("access_token") and data.get("user_id"):
+        return {"current": data["user_id"], "accounts": [data]}
+    return {"current": None, "accounts": []}
+
+
+def list_accounts() -> dict:
+    """{"current": user_id, "accounts": [...]}（トークンを含むので外部にそのまま出さない）"""
+    return _migrated()
+
+
+def get_account(user_id: str):
+    """user_id のアカウント設定を返す。無ければ None"""
+    for a in _migrated().get("accounts", []):
+        if a.get("user_id") == user_id:
+            return a
+    return None
+
 
 def load_config() -> dict:
-    if not CONFIG_PATH.exists():
+    """現在選択中のアカウント設定を返す（従来と同じ形の dict）"""
+    data = _migrated()
+    accounts = data.get("accounts", [])
+    if not accounts:
         raise ThreadsError(
-            "Threadsが未設定です。`python setup_threads.py`（Macは python3）を実行して"
-            "アクセストークンを登録してください。"
+            "Threadsが未設定です。Web UIの「🧵 Threads」画面から、"
+            "または `python setup_threads.py`（Macは python3）でトークンを登録してください。"
         )
-    cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    if not cfg.get("access_token") or not cfg.get("user_id"):
-        raise ThreadsError("threads_config.json が不完全です。setup_threads.py をやり直してください。")
-    return cfg
+    cur = data.get("current")
+    for a in accounts:
+        if a.get("user_id") == cur:
+            return a
+    return accounts[0]
 
 
 def save_config(cfg: dict):
-    CONFIG_PATH.write_text(
-        json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    """アカウントを追加/更新して現在のアカウントにする（旧APIとの互換用）"""
+    add_account(cfg)
+
+
+def add_account(cfg: dict) -> dict:
+    """アカウントを追加（同じuser_idは上書き）して current に設定する"""
+    if not cfg.get("access_token") or not cfg.get("user_id"):
+        raise ThreadsError("アカウント情報が不完全です（トークン/ユーザーID）")
+    with _CFG_LOCK:
+        data = _migrated()
+        accounts = data.get("accounts", [])
+        for i, a in enumerate(accounts):
+            if a.get("user_id") == cfg["user_id"]:
+                accounts[i] = cfg
+                break
+        else:
+            if len(accounts) >= MAX_ACCOUNTS:
+                raise ThreadsError(f"登録できるアカウントは最大{MAX_ACCOUNTS}個です。"
+                                   "不要なアカウントを削除してから追加してください。")
+            accounts.append(cfg)
+        data["accounts"] = accounts
+        data["current"] = cfg["user_id"]
+        _write_config_file(data)
+    return cfg
+
+
+def set_current_account(user_id: str) -> dict:
+    """現在のアカウントを切り替える"""
+    with _CFG_LOCK:
+        data = _migrated()
+        if not any(a.get("user_id") == user_id for a in data.get("accounts", [])):
+            raise ThreadsError("そのアカウントは登録されていません")
+        data["current"] = user_id
+        _write_config_file(data)
+    return get_account(user_id)
+
+
+def remove_account(user_id: str) -> bool:
+    with _CFG_LOCK:
+        data = _migrated()
+        accounts = [a for a in data.get("accounts", []) if a.get("user_id") != user_id]
+        if len(accounts) == len(data.get("accounts", [])):
+            return False
+        data["accounts"] = accounts
+        if data.get("current") == user_id:
+            data["current"] = accounts[0]["user_id"] if accounts else None
+        _write_config_file(data)
+    return True
 
 
 def is_configured() -> bool:
@@ -258,14 +350,17 @@ def parse_local_time(at_iso: str) -> float:
     return time.mktime(time.strptime(at_iso[:16], "%Y-%m-%dT%H:%M"))
 
 
-def add_schedule(text: str, at_iso: str) -> dict:
-    """予約を追加して保存する（時刻の妥当性は呼び出し側で検証済みの前提）"""
+def add_schedule(text: str, at_iso: str, user_id: str = None, username: str = "") -> dict:
+    """予約を追加して保存する（時刻の妥当性は呼び出し側で検証済みの前提）。
+    user_id を渡すと「予約したときのアカウント」で投稿される。"""
     item = {
         "id": str(int(time.time() * 1000)),
         "text": text,
         "at": at_iso[:16],
         "status": "pending",
         "created_at": int(time.time()),
+        "user_id": user_id,
+        "username": username,
     }
     with _SCHED_LOCK:
         items = load_schedule()
@@ -323,12 +418,14 @@ def process_due_posts() -> list:
         if changed:
             _save_schedule(items)
 
-    # 2) 投稿はロックの外で実行
+    # 2) 投稿はロックの外で実行（予約したときのアカウントを使う）
     results = []
     for it in due:
         upd = {"id": it["id"]}
         try:
-            cfg = load_config()
+            cfg = get_account(it.get("user_id")) if it.get("user_id") else load_config()
+            if cfg is None:
+                raise ThreadsError("投稿するアカウントが見つかりません（削除された可能性があります）")
             ids = publish_thread(cfg, it["text"])
             upd.update(status="posted", posted_at=int(time.time()),
                        count=len(ids), permalink=get_permalink(cfg, ids[0]))
@@ -353,6 +450,33 @@ def process_due_posts() -> list:
 # ==============================
 
 def split_text(text: str, limit: int = POST_CHAR_LIMIT) -> list:
+    """ツリー投稿用にテキストを分割する。
+
+    1. `---` だけの行があれば、そこで**手動分割**（ツリーの区切りを自由に設定できる）
+    2. 各パートが500字を超える場合のみ、段落→行の区切りで自動分割
+    """
+    parts, cur = [], []
+    for line in (text or "").strip().split("\n"):
+        if line.strip() == "---":
+            parts.append("\n".join(cur))
+            cur = []
+        else:
+            cur.append(line)
+    parts.append("\n".join(cur))
+
+    chunks = []
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        if len(part) <= limit:
+            chunks.append(part)
+        else:
+            chunks.extend(_auto_split(part, limit))
+    return chunks
+
+
+def _auto_split(text: str, limit: int = POST_CHAR_LIMIT) -> list:
     """500字上限に収まるように、段落→行の区切りを優先して分割する"""
     text = text.strip()
     if len(text) <= limit:

@@ -344,12 +344,46 @@ def api_save_file():
 
 @app.get("/api/threads/status")
 def api_threads_status():
-    """Threadsの設定状況（未設定なら手順を案内するためのフラグ）"""
+    """Threadsの設定状況＋登録アカウント一覧（トークンは返さない）"""
+    data = threads_api.list_accounts()
+    accounts = [{
+        "user_id": a.get("user_id", ""),
+        "username": a.get("username", ""),
+    } for a in data.get("accounts", [])]
     try:
         cfg = threads_api.load_config()
-        return {"configured": True, "username": cfg.get("username", "")}
+        return {
+            "configured": True,
+            "username": cfg.get("username", ""),
+            "user_id": cfg.get("user_id", ""),
+            "accounts": accounts,
+            "max_accounts": threads_api.MAX_ACCOUNTS,
+        }
     except ThreadsError:
-        return {"configured": False}
+        return {"configured": False, "accounts": accounts,
+                "max_accounts": threads_api.MAX_ACCOUNTS}
+
+
+@app.post("/api/threads/account-switch")
+def api_threads_account_switch():
+    """使用するThreadsアカウントを切り替える"""
+    data = request.get_json(force=True, silent=True) or {}
+    uid = (data.get("user_id") or "").strip()
+    try:
+        cfg = threads_api.set_current_account(uid)
+    except ThreadsError as e:
+        return {"error": str(e)}, 400
+    return {"ok": True, "username": cfg.get("username", "")}
+
+
+@app.post("/api/threads/account-remove")
+def api_threads_account_remove():
+    """登録済みThreadsアカウントを削除する"""
+    data = request.get_json(force=True, silent=True) or {}
+    uid = (data.get("user_id") or "").strip()
+    if not threads_api.remove_account(uid):
+        return {"error": "そのアカウントは見つかりませんでした"}, 400
+    return {"ok": True}
 
 
 @app.post("/api/threads/setup")
@@ -373,13 +407,16 @@ def api_threads_setup():
         me = threads_api.get_me(token)
     except ThreadsError as e:
         return {"error": f"トークンを確認できませんでした: {e}"}, 400
-    threads_api.save_config({
-        "access_token": token,
-        "user_id": me["id"],
-        "username": me.get("username", ""),
-        "expires_in": expires_in,
-        "obtained_at": int(time.time()),
-    })
+    try:
+        threads_api.add_account({
+            "access_token": token,
+            "user_id": me["id"],
+            "username": me.get("username", ""),
+            "expires_in": expires_in,
+            "obtained_at": int(time.time()),
+        })
+    except ThreadsError as e:  # 上限10個など
+        return {"error": str(e)}, 400
     return {"ok": True, "username": me.get("username", "")}
 
 
@@ -473,7 +510,9 @@ def api_threads_schedule_add():
     at = (data.get("at") or "").strip()
     if not text:
         return {"error": "投稿する本文が空です"}, 400
-    if not threads_api.is_configured():
+    try:
+        cfg = threads_api.load_config()
+    except ThreadsError:
         return {"error": "Threadsが未設定です。先に初期設定をしてください"}, 400
     try:
         due = threads_api.parse_local_time(at)
@@ -481,7 +520,9 @@ def api_threads_schedule_add():
         return {"error": "予約日時を指定してください"}, 400
     if due <= time.time() + 30:
         return {"error": "予約日時は現在より後にしてください"}, 400
-    item = threads_api.add_schedule(text, at)
+    # 予約したときのアカウントで投稿されるように記録する
+    item = threads_api.add_schedule(text, at, user_id=cfg.get("user_id"),
+                                    username=cfg.get("username", ""))
     return {"ok": True, "item": item}
 
 
