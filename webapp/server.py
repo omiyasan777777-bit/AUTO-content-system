@@ -35,7 +35,7 @@ import threads_api  # noqa: E402
 from threads_api import ThreadsError  # noqa: E402
 
 HOST = "127.0.0.1"  # ローカル専用。外部公開しないこと
-PORT = 8787
+PORT = int(os.environ.get("ACS_PORT", "8787"))  # 環境変数 ACS_PORT で変更可
 
 # Windows コンソール文字化け対策
 if sys.platform == "win32":
