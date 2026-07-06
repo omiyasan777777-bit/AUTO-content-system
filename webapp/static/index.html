@@ -734,11 +734,39 @@
   .th-card a { color: var(--g2); font-size: 11.5px; text-decoration: none; font-weight: 700; }
   .th-note { font-size: 11px; color: var(--muted); line-height: 1.6; }
   #th-compose { display: none; flex-direction: column; gap: 10px; }
-  #th-search { display: none; flex-direction: column; gap: 10px; overflow: hidden; }
+  #th-growth { display: none; flex-direction: column; gap: 10px; overflow-y: auto; }
   #th-rank { display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
-  #th-modal.tab-search #th-rank, #th-modal.tab-post #th-rank { display: none; }
-  #th-modal.tab-search #th-search { display: flex; }
+  #th-modal.tab-growth #th-rank, #th-modal.tab-post #th-rank { display: none; }
+  #th-modal.tab-growth #th-growth { display: flex; }
   #th-modal.tab-post #th-compose { display: flex; }
+  /* Growth Hub: 成長サマリーカード */
+  .th-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .th-stat {
+    flex: 1; min-width: 96px; padding: 10px 13px; border-radius: var(--radius-sm);
+    background: var(--bg); box-shadow: var(--nm-out-sm);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .th-stat b { font-size: 17px; color: var(--heading); }
+  .th-stat span { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+  .th-sec-title { font-size: 12.5px; font-weight: 800; color: var(--heading); margin-top: 4px; }
+  /* 予約投稿 */
+  #th-when {
+    border: none; outline: none; border-radius: 999px; padding: 8px 12px;
+    font-size: 12px; font-family: inherit; color: var(--text);
+    background: var(--bg); box-shadow: var(--nm-in);
+  }
+  #th-sched-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 170px; }
+  .th-sched-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    border-radius: var(--radius-sm); background: var(--bg); box-shadow: var(--nm-out-sm);
+    font-size: 12px; color: var(--text);
+  }
+  .th-sched-item .t { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .th-sched-item .when { color: var(--g2); font-weight: 800; white-space: nowrap; }
+  .th-sched-item .st-posted { color: var(--g1); font-weight: 800; white-space: nowrap; }
+  .th-sched-item .st-failed { color: #d6584b; font-weight: 800; white-space: nowrap; }
+  .th-sched-item .del { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 14px; padding: 0 2px; }
+  .th-sched-item .del:hover { color: #d6584b; }
   .th-controls input {
     flex: 1; min-width: 150px; border: none; outline: none; border-radius: 999px;
     padding: 8px 14px; font-size: 12.5px; font-family: inherit;
@@ -874,9 +902,9 @@
       <span class="th-title">🧵 Threads</span>
       <span class="th-user" id="th-user"></span>
       <div class="th-tabs">
-        <button id="th-tab-rank" class="active" onclick="thSetTab('rank')">📈 自分の人気投稿</button>
-        <button id="th-tab-search" onclick="thSetTab('search')">🔍 話題を探す</button>
-        <button id="th-tab-post" onclick="thSetTab('post')">✍️ 投稿する</button>
+        <button id="th-tab-rank" class="active" onclick="thSetTab('rank')">📈 人気投稿</button>
+        <button id="th-tab-growth" onclick="thSetTab('growth')">✦ Growth Hub</button>
+        <button id="th-tab-post" onclick="thSetTab('post')">✍️ 投稿・予約</button>
       </div>
       <button id="th-close" onclick="closeThreads()">✕</button>
     </div>
@@ -899,7 +927,18 @@
       <div class="th-note">伸びた投稿の「テーマ・書き出し・型」は、次の投稿や有料noteのコンセプトに再利用できます。</div>
     </div>
 
-    <div id="th-search">
+    <div id="th-growth">
+      <div class="th-controls">
+        <span class="th-sec-title">📊 アカウント成長サマリー</span>
+        <select id="th-gdays" onchange="thLoadGrowth()">
+          <option value="7">直近7日</option>
+          <option value="30" selected>直近30日</option>
+          <option value="90">直近90日</option>
+        </select>
+        <button class="th-mini-btn" onclick="thLoadGrowth()">↻ 更新</button>
+      </div>
+      <div class="th-stats" id="th-stats"><div class="th-setup">読み込み中…</div></div>
+      <div class="th-sec-title">🔍 話題を探す（他人の投稿を含む人気投稿検索）</div>
       <div class="th-controls">
         <input id="th-q" placeholder="キーワード（例: 婚活 / ダイエット / 副業）" onkeydown="if(event.key==='Enter'&&!event.isComposing)thSearch()">
         <select id="th-stype">
@@ -909,16 +948,21 @@
         <button class="th-mini-btn" onclick="thSearch()">🔍 検索</button>
       </div>
       <div id="th-search-list"></div>
-      <div class="th-note">他人の投稿を含むThreads全体からの検索です。「人気順」はThreads公式の人気ランキング。※他人の投稿のインプレッション数は非公開のため表示できません（いいね数はAPIが返した場合のみ表示）。</div>
+      <div class="th-note">「人気順」はThreads公式の人気ランキング。※他人の投稿のインプレッション数は非公開のため表示できません（いいね数はAPIが返した場合のみ表示）。伸びている型・テーマは有料noteのコンセプトに再利用できます。</div>
     </div>
 
     <div id="th-compose">
       <textarea id="th-text" spellcheck="false" placeholder="Threadsに投稿する本文…&#10;（500字を超えると自動でツリー連投になります）"></textarea>
       <div class="th-compose-foot">
         <span id="th-count">0字</span>
-        <button id="th-post-btn" onclick="thPost()">投稿する →</button>
+        <span class="spacer" style="flex:1"></span>
+        <input type="datetime-local" id="th-when">
+        <button class="th-mini-btn" onclick="thSchedule()">⏰ 予約する</button>
+        <button id="th-post-btn" onclick="thPost()">今すぐ投稿 →</button>
       </div>
-      <div class="th-note">投稿前に内容をよく確認してください。投稿はすぐに公開されます。</div>
+      <div class="th-sec-title">⏰ 予約一覧</div>
+      <div id="th-sched-list"><div class="th-setup">予約はまだありません。</div></div>
+      <div class="th-note">「今すぐ投稿」はすぐに公開されます。予約投稿は、<b>予約時刻にこのアプリ（start_webapp）が起動していれば</b>自動で投稿されます（Macがスリープ中・アプリ終了中は投稿されず、次回起動時にまとめて投稿されます）。</div>
     </div>
   </div>
 </div>
@@ -1345,6 +1389,8 @@ async function openThreads() {
     document.getElementById("th-user").textContent = st.username ? "@" + st.username : "";
     if (!st.configured) { thShowSetup(); return; }
     thLoadRanking();
+    thLoadGrowth();
+    thLoadSchedule();
   } catch (e) {
     document.getElementById("th-rank-list").innerHTML =
       '<div class="th-setup">⚠️ サーバーに接続できません: ' + esc(e.message) + "</div>";
@@ -1355,13 +1401,109 @@ function closeThreads() {
 }
 function thSetTab(tab) {
   const modal = document.getElementById("th-modal");
-  modal.classList.toggle("tab-search", tab === "search");
+  modal.classList.toggle("tab-growth", tab === "growth");
   modal.classList.toggle("tab-post", tab === "post");
   document.getElementById("th-tab-rank").classList.toggle("active", tab === "rank");
-  document.getElementById("th-tab-search").classList.toggle("active", tab === "search");
+  document.getElementById("th-tab-growth").classList.toggle("active", tab === "growth");
   document.getElementById("th-tab-post").classList.toggle("active", tab === "post");
   if (tab === "post") setTimeout(() => document.getElementById("th-text").focus(), 50);
-  if (tab === "search") setTimeout(() => document.getElementById("th-q").focus(), 50);
+  if (tab === "growth") setTimeout(() => document.getElementById("th-q").focus(), 50);
+}
+// ===== Growth Hub: アカウント成長サマリー =====
+async function thLoadGrowth() {
+  const box = document.getElementById("th-stats");
+  box.innerHTML = '<div class="th-setup">読み込み中…</div>';
+  const days = document.getElementById("th-gdays").value;
+  try {
+    const res = await fetch("/api/threads/growth?days=" + days);
+    const data = await res.json();
+    if (!res.ok) {
+      box.innerHTML = '<div class="th-setup">⚠️ ' + esc(data.error || "取得に失敗しました") + "</div>";
+      return;
+    }
+    const ins = data.insights || {};
+    const stats = [];
+    if (ins.followers_count !== undefined) stats.push(["フォロワー", ins.followers_count]);
+    stats.push([`閲覧（${days}日）`, ins.views || 0]);
+    stats.push([`いいね（${days}日）`, ins.likes || 0]);
+    stats.push([`リプライ（${days}日）`, ins.replies || 0]);
+    stats.push([`リポスト（${days}日）`, ins.reposts || 0]);
+    box.innerHTML = stats.map(([label, v]) =>
+      `<div class="th-stat"><b>${Number(v).toLocaleString()}</b><span>${esc(label)}</span></div>`).join("");
+  } catch (e) {
+    box.innerHTML = '<div class="th-setup">⚠️ 通信エラー: ' + esc(e.message) + "</div>";
+  }
+}
+// ===== 予約投稿 =====
+async function thLoadSchedule() {
+  const list = document.getElementById("th-sched-list");
+  try {
+    const res = await fetch("/api/threads/schedule");
+    const data = await res.json();
+    const pending = data.pending || [];
+    const done = data.done || [];
+    if (!pending.length && !done.length) {
+      list.innerHTML = '<div class="th-setup">予約はまだありません。</div>';
+      return;
+    }
+    const fmtAt = (at) => (at || "").replace("T", " ");
+    const rows = [];
+    for (const it of pending) {
+      rows.push(`<div class="th-sched-item">
+        <span class="when">⏰ ${esc(fmtAt(it.at))}</span>
+        <span class="t">${esc((it.text || "").replace(/\n/g, " "))}</span>
+        <button class="del" title="予約を取消" onclick="thCancelSchedule('${esc(it.id)}')">✕</button>
+      </div>`);
+    }
+    for (const it of done) {
+      const st = it.status === "posted"
+        ? `<span class="st-posted">✓ 投稿済み</span>`
+        : `<span class="st-failed" title="${esc(it.error || "")}">✕ 失敗</span>`;
+      const link = (it.status === "posted" && it.permalink)
+        ? ` <a href="${esc(it.permalink)}" target="_blank" rel="noopener">開く↗</a>` : "";
+      rows.push(`<div class="th-sched-item" style="opacity:.75">
+        ${st}
+        <span class="t">${esc((it.text || "").replace(/\n/g, " "))}</span>${link}
+      </div>`);
+    }
+    list.innerHTML = rows.join("");
+  } catch (e) { /* サーバー未起動時は無視 */ }
+}
+async function thSchedule() {
+  const text = thText.value.trim();
+  const at = document.getElementById("th-when").value;
+  if (!text) { alert("投稿する本文を入力してください。"); return; }
+  if (!at) { alert("予約日時を選択してください。"); return; }
+  try {
+    const res = await fetch("/api/threads/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, at }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert("予約できませんでした: " + (data.error || res.status)); return; }
+    thText.value = "";
+    thText.dispatchEvent(new Event("input"));
+    document.getElementById("th-when").value = "";
+    thLoadSchedule();
+  } catch (e) {
+    alert("通信エラー: " + e.message);
+  }
+}
+async function thCancelSchedule(id) {
+  if (!confirm("この予約を取り消しますか？")) return;
+  try {
+    const res = await fetch("/api/threads/schedule-cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) alert(data.error || "取消できませんでした");
+  } catch (e) {
+    alert("通信エラー: " + e.message);
+  }
+  thLoadSchedule();
 }
 async function thSearch() {
   const q = document.getElementById("th-q").value.trim();
@@ -1374,7 +1516,7 @@ async function thSearch() {
     const data = await res.json();
     if (!res.ok) {
       if (/未設定/.test(data.error || "")) {
-        list.innerHTML = '<div class="th-setup">先に「📈 自分の人気投稿」タブでThreads連携の初期設定をしてください。</div>';
+        list.innerHTML = '<div class="th-setup">先に「📈 人気投稿」タブでThreads連携の初期設定をしてください。</div>';
         return;
       }
       list.innerHTML = '<div class="th-setup">⚠️ ' + esc(data.error || "検索に失敗しました").replace(/\n/g, "<br>") + "</div>";
@@ -1511,7 +1653,7 @@ async function thPost() {
     alert("通信エラー: " + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = "投稿する →";
+    btn.textContent = "今すぐ投稿 →";
   }
 }
 

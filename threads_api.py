@@ -11,6 +11,7 @@ Threads API（graph.threads.net）で以下を行う共通モジュール:
 """
 
 import json
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -201,6 +202,150 @@ def keyword_search(cfg: dict, query: str, search_type: str = "TOP", limit: int =
         # like_count 非対応の環境向けフォールバック（権限エラー等はここで再度発生して伝わる）
         d = _request("GET", "/keyword_search", dict(base, fields=fields_min))
     return d.get("data", [])
+
+
+def get_user_insights(cfg: dict, days: int = 30) -> dict:
+    """アカウント全体のインサイト（Growth Hub用）。
+    views/likes等は期間の合計、followers_count は現在のフォロワー数。"""
+    since = int(time.time()) - days * 86400
+    params = {
+        "metric": "views,likes,replies,reposts,quotes,followers_count",
+        "since": since,
+        "access_token": cfg["access_token"],
+    }
+    try:
+        d = _request("GET", f"/{cfg['user_id']}/threads_insights", params)
+    except ThreadsError:
+        # followers_count 非対応のアカウント向けフォールバック
+        params["metric"] = "views,likes,replies,reposts,quotes"
+        d = _request("GET", f"/{cfg['user_id']}/threads_insights", params)
+    out = {}
+    for item in d.get("data", []):
+        name = item.get("name")
+        if isinstance(item.get("total_value"), dict):
+            out[name] = item["total_value"].get("value", 0)
+        else:
+            out[name] = sum(v.get("value", 0) for v in (item.get("values") or []))
+    return out
+
+
+# ==============================
+# 予約投稿（ローカルスケジュール）
+# ==============================
+# threads_schedule.json に予約を保存し、Webアプリのサーバーが定期チェックして
+# 予約時刻を過ぎたものを自動投稿する（サーバー起動中のみ実行される）。
+
+SCHEDULE_PATH = BASE_DIR / "threads_schedule.json"
+_SCHED_LOCK = threading.Lock()
+
+
+def load_schedule() -> list:
+    if not SCHEDULE_PATH.exists():
+        return []
+    try:
+        return json.loads(SCHEDULE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def _save_schedule(items: list):
+    SCHEDULE_PATH.write_text(
+        json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def parse_local_time(at_iso: str) -> float:
+    """'YYYY-MM-DDTHH:MM'（ローカル時刻）→ epoch秒。不正な形式は ValueError"""
+    return time.mktime(time.strptime(at_iso[:16], "%Y-%m-%dT%H:%M"))
+
+
+def add_schedule(text: str, at_iso: str) -> dict:
+    """予約を追加して保存する（時刻の妥当性は呼び出し側で検証済みの前提）"""
+    item = {
+        "id": str(int(time.time() * 1000)),
+        "text": text,
+        "at": at_iso[:16],
+        "status": "pending",
+        "created_at": int(time.time()),
+    }
+    with _SCHED_LOCK:
+        items = load_schedule()
+        items.append(item)
+        _save_schedule(items)
+    return item
+
+
+def cancel_schedule(sched_id: str) -> bool:
+    with _SCHED_LOCK:
+        items = load_schedule()
+        for it in items:
+            if it.get("id") == sched_id and it.get("status") == "pending":
+                items.remove(it)
+                _save_schedule(items)
+                return True
+    return False
+
+
+def process_due_posts() -> list:
+    """予約時刻を過ぎた pending を投稿する。処理した項目のリストを返す。
+
+    投稿（ネットワーク処理）はロックの外で行い、予約の追加/取消をブロックしない。
+    """
+    if not is_configured():
+        return []
+    now = time.time()
+
+    # 1) 期限が来た予約に「posting」の印を付ける（ロック内・軽い処理のみ）
+    with _SCHED_LOCK:
+        items = load_schedule()
+        due, changed = [], False
+        for it in items:
+            status = it.get("status")
+            # サーバーが投稿中に落ちた場合の残骸を回収（10分以上 posting のまま）
+            if status == "posting" and now - it.get("posting_at", 0) > 600:
+                it["status"] = "failed"
+                it["error"] = "投稿処理が中断されました。もう一度予約してください"
+                changed = True
+                continue
+            if status != "pending":
+                continue
+            try:
+                due_time = parse_local_time(it.get("at", ""))
+            except (ValueError, KeyError):
+                it["status"] = "failed"
+                it["error"] = "予約時刻の形式が不正です"
+                changed = True
+                continue
+            if due_time <= now:
+                it["status"] = "posting"
+                it["posting_at"] = int(now)
+                due.append(dict(it))
+                changed = True
+        if changed:
+            _save_schedule(items)
+
+    # 2) 投稿はロックの外で実行
+    results = []
+    for it in due:
+        upd = {"id": it["id"]}
+        try:
+            cfg = load_config()
+            ids = publish_thread(cfg, it["text"])
+            upd.update(status="posted", posted_at=int(time.time()),
+                       count=len(ids), permalink=get_permalink(cfg, ids[0]))
+        except ThreadsError as e:
+            upd.update(status="failed", error=str(e))
+        results.append(upd)
+
+    # 3) 結果を書き戻す
+    if results:
+        with _SCHED_LOCK:
+            items = load_schedule()
+            by_id = {u["id"]: u for u in results}
+            for it in items:
+                if it.get("id") in by_id:
+                    it.update(by_id[it["id"]])
+            _save_schedule(items)
+    return results
 
 
 # ==============================

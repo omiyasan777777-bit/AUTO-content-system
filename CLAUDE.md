@@ -67,8 +67,11 @@ AUTO-content-system/
 
 ## Threads連携（人気投稿分析・自動投稿）
 
-Meta公式の Threads API を使用（設定は `python setup_threads.py`、Macは `python3`）。
-Web UI のクイックバー「🧵 Threads」からも操作できる。
+Meta公式の Threads API を使用（設定は Web UI「🧵 Threads」から、または `python setup_threads.py`）。
+Web UI のタブ構成: 「📈 人気投稿」（自分の投稿ランキング）/「✦ Growth Hub」（フォロワー数・期間合計views等の
+成長サマリー＋話題検索）/「✍️ 投稿・予約」（今すぐ投稿＋日時指定の予約投稿）。
+予約投稿は `threads_schedule.json` に保存され、Webサーバー起動中に30秒ごとにチェックされて自動投稿される
+（サーバー停止中は投稿されず、次回起動時にまとめて投稿される）。
 
 - **「Threads分析」「Threadsの人気投稿」** → `python threads_insights.py` を**AIがBashで実行**し、
   インプレッション（views）・いいねの高い自分の投稿ランキングを表示。

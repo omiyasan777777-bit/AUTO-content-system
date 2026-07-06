@@ -20,6 +20,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -438,6 +439,76 @@ def api_threads_search():
     } for p in posts]}
 
 
+@app.get("/api/threads/growth")
+def api_threads_growth():
+    """Growth Hub: アカウント全体の成長サマリー（フォロワー数・期間の合計指標）"""
+    try:
+        days = min(max(int(request.args.get("days", 30)), 1), 365)
+    except ValueError:
+        return {"error": "days は数値で指定してください"}, 400
+    try:
+        cfg = threads_api.load_config()
+        data = threads_api.get_user_insights(cfg, days=days)
+    except ThreadsError as e:
+        return {"error": str(e)}, 400
+    return {"insights": data, "days": days}
+
+
+@app.get("/api/threads/schedule")
+def api_threads_schedule_list():
+    """予約投稿の一覧（実行待ちは時刻順、実行済み/失敗は直近10件）"""
+    items = threads_api.load_schedule()
+    pending = sorted([i for i in items if i.get("status") in ("pending", "posting")],
+                     key=lambda i: i.get("at", ""))
+    done = sorted([i for i in items if i.get("status") in ("posted", "failed")],
+                  key=lambda i: i.get("posted_at", i.get("created_at", 0)), reverse=True)[:10]
+    return {"pending": pending, "done": done}
+
+
+@app.post("/api/threads/schedule")
+def api_threads_schedule_add():
+    """予約投稿を追加"""
+    data = request.get_json(force=True, silent=True) or {}
+    text = (data.get("text") or "").strip()
+    at = (data.get("at") or "").strip()
+    if not text:
+        return {"error": "投稿する本文が空です"}, 400
+    if not threads_api.is_configured():
+        return {"error": "Threadsが未設定です。先に初期設定をしてください"}, 400
+    try:
+        due = threads_api.parse_local_time(at)
+    except (ValueError, IndexError):
+        return {"error": "予約日時を指定してください"}, 400
+    if due <= time.time() + 30:
+        return {"error": "予約日時は現在より後にしてください"}, 400
+    item = threads_api.add_schedule(text, at)
+    return {"ok": True, "item": item}
+
+
+@app.post("/api/threads/schedule-cancel")
+def api_threads_schedule_cancel():
+    """予約投稿の取消（実行待ちのもののみ）"""
+    data = request.get_json(force=True, silent=True) or {}
+    sid = (data.get("id") or "").strip()
+    if threads_api.cancel_schedule(sid):
+        return {"ok": True}
+    return {"error": "取消できませんでした（すでに投稿済みの可能性があります）"}, 400
+
+
+def _schedule_worker():
+    """30秒ごとに予約投稿をチェックして、期限が来たものを自動投稿する"""
+    while True:
+        try:
+            for it in threads_api.process_due_posts():
+                if it.get("status") == "posted":
+                    print(f"[threads-予約] 投稿しました（{it.get('count', 1)}件）: {it.get('permalink', '')}", flush=True)
+                else:
+                    print(f"[threads-予約] 失敗: {it.get('error', '')}", flush=True)
+        except Exception as e:
+            print(f"[threads-予約] エラー: {e}", flush=True)
+        time.sleep(30)
+
+
 @app.post("/api/threads/post")
 def api_threads_post():
     """テキストをThreadsに投稿（500字超は自動でツリー連投）"""
@@ -578,6 +649,8 @@ def api_send():
 
 
 if __name__ == "__main__":
+    # 予約投稿の実行スレッド（サーバー起動中のみ動く）
+    threading.Thread(target=_schedule_worker, daemon=True).start()
     print("=" * 60)
     print("  AUTO-content-system Web UI")
     print(f"  http://{HOST}:{PORT} をブラウザで開いてください")
