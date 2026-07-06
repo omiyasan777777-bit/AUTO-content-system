@@ -10,6 +10,25 @@ cd "$(dirname "$0")"
 DIR="$(pwd)"
 PLIST="$HOME/Library/LaunchAgents/com.shinya-threads.webapp.plist"
 
+# デスクトップ/書類/ダウンロードはmacOSの保護対象で、自動起動（launchd）からは
+# アクセスできず起動に失敗する。ホーム直下などへの移動を案内して終了する。
+case "$DIR" in
+  "$HOME/Desktop"*|"$HOME/Documents"*|"$HOME/Downloads"*)
+    echo "⚠️  このフォルダは「デスクトップ/書類/ダウンロード」の中にあります。"
+    echo "   Macの保護機能により、自動起動からはアクセスできません。"
+    echo ""
+    echo "   ターミナルで以下を実行して、ホーム直下に移動してください:"
+    echo ""
+    echo "     launchctl unload \"$PLIST\" 2>/dev/null"
+    echo "     mv \"$DIR\" \"\$HOME/AUTO-content-system\""
+    echo "     cd \"\$HOME/AUTO-content-system\""
+    echo "     ./setup_autostart.command"
+    echo ""
+    read -p "Enterキーで閉じます..."
+    exit 1
+    ;;
+esac
+
 mkdir -p "$HOME/Library/LaunchAgents"
 
 cat > "$PLIST" <<PLISTEOF
