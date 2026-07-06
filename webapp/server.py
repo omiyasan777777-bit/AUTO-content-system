@@ -406,6 +406,35 @@ def api_threads_insights():
     }
 
 
+@app.get("/api/threads/search")
+def api_threads_search():
+    """公開投稿のキーワード検索（他人の話題投稿を探す）"""
+    q = (request.args.get("q") or "").strip()
+    if not q:
+        return {"error": "キーワードを入力してください"}, 400
+    stype = request.args.get("type", "TOP")
+    if stype not in ("TOP", "RECENT"):
+        return {"error": f"未対応の並び順です: {stype}"}, 400
+    try:
+        cfg = threads_api.load_config()
+        posts = threads_api.keyword_search(cfg, q, search_type=stype, limit=25)
+    except ThreadsError as e:
+        msg = str(e)
+        low = msg.lower()
+        if "permission" in low or "keyword" in low or "oauth" in low or "scope" in low:
+            msg += ("\n※キーワード検索には「threads_keyword_search」権限が必要です。"
+                    "developers.facebook.com でこの権限にチェックを入れてトークンを再生成し、"
+                    "Threads画面から設定し直してください。")
+        return {"error": msg}, 400
+    return {"posts": [{
+        "text": p.get("text", ""),
+        "username": p.get("username", ""),
+        "timestamp": p.get("timestamp", ""),
+        "permalink": p.get("permalink", ""),
+        "like_count": p.get("like_count"),
+    } for p in posts]}
+
+
 @app.post("/api/threads/post")
 def api_threads_post():
     """テキストをThreadsに投稿（500字超は自動でツリー連投）"""
@@ -470,7 +499,7 @@ def api_send():
         # full（フルオート）は全許可のため --allow-dangerously-skip-permissions も付与
         cmd += ["--permission-mode", MODES[mode]]
         if mode == "full":
-            cmd += ["--allow-dangerously-skip-permissions"]
+            cmd += ["--dangerously-skip-permissions"]  # 旧バージョンのCLIでも通る表記
 
     if model:
         cmd += ["--model", model]
@@ -480,6 +509,8 @@ def api_send():
     # （可変長オプションが位置引数を誤って吸収するのを避けるため）
 
     def generate():
+        # 診断用: 起動コマンドをサーバーのターミナルに表示
+        print(f"[claude] {' '.join(cmd)}", flush=True)
         proc = subprocess.Popen(
             cmd,
             cwd=str(PROJECT_DIR),

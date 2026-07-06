@@ -173,6 +173,30 @@ def fetch_ranked_posts(cfg: dict, days: int = 30, top: int = 10,
     return posts[:top] if top else posts
 
 
+def keyword_search(cfg: dict, query: str, search_type: str = "TOP", limit: int = 25) -> list:
+    """公開投稿のキーワード検索（他人の投稿を含む）。
+
+    search_type: "TOP"（Threads公式の人気順） / "RECENT"（新着順）
+    トークンに threads_keyword_search 権限が必要。
+    ※他人の投稿のインプレッション数は非公開のため取得できない（Threadsの仕様）。
+      like_count はAPIが返す場合のみ含まれる。
+    """
+    base = {
+        "q": query,
+        "search_type": search_type,
+        "limit": min(max(limit, 1), 50),
+        "access_token": cfg["access_token"],
+    }
+    fields_rich = "id,text,timestamp,permalink,username,media_type,like_count"
+    fields_min = "id,text,timestamp,permalink,username,media_type"
+    try:
+        d = _request("GET", "/keyword_search", dict(base, fields=fields_rich))
+    except ThreadsError:
+        # like_count 非対応の環境向けフォールバック（権限エラー等はここで再度発生して伝わる）
+        d = _request("GET", "/keyword_search", dict(base, fields=fields_min))
+    return d.get("data", [])
+
+
 # ==============================
 # 投稿
 # ==============================

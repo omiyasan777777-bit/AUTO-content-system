@@ -76,6 +76,11 @@ Web UI のクイックバー「🧵 Threads」からも操作できる。
 - **「Threadsに投稿して」** → `python post_to_threads.py --text "本文"` を**AIがBashで実行**。
   500字超は自動でツリー連投になる。投稿はすぐ公開されるため、**投稿前に本文をユーザーへ提示して確認を取る**
   （フルオートモードでも、Threadsへの公開投稿だけは本文の確認を挟むこと。note下書きと違い取り消せないため）
+- **「Threadsで話題検索」「Threadsで〇〇を検索」** → `python threads_search.py --q "キーワード"` を**AIがBashで実行**。
+  他人の投稿を含むThreads全体から人気投稿（TOP）/新着（RECENT）を検索する。
+  Phase 1 競合リサーチの補助にも使える（`--out threads_trend.md` でレポート保存可）。
+  ※他人の投稿のインプレッション数は非公開（Threadsの仕様）。人気順=Threads公式ランキング。
+  ※トークンに threads_keyword_search 権限が必要
 - **「Threadsで宣伝して」** → 完成した note の `05_sales_letter.md` のフックと
   `threads_report.md` の伸びた投稿の型を参考に、宣伝ポスト（500字以内×1〜3案）を作成 →
   ユーザーが選んだ案を `post_to_threads.py` で投稿

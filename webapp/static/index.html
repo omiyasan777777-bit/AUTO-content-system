@@ -714,13 +714,13 @@
     background: var(--bg); color: var(--text); cursor: pointer; outline: none;
     font-family: inherit; box-shadow: var(--nm-out-sm);
   }
-  #th-reload {
+  .th-mini-btn {
     font-size: 12px; font-weight: 700; padding: 7px 14px; border: none; border-radius: 999px;
     background: var(--bg); color: var(--g2); cursor: pointer; font-family: inherit;
     box-shadow: var(--nm-out-sm);
   }
-  #th-reload:active { box-shadow: var(--nm-in); }
-  #th-rank-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px; }
+  .th-mini-btn:active { box-shadow: var(--nm-in); }
+  #th-rank-list, #th-search-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px; }
   .th-card {
     padding: 12px 14px; border-radius: var(--radius-sm);
     background: var(--bg); box-shadow: var(--nm-out-sm);
@@ -734,9 +734,18 @@
   .th-card a { color: var(--g2); font-size: 11.5px; text-decoration: none; font-weight: 700; }
   .th-note { font-size: 11px; color: var(--muted); line-height: 1.6; }
   #th-compose { display: none; flex-direction: column; gap: 10px; }
-  #th-modal.composing #th-rank { display: none; }
-  #th-modal.composing #th-compose { display: flex; }
+  #th-search { display: none; flex-direction: column; gap: 10px; overflow: hidden; }
   #th-rank { display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  #th-modal.tab-search #th-rank, #th-modal.tab-post #th-rank { display: none; }
+  #th-modal.tab-search #th-search { display: flex; }
+  #th-modal.tab-post #th-compose { display: flex; }
+  .th-controls input {
+    flex: 1; min-width: 150px; border: none; outline: none; border-radius: 999px;
+    padding: 8px 14px; font-size: 12.5px; font-family: inherit;
+    color: var(--text); background: var(--bg); box-shadow: var(--nm-in);
+  }
+  .th-controls input::placeholder { color: var(--muted); }
+  .th-uname { color: var(--g2); font-weight: 800; }
   #th-text {
     width: 100%; height: 180px; resize: vertical;
     border: none; outline: none; border-radius: var(--radius-sm);
@@ -865,7 +874,8 @@
       <span class="th-title">🧵 Threads</span>
       <span class="th-user" id="th-user"></span>
       <div class="th-tabs">
-        <button id="th-tab-rank" class="active" onclick="thSetTab('rank')">📈 人気投稿</button>
+        <button id="th-tab-rank" class="active" onclick="thSetTab('rank')">📈 自分の人気投稿</button>
+        <button id="th-tab-search" onclick="thSetTab('search')">🔍 話題を探す</button>
         <button id="th-tab-post" onclick="thSetTab('post')">✍️ 投稿する</button>
       </div>
       <button id="th-close" onclick="closeThreads()">✕</button>
@@ -883,10 +893,23 @@
           <option value="likes">いいね順</option>
           <option value="reposts">リポスト順</option>
         </select>
-        <button id="th-reload" onclick="thLoadRanking()">↻ 更新</button>
+        <button class="th-mini-btn" onclick="thLoadRanking()">↻ 更新</button>
       </div>
       <div id="th-rank-list"></div>
       <div class="th-note">伸びた投稿の「テーマ・書き出し・型」は、次の投稿や有料noteのコンセプトに再利用できます。</div>
+    </div>
+
+    <div id="th-search">
+      <div class="th-controls">
+        <input id="th-q" placeholder="キーワード（例: 婚活 / ダイエット / 副業）" onkeydown="if(event.key==='Enter'&&!event.isComposing)thSearch()">
+        <select id="th-stype">
+          <option value="TOP" selected>人気順（TOP）</option>
+          <option value="RECENT">新着順</option>
+        </select>
+        <button class="th-mini-btn" onclick="thSearch()">🔍 検索</button>
+      </div>
+      <div id="th-search-list"></div>
+      <div class="th-note">他人の投稿を含むThreads全体からの検索です。「人気順」はThreads公式の人気ランキング。※他人の投稿のインプレッション数は非公開のため表示できません（いいね数はAPIが返した場合のみ表示）。</div>
     </div>
 
     <div id="th-compose">
@@ -1195,7 +1218,10 @@ function addBubble(cls, text, scroll = true) {
   return div;
 }
 
+let statusBase = "";     // 現在の状態テキスト（経過秒の再描画用）
+let statusStart = 0;     // 状態表示を開始した時刻
 function setStatus(text) {
+  statusBase = text || "";
   let st = document.getElementById("status-line");
   if (!text) { if (st) st.remove(); return; }
   if (!st) {
@@ -1203,14 +1229,21 @@ function setStatus(text) {
     st.id = "status-line";
     st.className = "status";
     st.innerHTML = `<span class="dot"></span><span id="status-text"></span>`;
+    statusStart = Date.now();
   }
-  st.querySelector("#status-text").textContent = text;
+  const sec = Math.floor((Date.now() - statusStart) / 1000);
+  st.querySelector("#status-text").textContent = text + (sec >= 3 ? `（${sec}秒経過）` : "");
   chat.appendChild(st); // 常に最下部へ
   chat.scrollTop = chat.scrollHeight;
 }
+// 実行中は1秒ごとに経過秒を更新（初回応答が遅くても動いていることが分かるように）
+setInterval(() => { if (busy && statusBase) setStatus(statusBase); }, 1000);
 
 function quick(text) {
-  if (busy) return;
+  if (busy) {
+    alert("⏳ いま実行中です（下の状態表示を見てください）。\n応答が終わるまで待つか、⏹中断ボタンで止めてから押してください。");
+    return;
+  }
   input.value = text;
   send();
 }
@@ -1321,10 +1354,51 @@ function closeThreads() {
   document.getElementById("th-overlay").classList.add("hidden");
 }
 function thSetTab(tab) {
-  document.getElementById("th-modal").classList.toggle("composing", tab === "post");
+  const modal = document.getElementById("th-modal");
+  modal.classList.toggle("tab-search", tab === "search");
+  modal.classList.toggle("tab-post", tab === "post");
   document.getElementById("th-tab-rank").classList.toggle("active", tab === "rank");
+  document.getElementById("th-tab-search").classList.toggle("active", tab === "search");
   document.getElementById("th-tab-post").classList.toggle("active", tab === "post");
   if (tab === "post") setTimeout(() => document.getElementById("th-text").focus(), 50);
+  if (tab === "search") setTimeout(() => document.getElementById("th-q").focus(), 50);
+}
+async function thSearch() {
+  const q = document.getElementById("th-q").value.trim();
+  if (!q) { alert("検索キーワードを入力してください。"); return; }
+  const list = document.getElementById("th-search-list");
+  list.innerHTML = '<div class="th-setup">「' + esc(q) + '」を検索中…</div>';
+  const stype = document.getElementById("th-stype").value;
+  try {
+    const res = await fetch(`/api/threads/search?q=${encodeURIComponent(q)}&type=${stype}`);
+    const data = await res.json();
+    if (!res.ok) {
+      if (/未設定/.test(data.error || "")) {
+        list.innerHTML = '<div class="th-setup">先に「📈 自分の人気投稿」タブでThreads連携の初期設定をしてください。</div>';
+        return;
+      }
+      list.innerHTML = '<div class="th-setup">⚠️ ' + esc(data.error || "検索に失敗しました").replace(/\n/g, "<br>") + "</div>";
+      return;
+    }
+    const posts = data.posts || [];
+    if (!posts.length) {
+      list.innerHTML = '<div class="th-setup">見つかりませんでした。キーワードを変えてみてください。</div>';
+      return;
+    }
+    list.innerHTML = posts.map((p, i) => {
+      const when = (p.timestamp || "").slice(0, 16).replace("T", " ");
+      const likes = (p.like_count !== null && p.like_count !== undefined)
+        ? `<span>❤ <b>${Number(p.like_count).toLocaleString()}</b></span>` : "";
+      const link = p.permalink ? `<a href="${esc(p.permalink)}" target="_blank" rel="noopener">投稿を開く ↗</a>` : "";
+      return `<div class="th-card">
+        <span class="th-rank-no">No.${i + 1}　<span class="th-uname">@${esc(p.username || "")}</span></span>
+        <div class="th-text">${esc(p.text || "(本文なし)")}</div>
+        <div class="th-meta">${likes}<span>${esc(when)}</span>${link}</div>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    list.innerHTML = '<div class="th-setup">⚠️ 通信エラー: ' + esc(e.message) + "</div>";
+  }
 }
 function thShowSetup() {
   document.getElementById("th-rank-list").innerHTML =
