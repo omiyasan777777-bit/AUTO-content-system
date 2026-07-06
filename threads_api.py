@@ -15,6 +15,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -164,11 +165,16 @@ def fetch_ranked_posts(cfg: dict, days: int = 30, top: int = 10,
                        sort: str = "views", max_posts: int = 25) -> list:
     """インサイト付きの自分の投稿を sort（views / likes …）の降順で返す"""
     posts = get_my_posts(cfg, days=days, limit=max_posts)
-    for p in posts:
+
+    def _attach_insights(p):
         try:
             p["insights"] = get_post_insights(cfg, p["id"])
         except ThreadsError:
             p["insights"] = {}
+
+    # 1投稿=1リクエストのため並列化して高速化（投稿25件で数秒程度に）
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        list(ex.map(_attach_insights, posts))
     posts.sort(key=lambda p: p["insights"].get(sort, 0), reverse=True)
     return posts[:top] if top else posts
 
