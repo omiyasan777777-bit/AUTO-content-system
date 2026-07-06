@@ -21,6 +21,10 @@ AUTO-content-system/
 ├── Market-Lens/           ← note市場リサーチアプリ（`npm start` → 127.0.0.1:4173）
 │   ├── server.mjs         ← 検索/24h購入判定/穴場ジャンル/人気ワードAPI
 │   └── public/            ← フロントエンド（検索・分析UI）
+├── Threads-Poster/        ← Threads予約投稿×楽天アフィリ（`npm start` → 127.0.0.1:4310）
+│   ├── server.mjs         ← 予約スケジューラ/楽天API/価格・在庫監視/短縮URL/Threads投稿
+│   ├── lib/core.mjs       ← 純粋ロジック（プレースホルダ解決・セールカレンダー等）
+│   └── public/            ← フロントエンド（予約シート・ツリーエディタ・マスコット⚽）
 ├── prompts/               ← 各フェーズのプロンプト定義書
 │   ├── 00_master_orchestrator.md  ← 全体統括
 │   ├── 00a_self_analysis.md       ← Phase 0: 自己分析・棚卸し

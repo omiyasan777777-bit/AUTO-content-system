@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threads Poster — 予約投稿 × 楽天アフィリ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='12' width='48' height='40' rx='10' fill='%23E8734A'/%3E%3Crect x='18' y='26' width='7' height='12' rx='3.5' fill='%23fff'/%3E%3Crect x='39' y='26' width='7' height='12' rx='3.5' fill='%23fff'/%3E%3Ccircle cx='50' cy='56' r='6' fill='%23fff' stroke='%23222' stroke-width='1.5'/%3E%3Cpath d='M50 52l2.4 1.7-.9 2.8h-3l-.9-2.8z' fill='%23222'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-icon" viewBox="0 0 64 64" width="34" height="34" aria-hidden="true">
+      <rect x="8" y="12" width="48" height="40" rx="10" fill="#E8734A"/>
+      <rect x="18" y="26" width="7" height="12" rx="3.5" fill="#fff"/>
+      <rect x="39" y="26" width="7" height="12" rx="3.5" fill="#fff"/>
+      <circle cx="50" cy="56" r="6" fill="#fff" stroke="#222" stroke-width="1.5"/>
+      <path d="M50 52l2.4 1.7-.9 2.8h-3l-.9-2.8z" fill="#222"/>
+    </svg>
+    <div>
+      <h1>Threads Poster</h1>
+      <p class="sub">ツリー予約投稿 × 楽天アフィリエイト</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="demoBadge" class="badge hidden">デモモード</span>
+    <button class="ghost-btn" id="settingsBtn" title="設定">⚙️ 設定</button>
+  </div>
+</header>
+
+<div id="saleBanner" class="sale-banner hidden"></div>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="sheet">📅 予約シート</button>
+  <button class="tab" data-tab="editor">✏️ 投稿を作成</button>
+  <button class="tab" data-tab="sales">🔥 セールカレンダー</button>
+  <button class="tab" data-tab="links">🔗 短縮URL</button>
+</nav>
+
+<main>
+  <!-- ============ 予約シート ============ -->
+  <section id="tab-sheet" class="tab-panel">
+    <div class="panel-head">
+      <h2>予約シート</h2>
+      <div class="row-gap">
+        <button class="ghost-btn" id="refreshProductsBtn" title="予約中の全商品の価格・在庫を今すぐ再チェック">💴 価格・在庫を再チェック</button>
+        <button class="primary-btn" id="newPostBtn">＋ 新規投稿</button>
+      </div>
+    </div>
+    <div id="sheetBody" class="sheet"></div>
+  </section>
+
+  <!-- ============ エディタ ============ -->
+  <section id="tab-editor" class="tab-panel hidden">
+    <div class="panel-head">
+      <h2 id="editorTitle">投稿を作成</h2>
+      <button class="ghost-btn" id="cancelEditBtn">キャンセル</button>
+    </div>
+    <div class="editor-meta">
+      <label>管理タイトル<input type="text" id="postTitle" placeholder="例: スーパーSALE目玉商品まとめ"></label>
+      <label>投稿日時<input type="datetime-local" id="postAt"></label>
+    </div>
+    <p class="hint">💡 本文に <code>{商品名}</code> <code>{価格}</code> <code>{URL}</code> と書くと、投稿する瞬間の最新情報に自動で置き換わります（価格変動に自動追従）。</p>
+    <div id="treeList"></div>
+    <div class="editor-actions">
+      <button class="ghost-btn" id="addNodeBtn">＋ ツリーを追加（ぶら下げ投稿）</button>
+      <button class="primary-btn" id="savePostBtn">💾 予約を保存</button>
+    </div>
+  </section>
+
+  <!-- ============ セールカレンダー ============ -->
+  <section id="tab-sales" class="tab-panel hidden">
+    <div class="panel-head">
+      <h2>楽天セールカレンダー</h2>
+      <label class="toggle"><input type="checkbox" id="saleAutoGen"> セール開始日に告知投稿を自動生成する</label>
+    </div>
+    <p class="hint">⚠️ 開催日は過去の傾向からの<b>推定</b>です（スーパーSALE: 3・6・9・12月 / お買い物マラソン: 毎月、いずれも4日20:00頃開始が多い）。公式発表に合わせて設定画面のカスタムイベントで上書きできます。</p>
+    <div id="saleList" class="sale-list"></div>
+  </section>
+
+  <!-- ============ 短縮URL ============ -->
+  <section id="tab-links" class="tab-panel hidden">
+    <div class="panel-head"><h2>楽天っぽいオリジナル短縮URL</h2></div>
+    <p class="hint">商品添付時に自動生成されます（例: <code>/r/ichiba-k3f9x2ab</code>）。クリック数も計測。<br>⚠️ このURLは<b>このツールが起動している間だけ</b>有効です。外部公開する場合は設定でベースURLを自分のドメインに変更してください。</p>
+    <div class="row-gap" style="margin-bottom:12px">
+      <input type="text" id="manualLinkUrl" placeholder="https://hb.afl.rakuten.co.jp/... を貼り付けて短縮" style="flex:1">
+      <button class="ghost-btn" id="makeLinkBtn">短縮する</button>
+    </div>
+    <div id="linkList" class="link-list"></div>
+  </section>
+</main>
+
+<!-- ============ 設定モーダル ============ -->
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-box">
+    <h2>⚙️ 設定</h2>
+    <h3>Threads API</h3>
+    <label>アクセストークン<input type="password" id="setThreadsToken" placeholder="THQVJ..."></label>
+    <label>ThreadsユーザーID<input type="text" id="setThreadsUserId" placeholder="1784..."></label>
+    <p class="hint">Meta for Developers でThreadsアプリを作成し、threads_basic / threads_content_publish 権限のトークンを取得してください。未設定の間はデモモード（実際には投稿されません）。</p>
+    <h3>楽天ウェブサービス</h3>
+    <label>アプリID (applicationId)<input type="text" id="setRakutenAppId" placeholder="10..."></label>
+    <label>アフィリエイトID<input type="text" id="setRakutenAffId" placeholder="例: 4a1b2c3d.e5f6g7h8..."></label>
+    <p class="hint">未設定の間はデモ商品データで動作します。</p>
+    <h3>短縮URL</h3>
+    <label>ベースURL<input type="text" id="setShortBase" placeholder="http://127.0.0.1:4310"></label>
+    <h3>カスタムセールイベント（公式発表で上書き）</h3>
+    <div id="customEventList"></div>
+    <button class="ghost-btn" id="addCustomEventBtn">＋ イベントを追加</button>
+    <div class="modal-actions">
+      <button class="ghost-btn" id="closeSettingsBtn">閉じる</button>
+      <button class="primary-btn" id="saveSettingsBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ マスコット（リフティング⚽ / 投稿時にキック） ============ -->
+<div id="mascot" class="mascot" title="投稿の瞬間にシュートを決めます">
+  <svg id="mascotSvg" viewBox="0 0 160 140" width="150" height="132">
+    <ellipse cx="88" cy="112" rx="34" ry="5" fill="rgba(0,0,0,.18)"/>
+    <!-- キャラ本体（オレンジ） -->
+    <g id="clawd">
+      <rect id="body" x="55" y="30" width="66" height="56" rx="14" fill="#E8734A"/>
+      <rect x="69" y="48" width="9" height="17" rx="4.5" fill="#fff"/>
+      <rect x="97" y="48" width="9" height="17" rx="4.5" fill="#fff"/>
+      <!-- 脚 -->
+      <rect id="legL" x="66" y="84" width="10" height="22" rx="5" fill="#E8734A"/>
+      <g id="legR-group">
+        <rect id="legR" x="98" y="84" width="10" height="22" rx="5" fill="#E8734A"/>
+      </g>
+      <!-- 汗（キック時） -->
+      <path id="sweat" d="M124 34q4 6 0 10" stroke="#7ec8ff" stroke-width="3" fill="none" opacity="0"/>
+    </g>
+    <!-- ボール（前面に描画） -->
+    <g id="ball">
+      <circle cx="0" cy="0" r="14" fill="#fff" stroke="#222" stroke-width="1.6"/>
+      <path d="M0 -9.5l7 5-2.7 8.2h-8.6L-7 -4.5z" fill="#222"/>
+      <path d="M0 -14v4.5M7 -4.5l4.5-2.8M4.3 3.7l3.8 3.8M-4.3 3.7l-3.8 3.8M-7 -4.5l-4.5-2.8" stroke="#222" stroke-width="1.3"/>
+    </g>
+  </svg>
+  <div id="mascotSpeech" class="mascot-speech hidden"></div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>

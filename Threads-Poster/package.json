@@ -1,0 +1,14 @@
+{
+  "name": "threads-poster",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Threads予約投稿ツール — ツリー投稿 × 楽天アフィリエイト連携（価格変動・在庫チェック・セールカレンダー付き）",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
