@@ -73,7 +73,10 @@ def nd(obj) -> str:
 
 @app.get("/")
 def index():
-    return send_from_directory(BASE_DIR / "static", "index.html")
+    res = send_from_directory(BASE_DIR / "static", "index.html")
+    # 更新（git pull）した画面がリロードだけで確実に反映されるようにキャッシュさせない
+    res.headers["Cache-Control"] = "no-store"
+    return res
 
 
 @app.post("/api/open-folder")
