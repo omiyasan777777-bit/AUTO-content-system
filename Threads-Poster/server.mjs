@@ -139,7 +139,7 @@ async function rakutenError(res) {
   const hints = {
     400: "パラメータ不正です。⚙️設定の「アプリケーションID」（UUID形式）と「アクセスキー」の両方が正しく入っているか「接続テスト」で確認してください",
     401: "認証エラーです。「アクセスキー」が正しいか確認してください",
-    403: "アクセス拒否です。⚙️設定の「🔌 接続テスト」を押すと複数の認証パターンを自動で試します。それでも失敗する場合は、楽天のアプリ設定の「許可Webサイト（アプリURL）」と⚙️設定の「アプリURL」が同じドメインか確認してください",
+    403: "アクセス拒否です。⚙️設定の「🔌 接続テスト」で詳細を診断できます。バックエンドサービス型なら「許可IPアドレス」にあなたのIPを、Webアプリケーション型なら「許可Webサイト」との一致を確認してください",
     404: "APIが見つかりません。時間をおいて再試行してください",
     429: "リクエストが多すぎます。数秒待ってから再試行してください",
     500: "楽天側の一時的なエラーです。時間をおいて再試行してください",
@@ -537,27 +537,47 @@ const server = http.createServer(async (req, res) => {
       const params = rakutenAuthParams();
       params.set("hits", "1");
       params.set("keyword", "楽天");
-      let lastError = null;
+      const diag = [];
       for (let i = 0; i < variants.length; i++) {
         try {
           const r = await fetch(`${RAKUTEN_ENDPOINT}?${params}`, { headers: variants[i].headers });
-          if (!r.ok) { lastError = await rakutenError(r); continue; }
-          const data = await r.json();
-          const item = (data.Items || []).map(normalizeRakutenItem)[0];
-          store.settings.rakutenHeaderVariant = i;
-          await saveStore("settings");
-          return json(res, 200, {
-            ok: true,
-            message: `✅ 接続成功！（パターン「${variants[i].name}」で認証OK・以降この方式を使います）テスト検索: 「${item?.itemName?.slice(0, 24) || "商品"}…」${store.settings.rakutenAffiliateId ? " / アフィリエイトIDも適用" : " / ※アフィリエイトIDは未設定"}`,
-          });
+          if (r.ok) {
+            const data = await r.json();
+            const item = (data.Items || []).map(normalizeRakutenItem)[0];
+            store.settings.rakutenHeaderVariant = i;
+            await saveStore("settings");
+            return json(res, 200, {
+              ok: true,
+              message: `✅ 接続成功！（パターン「${variants[i].name}」で認証OK・以降この方式を使います）テスト検索: 「${item?.itemName?.slice(0, 24) || "商品"}…」${store.settings.rakutenAffiliateId ? " / アフィリエイトIDも適用" : " / ※アフィリエイトIDは未設定"}`,
+            });
+          }
+          let snippet = "";
+          try { snippet = (await r.text()).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120); } catch { /* 本文なし */ }
+          diag.push(`・${variants[i].name} → HTTP ${r.status}${snippet ? `: ${snippet}` : ""}`);
         } catch (e) {
-          lastError = e;
+          diag.push(`・${variants[i].name} → 通信エラー: ${e.message}`);
         }
       }
-      const brief = (lastError?.message || "不明なエラー").split(" — ")[0];
+      // 診断用に現在のグローバルIPを取得（バックエンドサービス型の許可IP登録に必要）
+      let myIp = "";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=text", { signal: AbortSignal.timeout(5000) });
+        if (ipRes.ok) myIp = (await ipRes.text()).trim();
+      } catch { /* 取得できなくても続行 */ }
       return json(res, 200, {
         ok: false,
-        message: `全${variants.length}パターンで接続できませんでした（${brief}）。楽天ウェブサービスのアプリ設定にある「許可Webサイト（アプリURL）」に、⚙️設定の「アプリURL」と同じドメインが登録されているか確認してください。修正後にもう一度このボタンを押してください`,
+        message: [
+          `全${variants.length}パターンで接続できませんでした。`,
+          ``,
+          `【最重要チェック】楽天のアプリ登録時に選んだ「アプリケーションタイプ」を確認してください:`,
+          `● バックエンドサービス型（このツールはこちらを推奨）`,
+          `　→ 楽天の設定画面の「許可IPアドレス」に、あなたの現在のIP${myIp ? `【 ${myIp} 】` : "（確認: https://api.ipify.org ）"}を登録してください（反映は即時）`,
+          `● Webアプリケーション型`,
+          `　→ 「許可Webサイト」と⚙️設定の「アプリURL」を完全一致させてください`,
+          ``,
+          `[各パターンの応答]`,
+          ...diag,
+        ].join("\n"),
       });
     }
     // いま売れている商品（楽天ランキングAPI）
