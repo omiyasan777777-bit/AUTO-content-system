@@ -92,7 +92,11 @@
     <h3>楽天ウェブサービス</h3>
     <label>アプリID (applicationId)<input type="text" id="setRakutenAppId" placeholder="10..."></label>
     <label>アフィリエイトID<input type="text" id="setRakutenAffId" placeholder="例: 4a1b2c3d.e5f6g7h8..."></label>
-    <p class="hint">未設定の間はデモ商品データで動作します。</p>
+    <div class="row-gap">
+      <button class="ghost-btn" id="testRakutenBtn">🔌 接続テスト</button>
+      <span id="testRakutenResult" class="hint" style="margin:0"></span>
+    </div>
+    <p class="hint">「アプリID/デベロッパーID」（数字のみ）を貼り付けてください。アプリシークレットではありません。未設定の間はデモ商品データで動作します。</p>
     <h3>カスタムセールイベント（公式発表で上書き）</h3>
     <div id="customEventList"></div>
     <button class="ghost-btn" id="addCustomEventBtn">＋ イベントを追加</button>

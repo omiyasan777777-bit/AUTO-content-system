@@ -266,6 +266,7 @@ async function runSearch(card, node) {
   const keyword = $('[data-field="searchKeyword"]', card)?.value?.trim();
   const box = $("[data-results]", card);
   if (!keyword) { toast("検索キーワードを入力してください"); return; }
+  if (keyword.length < 2) { toast("キーワードは2文字以上で入力してください（楽天APIの仕様）"); return; }
   box.innerHTML = `<div class="hint">検索中…</div>`;
   try {
     const { items, demo } = await api(`/api/rakuten/search?keyword=${encodeURIComponent(keyword)}`);
@@ -395,6 +396,27 @@ $("#addCustomEventBtn").addEventListener("click", () => {
   customEvents.push({ id: `custom-${Date.now()}`, name: "", startAt: "", endAt: "" });
   renderCustomEvents();
 });
+// 楽天API接続テスト（入力中の値を一旦保存してからテスト）
+$("#testRakutenBtn").addEventListener("click", async () => {
+  const out = $("#testRakutenResult");
+  out.textContent = "テスト中…";
+  try {
+    await api("/api/settings", {
+      method: "POST",
+      body: { rakutenAppId: $("#setRakutenAppId").value, rakutenAffiliateId: $("#setRakutenAffId").value },
+    });
+    const s = await api("/api/settings"); // 自動補正後の値を反映
+    $("#setRakutenAppId").value = s.rakutenAppId || "";
+    $("#setRakutenAffId").value = s.rakutenAffiliateId || "";
+    const r = await api("/api/rakuten/test", { method: "POST" });
+    out.textContent = r.message;
+    out.style.color = r.ok ? "var(--green)" : "var(--red)";
+  } catch (e) {
+    out.textContent = `テスト失敗: ${e.message}`;
+    out.style.color = "var(--red)";
+  }
+});
+
 $("#saveSettingsBtn").addEventListener("click", async () => {
   await api("/api/settings", {
     method: "POST",

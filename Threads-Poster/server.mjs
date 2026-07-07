@@ -92,11 +92,32 @@ function mockItems(keyword) {
   }));
 }
 
+/** 楽天APIのエラー応答を、原因がわかる日本語メッセージに変換する */
+async function rakutenError(res) {
+  let detail = "";
+  try {
+    const body = await res.json();
+    detail = body.error_description || body.error || "";
+  } catch { /* 非JSON応答（プロキシ遮断など） */ }
+  const hints = {
+    400: "パラメータ不正です。⚙️設定の「アプリID」が正しいか（数字20桁・余計な文字なし）、「接続テスト」で確認してください",
+    404: "APIが見つかりません。時間をおいて再試行してください",
+    429: "リクエストが多すぎます。数秒待ってから再試行してください",
+    500: "楽天側の一時的なエラーです。時間をおいて再試行してください",
+    503: "楽天側がメンテナンス中の可能性があります",
+  };
+  const hint = hints[res.status] || "";
+  return new Error(`楽天API エラー (HTTP ${res.status})${detail ? `: ${detail}` : ""}${hint ? ` — ${hint}` : ""}`);
+}
+
 async function rakutenSearch({ keyword = "", itemCode = "", hits = 10 }) {
   const { rakutenAppId, rakutenAffiliateId } = store.settings;
   if (!rakutenAppId) {
     // APIキー未設定 → デモデータ（UI動作確認用）
     return { demo: true, items: keyword ? mockItems(keyword) : [] };
+  }
+  if (!itemCode && keyword.trim().length < 2) {
+    throw new Error("検索キーワードは2文字以上で入力してください（楽天APIの仕様）");
   }
   const params = new URLSearchParams({
     applicationId: rakutenAppId,
@@ -106,9 +127,9 @@ async function rakutenSearch({ keyword = "", itemCode = "", hits = 10 }) {
   });
   if (rakutenAffiliateId) params.set("affiliateId", rakutenAffiliateId);
   if (itemCode) params.set("itemCode", itemCode);
-  else params.set("keyword", keyword);
+  else params.set("keyword", keyword.trim());
   const res = await fetch(`${RAKUTEN_ENDPOINT}?${params}`);
-  if (!res.ok) throw new Error(`楽天API エラー: HTTP ${res.status}`);
+  if (!res.ok) throw await rakutenError(res);
   const data = await res.json();
   const items = (data.Items || []).map(normalizeRakutenItem);
   return { demo: false, items };
@@ -154,7 +175,7 @@ async function rakutenRanking({ genreId = "", genreName = "総合" }) {
   if (rakutenAffiliateId) params.set("affiliateId", rakutenAffiliateId);
   if (genreId) params.set("genreId", String(genreId));
   const res = await fetch(`${RAKUTEN_RANKING_ENDPOINT}?${params}`);
-  if (!res.ok) throw new Error(`楽天ランキングAPI エラー: HTTP ${res.status}`);
+  if (!res.ok) throw await rakutenError(res);
   const data = await res.json();
   const items = (data.Items || []).slice(0, 15).map(normalizeRakutenItem);
   return { demo: false, items };
@@ -391,8 +412,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (path === "/api/settings" && req.method === "POST") {
       const body = await readBody(req);
+      // 貼り付けミス対策: 全角数字→半角、空白・改行を除去
+      const clean = (v) => String(v).replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).replace(/\s+/g, "");
       for (const key of ["rakutenAppId", "rakutenAffiliateId"]) {
-        if (typeof body[key] === "string") store.settings[key] = body[key].trim();
+        if (typeof body[key] === "string") store.settings[key] = clean(body[key]);
       }
       if (typeof body.saleAutoGenerate === "boolean") store.settings.saleAutoGenerate = body.saleAutoGenerate;
       if (Array.isArray(body.customSaleEvents)) store.settings.customSaleEvents = body.customSaleEvents;
@@ -457,6 +480,21 @@ const server = http.createServer(async (req, res) => {
     if (path === "/api/rakuten/refresh" && req.method === "POST") {
       await priceWatchTick();
       return json(res, 200, { ok: true });
+    }
+    // 楽天API接続テスト（設定画面の「接続テスト」ボタン）
+    if (path === "/api/rakuten/test" && req.method === "POST") {
+      if (!store.settings.rakutenAppId) {
+        return json(res, 200, { ok: false, message: "アプリIDが未設定です（デモモードで動作中）" });
+      }
+      if (!/^\d{10,}$/.test(store.settings.rakutenAppId)) {
+        return json(res, 200, { ok: false, message: `アプリIDの形式が不正です（数字のみのはずが「${store.settings.rakutenAppId.slice(0, 24)}…」になっています）。楽天ウェブサービスの「アプリID/デベロッパーID」を貼り付けてください（アプリシークレットではありません）` });
+      }
+      try {
+        const { items } = await rakutenSearch({ keyword: "楽天", hits: 1 });
+        return json(res, 200, { ok: true, message: `✅ 接続成功！（テスト検索で「${items[0]?.itemName?.slice(0, 24) || "商品"}…」を取得）${store.settings.rakutenAffiliateId ? " アフィリエイトIDも適用されています" : " ※アフィリエイトIDは未設定です"}` });
+      } catch (e) {
+        return json(res, 200, { ok: false, message: e.message });
+      }
     }
     // いま売れている商品（楽天ランキングAPI）
     if (path === "/api/rakuten/ranking" && req.method === "GET") {
