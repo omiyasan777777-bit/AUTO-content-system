@@ -32,6 +32,7 @@ const store = {
     rakutenAppId: "",     // 2026年新形式: UUID（例: 2fc160ec-26f2-...）
     rakutenAccessKey: "", // 2026年新APIで必須
     rakutenAppUrl: "",    // 楽天に登録したアプリURL（Referer/Origin一致用）
+    rakutenHeaderVariant: 0, // 接続テストで通った認証ヘッダーパターン
     rakutenAffiliateId: "",
     saleAutoGenerate: false,
     customSaleEvents: [],
@@ -76,16 +77,30 @@ function pushEvent(type, message, extra = {}) {
 // ---------- 楽天API（2026年新仕様: openapi.rakuten.co.jp + accessKey認証） ----------
 const RAKUTEN_ENDPOINT = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260401";
 
-/** 新APIはブラウザ想定のため Referer/Origin ヘッダーが必須（登録アプリURLと一致させる） */
-function rakutenHeaders() {
+/**
+ * 新APIはブラウザ想定のため Referer/Origin ヘッダーの検証がある。
+ * 環境により通る組み合わせが異なるため、複数パターンを用意し、
+ * 接続テストで通ったパターンを settings.rakutenHeaderVariant に記憶して使い回す。
+ */
+const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+function rakutenHeaderVariants() {
   const appUrl = (store.settings.rakutenAppUrl || "").trim() || "http://127.0.0.1:4310";
+  const referer = appUrl.endsWith("/") ? appUrl : `${appUrl}/`;
   let origin = appUrl;
   try { origin = new URL(appUrl).origin; } catch { /* URL形式でなければそのまま */ }
-  return {
-    Referer: appUrl.endsWith("/") ? appUrl : `${appUrl}/`,
-    Origin: origin,
-    "User-Agent": "Mozilla/5.0 (ThreadsPoster/1.0)",
-  };
+  return [
+    { name: "アプリURL（Referer+Origin）", headers: { Referer: referer, Origin: origin, "User-Agent": BROWSER_UA } },
+    { name: "アプリURL（Refererのみ）", headers: { Referer: referer, "User-Agent": BROWSER_UA } },
+    { name: "楽天ドメイン（フォールバック）", headers: { Referer: "https://www.rakuten.co.jp/", Origin: "https://www.rakuten.co.jp", "User-Agent": BROWSER_UA } },
+    { name: "ヘッダー最小（UAのみ）", headers: { "User-Agent": BROWSER_UA } },
+  ];
+}
+
+function rakutenHeaders() {
+  const variants = rakutenHeaderVariants();
+  const idx = Number(store.settings.rakutenHeaderVariant);
+  return (variants[idx] || variants[0]).headers;
 }
 
 function rakutenAuthParams() {
@@ -124,7 +139,7 @@ async function rakutenError(res) {
   const hints = {
     400: "パラメータ不正です。⚙️設定の「アプリケーションID」（UUID形式）と「アクセスキー」の両方が正しく入っているか「接続テスト」で確認してください",
     401: "認証エラーです。「アクセスキー」が正しいか確認してください",
-    403: "アクセス拒否です。⚙️設定の「アプリURL」が、楽天に登録したアプリURLと一致しているか確認してください（新APIはReferer/Originの一致が必要）",
+    403: "アクセス拒否です。⚙️設定の「🔌 接続テスト」を押すと複数の認証パターンを自動で試します。それでも失敗する場合は、楽天のアプリ設定の「許可Webサイト（アプリURL）」と⚙️設定の「アプリURL」が同じドメインか確認してください",
     404: "APIが見つかりません。時間をおいて再試行してください",
     429: "リクエストが多すぎます。数秒待ってから再試行してください",
     500: "楽天側の一時的なエラーです。時間をおいて再試行してください",
@@ -517,12 +532,33 @@ const server = http.createServer(async (req, res) => {
       if (!rakutenAccessKey) {
         return json(res, 200, { ok: false, message: "「アクセスキー」が未設定です。2026年の新APIではアプリケーションIDとセットで必須です（アプリ登録時に発行されます）" });
       }
-      try {
-        const { items } = await rakutenSearch({ keyword: "楽天", hits: 1 });
-        return json(res, 200, { ok: true, message: `✅ 接続成功！（テスト検索で「${items[0]?.itemName?.slice(0, 24) || "商品"}…」を取得）${store.settings.rakutenAffiliateId ? " アフィリエイトIDも適用されています" : " ※アフィリエイトIDは未設定です"}` });
-      } catch (e) {
-        return json(res, 200, { ok: false, message: e.message });
+      // 複数のヘッダーパターンを順に試し、通ったものを記憶する
+      const variants = rakutenHeaderVariants();
+      const params = rakutenAuthParams();
+      params.set("hits", "1");
+      params.set("keyword", "楽天");
+      let lastError = null;
+      for (let i = 0; i < variants.length; i++) {
+        try {
+          const r = await fetch(`${RAKUTEN_ENDPOINT}?${params}`, { headers: variants[i].headers });
+          if (!r.ok) { lastError = await rakutenError(r); continue; }
+          const data = await r.json();
+          const item = (data.Items || []).map(normalizeRakutenItem)[0];
+          store.settings.rakutenHeaderVariant = i;
+          await saveStore("settings");
+          return json(res, 200, {
+            ok: true,
+            message: `✅ 接続成功！（パターン「${variants[i].name}」で認証OK・以降この方式を使います）テスト検索: 「${item?.itemName?.slice(0, 24) || "商品"}…」${store.settings.rakutenAffiliateId ? " / アフィリエイトIDも適用" : " / ※アフィリエイトIDは未設定"}`,
+          });
+        } catch (e) {
+          lastError = e;
+        }
       }
+      const brief = (lastError?.message || "不明なエラー").split(" — ")[0];
+      return json(res, 200, {
+        ok: false,
+        message: `全${variants.length}パターンで接続できませんでした（${brief}）。楽天ウェブサービスのアプリ設定にある「許可Webサイト（アプリURL）」に、⚙️設定の「アプリURL」と同じドメインが登録されているか確認してください。修正後にもう一度このボタンを押してください`,
+      });
     }
     // いま売れている商品（楽天ランキングAPI）
     if (path === "/api/rakuten/ranking" && req.method === "GET") {
