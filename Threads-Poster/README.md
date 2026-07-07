@@ -27,10 +27,15 @@ Threadsへの**ツリー型（スレッド型）予約投稿**と**楽天アフ�
 
 ## APIキーの取得
 
-### 楽天ウェブサービス（無料）
-1. https://webservice.rakuten.co.jp/ で「アプリID」を発行
-2. 楽天アフィリエイト https://affiliate.rakuten.co.jp/ で「アフィリエイトID」を確認
-3. 両方を⚙️設定に貼り付け
+### 楽天ウェブサービス（無料・2026年新API対応）
+
+⚠️ 楽天APIは**2026年5月に全面刷新**されました。旧「アプリID（数字のみ）」は使えません。
+
+1. https://webservice.rakuten.co.jp/ で**新規アプリを登録**（アプリ名・アプリURLを入力）
+2. 発行される **アプリケーションID（UUID形式: `2fc160ec-26f2-...`）** と **アクセスキー** を⚙️設定に貼り付け
+3. **アプリURL** 欄には、登録時に入力したURLと**同じもの**を入力（新APIはReferer/Origin検証があるため、一致しないと403になります）
+4. 楽天アフィリエイト https://affiliate.rakuten.co.jp/ の「アフィリエイトID」も貼り付け
+5. 「🔌 接続テスト」で ✅ が出ればOK
 
 ### Threads API（最大10アカウント）
 1. https://developers.facebook.com/ でアプリを作成（ユースケース: Threads API）

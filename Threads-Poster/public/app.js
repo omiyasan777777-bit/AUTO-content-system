@@ -338,6 +338,8 @@ let editAccounts = [];
 async function openSettings() {
   const s = await api("/api/settings");
   $("#setRakutenAppId").value = s.rakutenAppId || "";
+  $("#setRakutenAccessKey").value = s.rakutenAccessKey || "";
+  $("#setRakutenAppUrl").value = s.rakutenAppUrl || "";
   $("#setRakutenAffId").value = s.rakutenAffiliateId || "";
   editAccounts = (s.threadsAccounts || []).map((a) => ({ ...a }));
   renderAccounts();
@@ -403,10 +405,17 @@ $("#testRakutenBtn").addEventListener("click", async () => {
   try {
     await api("/api/settings", {
       method: "POST",
-      body: { rakutenAppId: $("#setRakutenAppId").value, rakutenAffiliateId: $("#setRakutenAffId").value },
+      body: {
+        rakutenAppId: $("#setRakutenAppId").value,
+        rakutenAccessKey: $("#setRakutenAccessKey").value,
+        rakutenAppUrl: $("#setRakutenAppUrl").value,
+        rakutenAffiliateId: $("#setRakutenAffId").value,
+      },
     });
     const s = await api("/api/settings"); // 自動補正後の値を反映
     $("#setRakutenAppId").value = s.rakutenAppId || "";
+    $("#setRakutenAccessKey").value = s.rakutenAccessKey || "";
+    $("#setRakutenAppUrl").value = s.rakutenAppUrl || "";
     $("#setRakutenAffId").value = s.rakutenAffiliateId || "";
     const r = await api("/api/rakuten/test", { method: "POST" });
     out.textContent = r.message;
@@ -423,6 +432,8 @@ $("#saveSettingsBtn").addEventListener("click", async () => {
     body: {
       threadsAccounts: editAccounts.filter((a) => a.name || a.userId || a.accessToken),
       rakutenAppId: $("#setRakutenAppId").value.trim(),
+      rakutenAccessKey: $("#setRakutenAccessKey").value.trim(),
+      rakutenAppUrl: $("#setRakutenAppUrl").value.trim(),
       rakutenAffiliateId: $("#setRakutenAffId").value.trim(),
       customSaleEvents: customEvents
         .filter((ev) => ev.name && ev.startAt)

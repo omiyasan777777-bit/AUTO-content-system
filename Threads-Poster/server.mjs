@@ -29,7 +29,9 @@ const MAX_ACCOUNTS = 10;
 const store = {
   settings: {
     threadsAccounts: [], // [{id, name, accessToken, userId}] 最大10アカウント
-    rakutenAppId: "",
+    rakutenAppId: "",     // 2026年新形式: UUID（例: 2fc160ec-26f2-...）
+    rakutenAccessKey: "", // 2026年新APIで必須
+    rakutenAppUrl: "",    // 楽天に登録したアプリURL（Referer/Origin一致用）
     rakutenAffiliateId: "",
     saleAutoGenerate: false,
     customSaleEvents: [],
@@ -71,8 +73,28 @@ function pushEvent(type, message, extra = {}) {
   saveStore("events").catch(() => {});
 }
 
-// ---------- 楽天API ----------
-const RAKUTEN_ENDPOINT = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
+// ---------- 楽天API（2026年新仕様: openapi.rakuten.co.jp + accessKey認証） ----------
+const RAKUTEN_ENDPOINT = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260401";
+
+/** 新APIはブラウザ想定のため Referer/Origin ヘッダーが必須（登録アプリURLと一致させる） */
+function rakutenHeaders() {
+  const appUrl = (store.settings.rakutenAppUrl || "").trim() || "http://127.0.0.1:4310";
+  let origin = appUrl;
+  try { origin = new URL(appUrl).origin; } catch { /* URL形式でなければそのまま */ }
+  return {
+    Referer: appUrl.endsWith("/") ? appUrl : `${appUrl}/`,
+    Origin: origin,
+    "User-Agent": "Mozilla/5.0 (ThreadsPoster/1.0)",
+  };
+}
+
+function rakutenAuthParams() {
+  const { rakutenAppId, rakutenAccessKey, rakutenAffiliateId } = store.settings;
+  const params = new URLSearchParams({ applicationId: rakutenAppId, format: "json", formatVersion: "2" });
+  if (rakutenAccessKey) params.set("accessKey", rakutenAccessKey);
+  if (rakutenAffiliateId) params.set("affiliateId", rakutenAffiliateId);
+  return params;
+}
 
 function mockItems(keyword) {
   const seeds = [
@@ -100,7 +122,9 @@ async function rakutenError(res) {
     detail = body.error_description || body.error || "";
   } catch { /* 非JSON応答（プロキシ遮断など） */ }
   const hints = {
-    400: "パラメータ不正です。⚙️設定の「アプリID」が正しいか（数字20桁・余計な文字なし）、「接続テスト」で確認してください",
+    400: "パラメータ不正です。⚙️設定の「アプリケーションID」（UUID形式）と「アクセスキー」の両方が正しく入っているか「接続テスト」で確認してください",
+    401: "認証エラーです。「アクセスキー」が正しいか確認してください",
+    403: "アクセス拒否です。⚙️設定の「アプリURL」が、楽天に登録したアプリURLと一致しているか確認してください（新APIはReferer/Originの一致が必要）",
     404: "APIが見つかりません。時間をおいて再試行してください",
     429: "リクエストが多すぎます。数秒待ってから再試行してください",
     500: "楽天側の一時的なエラーです。時間をおいて再試行してください",
@@ -111,24 +135,19 @@ async function rakutenError(res) {
 }
 
 async function rakutenSearch({ keyword = "", itemCode = "", hits = 10 }) {
-  const { rakutenAppId, rakutenAffiliateId } = store.settings;
-  if (!rakutenAppId) {
+  const { rakutenAppId, rakutenAccessKey } = store.settings;
+  if (!rakutenAppId || !rakutenAccessKey) {
     // APIキー未設定 → デモデータ（UI動作確認用）
     return { demo: true, items: keyword ? mockItems(keyword) : [] };
   }
   if (!itemCode && keyword.trim().length < 2) {
     throw new Error("検索キーワードは2文字以上で入力してください（楽天APIの仕様）");
   }
-  const params = new URLSearchParams({
-    applicationId: rakutenAppId,
-    format: "json",
-    hits: String(Math.min(30, hits)),
-    formatVersion: "2",
-  });
-  if (rakutenAffiliateId) params.set("affiliateId", rakutenAffiliateId);
+  const params = rakutenAuthParams();
+  params.set("hits", String(Math.min(30, hits)));
   if (itemCode) params.set("itemCode", itemCode);
   else params.set("keyword", keyword.trim());
-  const res = await fetch(`${RAKUTEN_ENDPOINT}?${params}`);
+  const res = await fetch(`${RAKUTEN_ENDPOINT}?${params}`, { headers: rakutenHeaders() });
   if (!res.ok) throw await rakutenError(res);
   const data = await res.json();
   const items = (data.Items || []).map(normalizeRakutenItem);
@@ -148,7 +167,7 @@ async function refreshProduct(product) {
 }
 
 // ---------- 楽天ランキングAPI（いま売れている商品） ----------
-const RAKUTEN_RANKING_ENDPOINT = "https://app.rakuten.co.jp/services/api/IchibaItemRanking/20220601";
+const RAKUTEN_RANKING_ENDPOINT = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601";
 
 function mockRankingItems(genreName = "総合") {
   const seeds = [
@@ -169,12 +188,11 @@ function mockRankingItems(genreName = "総合") {
 }
 
 async function rakutenRanking({ genreId = "", genreName = "総合" }) {
-  const { rakutenAppId, rakutenAffiliateId } = store.settings;
-  if (!rakutenAppId) return { demo: true, items: mockRankingItems(genreName) };
-  const params = new URLSearchParams({ applicationId: rakutenAppId, format: "json", formatVersion: "2" });
-  if (rakutenAffiliateId) params.set("affiliateId", rakutenAffiliateId);
+  const { rakutenAppId, rakutenAccessKey } = store.settings;
+  if (!rakutenAppId || !rakutenAccessKey) return { demo: true, items: mockRankingItems(genreName) };
+  const params = rakutenAuthParams();
   if (genreId) params.set("genreId", String(genreId));
-  const res = await fetch(`${RAKUTEN_RANKING_ENDPOINT}?${params}`);
+  const res = await fetch(`${RAKUTEN_RANKING_ENDPOINT}?${params}`, { headers: rakutenHeaders() });
   if (!res.ok) throw await rakutenError(res);
   const data = await res.json();
   const items = (data.Items || []).slice(0, 15).map(normalizeRakutenItem);
@@ -412,11 +430,14 @@ const server = http.createServer(async (req, res) => {
     }
     if (path === "/api/settings" && req.method === "POST") {
       const body = await readBody(req);
-      // 貼り付けミス対策: 全角数字→半角、空白・改行を除去
-      const clean = (v) => String(v).replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).replace(/\s+/g, "");
-      for (const key of ["rakutenAppId", "rakutenAffiliateId"]) {
+      // 貼り付けミス対策: 全角英数→半角、空白・改行を除去
+      const clean = (v) => String(v)
+        .replace(/[０-９ａ-ｚＡ-Ｚ－]/g, (c) => c === "－" ? "-" : String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+        .replace(/\s+/g, "");
+      for (const key of ["rakutenAppId", "rakutenAccessKey", "rakutenAffiliateId"]) {
         if (typeof body[key] === "string") store.settings[key] = clean(body[key]);
       }
+      if (typeof body.rakutenAppUrl === "string") store.settings.rakutenAppUrl = body.rakutenAppUrl.trim();
       if (typeof body.saleAutoGenerate === "boolean") store.settings.saleAutoGenerate = body.saleAutoGenerate;
       if (Array.isArray(body.customSaleEvents)) store.settings.customSaleEvents = body.customSaleEvents;
       if (Array.isArray(body.threadsAccounts)) {
@@ -483,11 +504,18 @@ const server = http.createServer(async (req, res) => {
     }
     // 楽天API接続テスト（設定画面の「接続テスト」ボタン）
     if (path === "/api/rakuten/test" && req.method === "POST") {
-      if (!store.settings.rakutenAppId) {
-        return json(res, 200, { ok: false, message: "アプリIDが未設定です（デモモードで動作中）" });
+      const { rakutenAppId, rakutenAccessKey } = store.settings;
+      if (!rakutenAppId) {
+        return json(res, 200, { ok: false, message: "アプリケーションIDが未設定です（デモモードで動作中）" });
       }
-      if (!/^\d{10,}$/.test(store.settings.rakutenAppId)) {
-        return json(res, 200, { ok: false, message: `アプリIDの形式が不正です（数字のみのはずが「${store.settings.rakutenAppId.slice(0, 24)}…」になっています）。楽天ウェブサービスの「アプリID/デベロッパーID」を貼り付けてください（アプリシークレットではありません）` });
+      if (/^\d+$/.test(rakutenAppId)) {
+        return json(res, 200, { ok: false, message: "数字のみのIDは2026年5月に廃止された旧形式です。楽天ウェブサービスで新規アプリを登録し直し、UUID形式（例: 2fc160ec-26f2-4a04-…）の「アプリケーションID」と「アクセスキー」を取得してください" });
+      }
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rakutenAppId)) {
+        return json(res, 200, { ok: false, message: `アプリケーションIDの形式が不正です（「${rakutenAppId.slice(0, 24)}…」）。ハイフン区切りのUUID形式（例: 2fc160ec-26f2-4a04-888f-…）を貼り付けてください` });
+      }
+      if (!rakutenAccessKey) {
+        return json(res, 200, { ok: false, message: "「アクセスキー」が未設定です。2026年の新APIではアプリケーションIDとセットで必須です（アプリ登録時に発行されます）" });
       }
       try {
         const { items } = await rakutenSearch({ keyword: "楽天", hits: 1 });
@@ -520,7 +548,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         version: appVersion,
         demoThreads: !(store.settings.threadsAccounts || []).some((a) => a.accessToken && a.userId),
-        demoRakuten: !store.settings.rakutenAppId,
+        demoRakuten: !store.settings.rakutenAppId || !store.settings.rakutenAccessKey,
         accounts: (store.settings.threadsAccounts || []).length,
         maxAccounts: MAX_ACCOUNTS,
         scheduled: store.posts.filter((p) => p.status === "scheduled").length,

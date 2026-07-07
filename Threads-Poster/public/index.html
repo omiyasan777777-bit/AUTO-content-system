@@ -89,14 +89,20 @@
     <p class="hint">Meta for Developers でThreadsアプリを作成し、threads_basic / threads_content_publish 権限のトークンを取得してください。アカウント未登録の間はデモモード（実際には投稿されません）。投稿ごとに使うアカウントを選べます。</p>
     <div id="accountList"></div>
     <button class="ghost-btn" id="addAccountBtn">＋ アカウントを追加</button>
-    <h3>楽天ウェブサービス</h3>
-    <label>アプリID (applicationId)<input type="text" id="setRakutenAppId" placeholder="10..."></label>
+    <h3>楽天ウェブサービス（2026年 新API対応）</h3>
+    <label>アプリケーションID（UUID形式）<input type="text" id="setRakutenAppId" placeholder="例: 2fc160ec-26f2-4a04-888f-4b6eb504b0e6"></label>
+    <label>アクセスキー<input type="text" id="setRakutenAccessKey" placeholder="アプリ登録時に発行されるキー"></label>
+    <label>アプリURL（楽天に登録したURLと同じもの）<input type="text" id="setRakutenAppUrl" placeholder="例: https://あなたのブログ.com"></label>
     <label>アフィリエイトID<input type="text" id="setRakutenAffId" placeholder="例: 4a1b2c3d.e5f6g7h8..."></label>
     <div class="row-gap">
       <button class="ghost-btn" id="testRakutenBtn">🔌 接続テスト</button>
       <span id="testRakutenResult" class="hint" style="margin:0"></span>
     </div>
-    <p class="hint">アプリIDは <a href="https://webservice.rakuten.co.jp/app/list" target="_blank" rel="noopener" style="color:var(--gold)">楽天ウェブサービスの「アプリ情報の確認」</a> に表示される「<b>アプリID/デベロッパーID</b>」（数字のみ）です。まだ無い場合は同サイト右上の「アプリID発行」から作成（アプリ名・URLは何でもOK）。「アプリシークレット」ではありません。未設定の間はデモ商品データで動作します。</p>
+    <p class="hint">
+      ⚠️ 楽天APIは<b>2026年5月に全面刷新</b>されました。旧「アプリID（数字のみ）」は廃止されています。<br>
+      <a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener" style="color:var(--gold)">楽天ウェブサービス</a> で<b>新規アプリを登録</b>すると、UUID形式の「アプリケーションID」と「アクセスキー」が発行されます。
+      登録時に入力した<b>アプリURL</b>を上の欄にも同じように入力してください（一致しないと403エラーになります）。未設定の間はデモ商品データで動作します。
+    </p>
     <h3>カスタムセールイベント（公式発表で上書き）</h3>
     <div id="customEventList"></div>
     <button class="ghost-btn" id="addCustomEventBtn">＋ イベントを追加</button>
