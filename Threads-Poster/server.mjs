@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  resolvePlaceholders, makeSlug, buildSaleCalendar, nextSaleEvent,
+  resolvePlaceholders, buildSaleCalendar, nextSaleEvent,
   decidePrePublishAction, applyPriceUpdate, normalizeRakutenItem, formatPrice,
 } from "./lib/core.mjs";
 
@@ -24,24 +24,23 @@ const types = {
 };
 
 // ---------- JSON ストレージ ----------
+const MAX_ACCOUNTS = 10;
+
 const store = {
   settings: {
-    threadsAccessToken: "",
-    threadsUserId: "",
+    threadsAccounts: [], // [{id, name, accessToken, userId}] 最大10アカウント
     rakutenAppId: "",
     rakutenAffiliateId: "",
-    shortBaseUrl: `http://127.0.0.1:${port}`,
     saleAutoGenerate: false,
     customSaleEvents: [],
   },
-  posts: [],   // {id, title, scheduledAt, status, tree:[{text,imageUrl,product,outOfStockMode,replaceKeyword}], log:[]}
-  links: {},   // slug -> {url, itemCode, createdAt, hits}
+  posts: [],   // {id, title, scheduledAt, status, accountId, tree:[{text,imageUrl,product,outOfStockMode,replaceKeyword}], log:[]}
   events: [],  // {id, at, type, message} 直近200件（マスコット演出・アラート用）
 };
 
 async function loadStore() {
   await mkdir(dataDir, { recursive: true });
-  for (const key of ["settings", "posts", "links", "events"]) {
+  for (const key of ["settings", "posts", "events"]) {
     try {
       const raw = await readFile(join(dataDir, `${key}.json`), "utf8");
       const parsed = JSON.parse(raw);
@@ -49,6 +48,15 @@ async function loadStore() {
       else store[key] = parsed;
     } catch { /* 初回起動時はファイルなし */ }
   }
+  // 旧形式（単一アカウント設定）からの移行
+  const s = store.settings;
+  if (!Array.isArray(s.threadsAccounts)) s.threadsAccounts = [];
+  if (s.threadsAccessToken && s.threadsUserId && !s.threadsAccounts.length) {
+    s.threadsAccounts.push({ id: `acc-${Date.now()}`, name: "メイン", accessToken: s.threadsAccessToken, userId: s.threadsUserId });
+  }
+  delete s.threadsAccessToken;
+  delete s.threadsUserId;
+  delete s.shortBaseUrl;
 }
 
 async function saveStore(key) {
@@ -118,29 +126,47 @@ async function refreshProduct(product) {
   }
 }
 
-// ---------- 短縮URL（楽天っぽいオリジナルURL） ----------
-function createShortLink(url, itemCode = "") {
-  const existing = new Set(Object.keys(store.links));
-  for (const [slug, link] of Object.entries(store.links)) {
-    if (link.url === url) return slug; // 同一URLは再利用
-  }
-  const slug = makeSlug(existing);
-  store.links[slug] = { url, itemCode, createdAt: new Date().toISOString(), hits: 0 };
-  saveStore("links").catch(() => {});
-  return slug;
+// ---------- 楽天ランキングAPI（いま売れている商品） ----------
+const RAKUTEN_RANKING_ENDPOINT = "https://app.rakuten.co.jp/services/api/IchibaItemRanking/20220601";
+
+function mockRankingItems(genreName = "総合") {
+  const seeds = [
+    ["🥇いま一番売れてる", 3980], ["🥈飛ぶように売れてる", 12800], ["🥉インフルエンサー紹介多数", 1980],
+    ["④ SNSでバズり中", 6980], ["⑤ リピーター続出", 2480], ["⑥ TV紹介で品薄", 8800],
+  ];
+  return seeds.map(([prefix, price], i) => normalizeRakutenItem({
+    itemCode: `demo:rank-${i + 1}`,
+    itemName: `${prefix}【${genreName}】デモ売れ筋商品${i + 1}`,
+    itemPrice: price,
+    itemUrl: `https://item.rakuten.co.jp/demo-rank/${i + 1}/`,
+    affiliateUrl: `https://hb.afl.rakuten.co.jp/demo-rank/${i + 1}/`,
+    mediumImageUrls: [{ imageUrl: "" }],
+    shopName: "デモショップ",
+    availability: 1,
+    reviewAverage: 4.8 - i * 0.1,
+  }));
 }
 
-function shortUrlFor(slug) {
-  const base = (store.settings.shortBaseUrl || `http://127.0.0.1:${port}`).replace(/\/$/, "");
-  return `${base}/r/${slug}`;
+async function rakutenRanking({ genreId = "", genreName = "総合" }) {
+  const { rakutenAppId, rakutenAffiliateId } = store.settings;
+  if (!rakutenAppId) return { demo: true, items: mockRankingItems(genreName) };
+  const params = new URLSearchParams({ applicationId: rakutenAppId, format: "json", formatVersion: "2" });
+  if (rakutenAffiliateId) params.set("affiliateId", rakutenAffiliateId);
+  if (genreId) params.set("genreId", String(genreId));
+  const res = await fetch(`${RAKUTEN_RANKING_ENDPOINT}?${params}`);
+  if (!res.ok) throw new Error(`楽天ランキングAPI エラー: HTTP ${res.status}`);
+  const data = await res.json();
+  const items = (data.Items || []).slice(0, 15).map(normalizeRakutenItem);
+  return { demo: false, items };
 }
 
 // ---------- Threads API ----------
 const THREADS_BASE = "https://graph.threads.net/v1.0";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function threadsCreateAndPublish({ text, imageUrl, replyToId }) {
-  const { threadsAccessToken: token, threadsUserId: userId } = store.settings;
+async function threadsCreateAndPublish(account, { text, imageUrl, replyToId }) {
+  const token = account?.accessToken;
+  const userId = account?.userId;
   if (!token || !userId) {
     // デモモード: 実投稿せず成功扱い
     await sleep(300);
@@ -157,16 +183,16 @@ async function threadsCreateAndPublish({ text, imageUrl, replyToId }) {
   }
   if (replyToId) params.set("reply_to_id", replyToId);
   const createRes = await fetch(`${THREADS_BASE}/${userId}/threads`, { method: "POST", body: params });
-  const created = await createRes.json();
+  const created = await createRes.json().catch(() => ({}));
   if (!createRes.ok || !created.id) {
-    throw new Error(`Threads作成エラー: ${created.error?.message || createRes.status}`);
+    throw new Error(`Threads作成エラー: ${created.error?.message || `HTTP ${createRes.status}`}`);
   }
   if (imageUrl) await sleep(15000); // 画像はサーバー側処理を待つ（公式推奨は30秒だが実用上短縮）
   const pubParams = new URLSearchParams({ access_token: token, creation_id: created.id });
   const pubRes = await fetch(`${THREADS_BASE}/${userId}/threads_publish`, { method: "POST", body: pubParams });
-  const published = await pubRes.json();
+  const published = await pubRes.json().catch(() => ({}));
   if (!pubRes.ok || !published.id) {
-    throw new Error(`Threads公開エラー: ${published.error?.message || pubRes.status}`);
+    throw new Error(`Threads公開エラー: ${published.error?.message || `HTTP ${pubRes.status}`}`);
   }
   return { id: published.id, demo: false };
 }
@@ -178,6 +204,14 @@ async function publishPost(post) {
   const logAdd = (msg) => post.log.push(`[${new Date().toLocaleString("ja-JP")}] ${msg}`);
   let replyToId = null;
   let postedCount = 0;
+
+  // 投稿に使うThreadsアカウントを解決（未指定なら先頭のアカウント）
+  const accounts = store.settings.threadsAccounts || [];
+  const account = accounts.find((a) => a.id === post.accountId) || accounts[0] || null;
+  if (accounts.length && !accounts.find((a) => a.id === post.accountId) && post.accountId) {
+    logAdd(`⚠️ 指定アカウントが見つからないため「${account?.name || "先頭"}」で投稿します`);
+  }
+  if (account) logAdd(`👤 アカウント「${account.name}」で投稿します`);
 
   for (let i = 0; i < post.tree.length; i++) {
     const node = post.tree[i];
@@ -219,16 +253,12 @@ async function publishPost(post) {
       }
     }
 
-    // 楽天っぽい短縮URL生成 & プレースホルダ解決
-    let shortUrl = "";
-    if (product?.affiliateUrl || product?.itemUrl) {
-      shortUrl = shortUrlFor(createShortLink(product.affiliateUrl || product.itemUrl, product.itemCode));
-    }
-    const text = resolvePlaceholders(node.text, product, shortUrl);
+    // プレースホルダ解決（{URL} は楽天アフィリエイトリンクに直接飛ぶ）
+    const text = resolvePlaceholders(node.text, product);
     const imageUrl = node.imageUrl || (node.useProductImage && product?.imageUrl) || "";
 
     try {
-      const result = await threadsCreateAndPublish({ text, imageUrl, replyToId });
+      const result = await threadsCreateAndPublish(account, { text, imageUrl, replyToId });
       replyToId = result.id;
       postedCount++;
       logAdd(`✅ ツリー${i + 1}を投稿${result.demo ? "（デモ）" : ""}: ${result.id}`);
@@ -350,32 +380,37 @@ const server = http.createServer(async (req, res) => {
   const path = url.pathname;
 
   try {
-    // 短縮URLリダイレクト
-    if (path.startsWith("/r/")) {
-      const slug = path.slice(3);
-      const link = store.links[slug];
-      if (link) {
-        link.hits = (link.hits || 0) + 1;
-        saveStore("links").catch(() => {});
-        res.writeHead(302, { location: link.url });
-        return res.end();
-      }
-      res.writeHead(404); return res.end("link not found");
-    }
-
     // ---- API ----
     if (path === "/api/settings" && req.method === "GET") {
       const s = { ...store.settings };
-      s.threadsAccessToken = s.threadsAccessToken ? "●●●（設定済み）" : "";
+      // トークンはマスクして返す（画面には出さない）
+      s.threadsAccounts = (s.threadsAccounts || []).map((a) => ({
+        ...a, accessToken: a.accessToken ? "●●●（設定済み）" : "",
+      }));
       return json(res, 200, s);
     }
     if (path === "/api/settings" && req.method === "POST") {
       const body = await readBody(req);
-      for (const key of ["threadsAccessToken", "threadsUserId", "rakutenAppId", "rakutenAffiliateId", "shortBaseUrl"]) {
-        if (typeof body[key] === "string" && !body[key].startsWith("●")) store.settings[key] = body[key].trim();
+      for (const key of ["rakutenAppId", "rakutenAffiliateId"]) {
+        if (typeof body[key] === "string") store.settings[key] = body[key].trim();
       }
       if (typeof body.saleAutoGenerate === "boolean") store.settings.saleAutoGenerate = body.saleAutoGenerate;
       if (Array.isArray(body.customSaleEvents)) store.settings.customSaleEvents = body.customSaleEvents;
+      if (Array.isArray(body.threadsAccounts)) {
+        const prev = store.settings.threadsAccounts || [];
+        store.settings.threadsAccounts = body.threadsAccounts.slice(0, MAX_ACCOUNTS).map((a) => {
+          const old = prev.find((p) => p.id === a.id);
+          const token = typeof a.accessToken === "string" && !a.accessToken.startsWith("●")
+            ? a.accessToken.trim()
+            : old?.accessToken || "";
+          return {
+            id: a.id || `acc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            name: String(a.name || "").trim() || "無名アカウント",
+            userId: String(a.userId || "").trim(),
+            accessToken: token,
+          };
+        });
+      }
       await saveStore("settings");
       return json(res, 200, { ok: true });
     }
@@ -391,6 +426,7 @@ const server = http.createServer(async (req, res) => {
       const post = existing || { id: `post-${Date.now()}`, createdAt: new Date().toISOString(), log: [] };
       post.title = body.title || "";
       post.scheduledAt = body.scheduledAt;
+      post.accountId = body.accountId || "";
       post.tree = body.tree;
       if (!existing || existing.status !== "posted") post.status = "scheduled";
       if (!existing) store.posts.push(post);
@@ -422,22 +458,19 @@ const server = http.createServer(async (req, res) => {
       await priceWatchTick();
       return json(res, 200, { ok: true });
     }
+    // いま売れている商品（楽天ランキングAPI）
+    if (path === "/api/rakuten/ranking" && req.method === "GET") {
+      const result = await rakutenRanking({
+        genreId: url.searchParams.get("genreId") || "",
+        genreName: url.searchParams.get("genreName") || "総合",
+      });
+      return json(res, 200, result);
+    }
 
     if (path === "/api/sales" && req.method === "GET") {
       const calendar = buildSaleCalendar(new Date(), store.settings.customSaleEvents).slice(0, 8);
       const next = nextSaleEvent(new Date(), store.settings.customSaleEvents);
       return json(res, 200, { calendar, next, autoGenerate: store.settings.saleAutoGenerate });
-    }
-
-    if (path === "/api/links" && req.method === "GET") {
-      const list = Object.entries(store.links).map(([slug, l]) => ({ slug, shortUrl: shortUrlFor(slug), ...l }));
-      return json(res, 200, list);
-    }
-    if (path === "/api/links" && req.method === "POST") {
-      const body = await readBody(req);
-      if (!body.url) return json(res, 400, { error: "URLを指定してください" });
-      const slug = createShortLink(body.url, body.itemCode || "");
-      return json(res, 200, { slug, shortUrl: shortUrlFor(slug) });
     }
 
     if (path === "/api/events" && req.method === "GET") {
@@ -448,8 +481,10 @@ const server = http.createServer(async (req, res) => {
     if (path === "/api/status") {
       return json(res, 200, {
         version: appVersion,
-        demoThreads: !store.settings.threadsAccessToken || !store.settings.threadsUserId,
+        demoThreads: !(store.settings.threadsAccounts || []).some((a) => a.accessToken && a.userId),
         demoRakuten: !store.settings.rakutenAppId,
+        accounts: (store.settings.threadsAccounts || []).length,
+        maxAccounts: MAX_ACCOUNTS,
         scheduled: store.posts.filter((p) => p.status === "scheduled").length,
         posted: store.posts.filter((p) => p.status === "posted").length,
       });

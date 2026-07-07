@@ -22,7 +22,7 @@ AUTO-content-system/
 │   ├── server.mjs         ← 検索/24h購入判定/穴場ジャンル/人気ワードAPI
 │   └── public/            ← フロントエンド（検索・分析UI）
 ├── Threads-Poster/        ← Threads予約投稿×楽天アフィリ（`npm start` → 127.0.0.1:4310）
-│   ├── server.mjs         ← 予約スケジューラ/楽天API/価格・在庫監視/短縮URL/Threads投稿
+│   ├── server.mjs         ← 予約スケジューラ/楽天API/価格・在庫監視/売れ筋ランキング/Threads投稿（最大10アカウント）
 │   ├── lib/core.mjs       ← 純粋ロジック（プレースホルダ解決・セールカレンダー等）
 │   └── public/            ← フロントエンド（予約シート・ツリーエディタ・マスコット⚽）
 ├── prompts/               ← 各フェーズのプロンプト定義書

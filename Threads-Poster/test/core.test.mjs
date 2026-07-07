@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  formatPrice, resolvePlaceholders, makeSlug, buildSaleCalendar, nextSaleEvent,
+  formatPrice, resolvePlaceholders, buildSaleCalendar, nextSaleEvent,
   decidePrePublishAction, applyPriceUpdate, normalizeRakutenItem,
 } from "../lib/core.mjs";
 
@@ -12,27 +12,23 @@ test("formatPrice: カンマ区切り+円", () => {
 });
 
 test("resolvePlaceholders: 日本語・英語の両方を解決", () => {
-  const product = { itemName: "テスト商品", itemPrice: 4980, affiliateUrl: "https://a.example/x" };
+  const product = { itemName: "テスト商品", itemPrice: 4980, affiliateUrl: "https://hb.afl.rakuten.co.jp/x" };
   const text = "✨{商品名} が {価格}！\n👉 {URL} / {name} {price} {url}";
-  const out = resolvePlaceholders(text, product, "http://short/r/ichiba-abc");
+  const out = resolvePlaceholders(text, product);
   assert.match(out, /テスト商品 が 4,980円！/);
-  assert.match(out, /http:\/\/short\/r\/ichiba-abc/);
+  assert.match(out, /https:\/\/hb\.afl\.rakuten\.co\.jp\/x/);
   assert.doesNotMatch(out, /\{商品名\}|\{price\}/);
 });
 
-test("resolvePlaceholders: 短縮URL未指定ならアフィリエイトURLを使う", () => {
-  const product = { itemName: "A", itemPrice: 100, affiliateUrl: "https://afl.example/1" };
-  assert.equal(resolvePlaceholders("{URL}", product, ""), "https://afl.example/1");
-});
-
-test("makeSlug: 楽天っぽい接頭辞つき・重複回避", () => {
-  const existing = new Set();
-  for (let i = 0; i < 50; i++) {
-    const slug = makeSlug(existing);
-    assert.match(slug, /^(ichiba|rk|sale|item)-[a-z0-9]+$/);
-    assert.ok(!existing.has(slug));
-    existing.add(slug);
-  }
+test("resolvePlaceholders: {URL}はアフィリエイトリンク直行、無ければ商品ページ", () => {
+  assert.equal(
+    resolvePlaceholders("{URL}", { affiliateUrl: "https://hb.afl.rakuten.co.jp/1", itemUrl: "https://item.rakuten.co.jp/1" }),
+    "https://hb.afl.rakuten.co.jp/1",
+  );
+  assert.equal(
+    resolvePlaceholders("{URL}", { itemUrl: "https://item.rakuten.co.jp/1" }),
+    "https://item.rakuten.co.jp/1",
+  );
 });
 
 test("buildSaleCalendar: スーパーSALEは3,6,9,12月、それ以外はマラソン", () => {
@@ -92,5 +88,6 @@ test("normalizeRakutenItem: formatVersion=2形式を正規化", () => {
   });
   assert.equal(item.itemPrice, 1980);
   assert.equal(item.affiliateUrl, "https://hb.afl.rakuten.co.jp/x");
-  assert.equal(item.imageUrl, "https://img.example/1.jpg?_ex=128x128");
+  // 128x128 サムネイルは 300x300 に高解像度化される
+  assert.equal(item.imageUrl, "https://img.example/1.jpg?_ex=300x300");
 });

@@ -34,8 +34,16 @@ function showTab(name) {
   $$(".tab-panel").forEach((p) => p.classList.toggle("hidden", p.id !== `tab-${name}`));
   if (name === "sheet") loadPosts();
   if (name === "sales") loadSales();
-  if (name === "links") loadLinks();
 }
+
+/* ---------- Threadsアカウント（最大10個） ---------- */
+let accountsCache = [];
+async function loadAccounts() {
+  const s = await api("/api/settings");
+  accountsCache = s.threadsAccounts || [];
+  return accountsCache;
+}
+const accountName = (id) => accountsCache.find((a) => a.id === id)?.name || "";
 
 /* ---------- 予約シート ---------- */
 const STATUS_LABEL = { scheduled: "予約中", posting: "投稿中…", posted: "投稿済み", skipped: "スキップ", error: "エラー" };
@@ -63,6 +71,7 @@ async function loadPosts() {
         <span class="chip ${esc(p.status)}">${STATUS_LABEL[p.status] || esc(p.status)}</span>
         <span class="when">${fmtDate(p.scheduledAt)}</span>
         <span class="title">${esc(p.title || "（無題）")}</span>
+        ${accountName(p.accountId) ? `<span class="chip">👤 ${esc(accountName(p.accountId))}</span>` : ""}
         <span class="chip">🧵 ${p.tree?.length || 0}ツリー</span>
       </div>
       ${prods ? `<div class="products">${prods}</div>` : ""}
@@ -113,15 +122,34 @@ function blankNode() {
   return { text: "", imageUrl: "", useProductImage: true, product: null, outOfStockMode: "skip", replaceKeyword: "" };
 }
 
-function openEditor(post) {
+// 楽天ランキングの主要ジャンル（「いま売れてる商品」用）
+const GENRES = [
+  { id: "", name: "🏆 総合ランキング" },
+  { id: "100371", name: "レディースファッション" },
+  { id: "551177", name: "メンズファッション" },
+  { id: "100227", name: "食品" },
+  { id: "551167", name: "スイーツ・お菓子" },
+  { id: "562637", name: "家電" },
+  { id: "100939", name: "コスメ・香水" },
+  { id: "100938", name: "ダイエット・健康" },
+  { id: "558944", name: "キッチン用品" },
+  { id: "100804", name: "インテリア・寝具" },
+  { id: "566382", name: "おもちゃ" },
+];
+
+async function openEditor(post) {
   editing = post
     ? JSON.parse(JSON.stringify(post))
-    : { title: "", scheduledAt: "", tree: [blankNode()] };
+    : { title: "", scheduledAt: "", accountId: "", tree: [blankNode()] };
   $("#editorTitle").textContent = post ? "投稿を編集" : "投稿を作成";
   $("#postTitle").value = editing.title || "";
   const dt = editing.scheduledAt ? new Date(editing.scheduledAt) : new Date(Date.now() + 3600000);
   dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
   $("#postAt").value = dt.toISOString().slice(0, 16);
+  if (!accountsCache.length) await loadAccounts().catch(() => {});
+  $("#postAccount").innerHTML = accountsCache.length
+    ? accountsCache.map((a) => `<option value="${esc(a.id)}" ${a.id === editing.accountId ? "selected" : ""}>${esc(a.name)}</option>`).join("")
+    : `<option value="">（未登録: デモ投稿）</option>`;
   renderTree();
   showTab("editor");
 }
@@ -157,6 +185,10 @@ function renderTree() {
             <div class="search-row">
               <input type="text" data-field="searchKeyword" placeholder="🛒 楽天から商品を検索して添付（例: ワイヤレスイヤホン）">
               <button class="mini-btn" data-nact="search">検索</button>
+            </div>
+            <div class="search-row" style="margin-top:8px">
+              <select data-field="rankGenre" style="flex:1">${GENRES.map((g) => `<option value="${g.id}">${g.name}</option>`).join("")}</select>
+              <button class="mini-btn" data-nact="ranking" title="楽天ランキングから、いま売れている商品を取得">🔥 いま売れてる商品</button>
             </div>
             <div class="result-list" data-results></div>
           </div>`}
@@ -201,6 +233,7 @@ function renderTree() {
       }
       if (act === "detach") { node.product = null; renderTree(); }
       if (act === "search") await runSearch(card, node);
+      if (act === "ranking") await runRanking(card);
       if (e.target.closest?.("[data-attach]")) {
         node.product = JSON.parse(decodeURIComponent(e.target.closest("[data-attach]").dataset.attach));
         if (!node.text.trim()) node.text = "✨ {商品名}\n\n今なら {価格}\n👉 {URL}";
@@ -216,6 +249,19 @@ function renderTree() {
   });
 }
 
+function renderResults(box, items, demo, note = "") {
+  if (!items.length) { box.innerHTML = `<div class="hint">見つかりませんでした</div>`; return; }
+  box.innerHTML = (demo ? `<div class="hint">※楽天アプリID未設定のためデモ商品を表示中（⚙️設定から登録）</div>` : "") +
+    (note ? `<div class="hint">${note}</div>` : "") +
+    items.map((it) => `
+    <div class="result-item">
+      ${it.imageUrl ? `<img src="${esc(it.imageUrl)}" alt="">` : `<img alt="">`}
+      <span class="r-name">${esc(it.itemName).slice(0, 60)}</span>
+      <span class="r-meta"><span class="price">${yen(it.itemPrice)}</span>${esc(it.shopName)}${Number(it.availability) === 0 ? " ⚠️在庫切れ" : ""}</span>
+      <button class="mini-btn" data-attach="${encodeURIComponent(JSON.stringify(it))}">添付</button>
+    </div>`).join("");
+}
+
 async function runSearch(card, node) {
   const keyword = $('[data-field="searchKeyword"]', card)?.value?.trim();
   const box = $("[data-results]", card);
@@ -223,15 +269,21 @@ async function runSearch(card, node) {
   box.innerHTML = `<div class="hint">検索中…</div>`;
   try {
     const { items, demo } = await api(`/api/rakuten/search?keyword=${encodeURIComponent(keyword)}`);
-    if (!items.length) { box.innerHTML = `<div class="hint">見つかりませんでした</div>`; return; }
-    box.innerHTML = (demo ? `<div class="hint">※楽天アプリID未設定のためデモ商品を表示中（⚙️設定から登録）</div>` : "") +
-      items.map((it) => `
-      <div class="result-item">
-        ${it.imageUrl ? `<img src="${esc(it.imageUrl)}" alt="">` : `<img alt="">`}
-        <span class="r-name">${esc(it.itemName).slice(0, 60)}</span>
-        <span class="r-meta"><span class="price">${yen(it.itemPrice)}</span>${esc(it.shopName)}${Number(it.availability) === 0 ? " ⚠️在庫切れ" : ""}</span>
-        <button class="mini-btn" data-attach="${encodeURIComponent(JSON.stringify(it))}">添付</button>
-      </div>`).join("");
+    renderResults(box, items, demo);
+  } catch (e) {
+    box.innerHTML = `<div class="hint">エラー: ${esc(e.message)}</div>`;
+  }
+}
+
+// いま売れている商品（楽天ランキング）
+async function runRanking(card) {
+  const sel = $('[data-field="rankGenre"]', card);
+  const genre = GENRES.find((g) => g.id === sel?.value) || GENRES[0];
+  const box = $("[data-results]", card);
+  box.innerHTML = `<div class="hint">ランキング取得中…</div>`;
+  try {
+    const { items, demo } = await api(`/api/rakuten/ranking?genreId=${encodeURIComponent(genre.id)}&genreName=${encodeURIComponent(genre.name)}`);
+    renderResults(box, items, demo, `🔥 ${esc(genre.name)}で、いま売れている商品（楽天ランキング）`);
   } catch (e) {
     box.innerHTML = `<div class="hint">エラー: ${esc(e.message)}</div>`;
   }
@@ -245,7 +297,10 @@ $("#savePostBtn").addEventListener("click", async () => {
   try {
     await api("/api/posts", {
       method: "POST",
-      body: { id: editing.id, title: editing.title, scheduledAt: new Date(at).toISOString(), tree: editing.tree },
+      body: {
+        id: editing.id, title: editing.title, scheduledAt: new Date(at).toISOString(),
+        accountId: $("#postAccount").value || "", tree: editing.tree,
+      },
     });
     toast("💾 予約を保存しました");
     showTab("sheet");
@@ -273,45 +328,52 @@ $("#saleAutoGen").addEventListener("change", async (e) => {
   toast(e.target.checked ? "✅ セール開始日の自動投稿生成をONにしました" : "自動生成をOFFにしました");
 });
 
-/* ---------- 短縮URL ---------- */
-async function loadLinks() {
-  const links = await api("/api/links");
-  $("#linkList").innerHTML = links.length ? links.map((l) => `
-    <div class="link-item">
-      <span class="short">${esc(l.shortUrl)}</span>
-      <span class="dest">→ ${esc(l.url)}</span>
-      <span class="hits">${l.hits || 0} クリック</span>
-      <button class="mini-btn" data-copy="${esc(l.shortUrl)}">コピー</button>
-    </div>`).join("") : `<div class="empty">— まだURLがありません —</div>`;
-  $$("[data-copy]").forEach((b) => b.addEventListener("click", () => {
-    navigator.clipboard.writeText(b.dataset.copy);
-    toast("📋 コピーしました");
-  }));
-}
-$("#makeLinkBtn").addEventListener("click", async () => {
-  const url = $("#manualLinkUrl").value.trim();
-  if (!url) return;
-  await api("/api/links", { method: "POST", body: { url } });
-  $("#manualLinkUrl").value = "";
-  loadLinks();
-});
-
 /* ---------- 設定 ---------- */
 $("#settingsBtn").addEventListener("click", openSettings);
 $("#closeSettingsBtn").addEventListener("click", () => $("#settingsModal").classList.add("hidden"));
 
 let customEvents = [];
+let editAccounts = [];
 async function openSettings() {
   const s = await api("/api/settings");
-  $("#setThreadsToken").value = s.threadsAccessToken || "";
-  $("#setThreadsUserId").value = s.threadsUserId || "";
   $("#setRakutenAppId").value = s.rakutenAppId || "";
   $("#setRakutenAffId").value = s.rakutenAffiliateId || "";
-  $("#setShortBase").value = s.shortBaseUrl || "";
+  editAccounts = (s.threadsAccounts || []).map((a) => ({ ...a }));
+  renderAccounts();
   customEvents = s.customSaleEvents || [];
   renderCustomEvents();
   $("#settingsModal").classList.remove("hidden");
 }
+
+function renderAccounts() {
+  $("#accountList").innerHTML = editAccounts.map((a, i) => `
+    <div class="account-row" data-i="${i}">
+      <span class="acc-no">アカウント ${i + 1} / 10</span>
+      <input type="text" data-f="name" value="${esc(a.name || "")}" placeholder="表示名">
+      <input type="text" data-f="userId" value="${esc(a.userId || "")}" placeholder="ThreadsユーザーID">
+      <input type="password" data-f="accessToken" value="${esc(a.accessToken || "")}" placeholder="アクセストークン">
+      <button class="mini-btn danger" data-f="del" title="削除">✕</button>
+    </div>`).join("");
+  $("#addAccountBtn").disabled = editAccounts.length >= 10;
+  $("#addAccountBtn").textContent = editAccounts.length >= 10 ? "上限（10個）に達しました" : "＋ アカウントを追加";
+  $$(".account-row").forEach((row) => {
+    const i = Number(row.dataset.i);
+    row.addEventListener("input", (e) => {
+      const f = e.target.dataset.f;
+      if (f && f !== "del") editAccounts[i][f] = e.target.value;
+    });
+    $('[data-f="del"]', row).addEventListener("click", () => {
+      if (!confirm(`アカウント「${editAccounts[i].name || i + 1}」を削除しますか？`)) return;
+      editAccounts.splice(i, 1);
+      renderAccounts();
+    });
+  });
+}
+$("#addAccountBtn").addEventListener("click", () => {
+  if (editAccounts.length >= 10) return;
+  editAccounts.push({ id: `acc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name: `アカウント${editAccounts.length + 1}`, userId: "", accessToken: "" });
+  renderAccounts();
+});
 function renderCustomEvents() {
   $("#customEventList").innerHTML = customEvents.map((ev, i) => `
     <div class="custom-event-row" data-i="${i}">
@@ -337,11 +399,9 @@ $("#saveSettingsBtn").addEventListener("click", async () => {
   await api("/api/settings", {
     method: "POST",
     body: {
-      threadsAccessToken: $("#setThreadsToken").value.trim(),
-      threadsUserId: $("#setThreadsUserId").value.trim(),
+      threadsAccounts: editAccounts.filter((a) => a.name || a.userId || a.accessToken),
       rakutenAppId: $("#setRakutenAppId").value.trim(),
       rakutenAffiliateId: $("#setRakutenAffId").value.trim(),
-      shortBaseUrl: $("#setShortBase").value.trim(),
       customSaleEvents: customEvents
         .filter((ev) => ev.name && ev.startAt)
         .map((ev) => ({ ...ev, startAt: new Date(ev.startAt).toISOString(), endAt: ev.endAt ? new Date(ev.endAt).toISOString() : "" })),
@@ -349,7 +409,9 @@ $("#saveSettingsBtn").addEventListener("click", async () => {
   });
   $("#settingsModal").classList.add("hidden");
   toast("✅ 設定を保存しました");
+  await loadAccounts().catch(() => {});
   loadStatus();
+  loadPosts();
 });
 
 /* ---------- ステータス & セールバナー ---------- */
@@ -414,7 +476,7 @@ async function pollEvents() {
 
 /* ---------- 起動 ---------- */
 loadStatus();
-loadPosts();
+loadAccounts().then(loadPosts).catch(loadPosts);
 pollEvents();
 setInterval(pollEvents, 5000);
 setInterval(loadStatus, 5 * 60000);

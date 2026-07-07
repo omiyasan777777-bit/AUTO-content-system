@@ -35,7 +35,6 @@
   <button class="tab active" data-tab="sheet">📅 予約シート</button>
   <button class="tab" data-tab="editor">✏️ 投稿を作成</button>
   <button class="tab" data-tab="sales">🔥 セールカレンダー</button>
-  <button class="tab" data-tab="links">🔗 短縮URL</button>
 </nav>
 
 <main>
@@ -60,8 +59,9 @@
     <div class="editor-meta">
       <label>管理タイトル<input type="text" id="postTitle" placeholder="例: スーパーSALE目玉商品まとめ"></label>
       <label>投稿日時<input type="datetime-local" id="postAt"></label>
+      <label>投稿アカウント<select id="postAccount"></select></label>
     </div>
-    <p class="hint">💡 本文に <code>{商品名}</code> <code>{価格}</code> <code>{URL}</code> と書くと、投稿する瞬間の最新情報に自動で置き換わります（価格変動に自動追従）。</p>
+    <p class="hint">💡 本文に <code>{商品名}</code> <code>{価格}</code> <code>{URL}</code> と書くと、投稿する瞬間の最新情報に自動で置き換わります（価格変動に自動追従）。{URL} は楽天アフィリエイトのページに直接飛びます。</p>
     <div id="treeList"></div>
     <div class="editor-actions">
       <button class="ghost-btn" id="addNodeBtn">＋ ツリーを追加（ぶら下げ投稿）</button>
@@ -79,32 +79,20 @@
     <div id="saleList" class="sale-list"></div>
   </section>
 
-  <!-- ============ 短縮URL ============ -->
-  <section id="tab-links" class="tab-panel hidden">
-    <div class="panel-head"><h2>楽天っぽいオリジナル短縮URL</h2></div>
-    <p class="hint">商品添付時に自動生成されます（例: <code>/r/ichiba-k3f9x2ab</code>）。クリック数も計測。<br>⚠️ このURLは<b>このツールが起動している間だけ</b>有効です。外部公開する場合は設定でベースURLを自分のドメインに変更してください。</p>
-    <div class="row-gap" style="margin-bottom:12px">
-      <input type="text" id="manualLinkUrl" placeholder="https://hb.afl.rakuten.co.jp/... を貼り付けて短縮" style="flex:1">
-      <button class="ghost-btn" id="makeLinkBtn">短縮する</button>
-    </div>
-    <div id="linkList" class="link-list"></div>
-  </section>
 </main>
 
 <!-- ============ 設定モーダル ============ -->
 <div id="settingsModal" class="modal hidden">
   <div class="modal-box">
     <h2>⚙️ 設定</h2>
-    <h3>Threads API</h3>
-    <label>アクセストークン<input type="password" id="setThreadsToken" placeholder="THQVJ..."></label>
-    <label>ThreadsユーザーID<input type="text" id="setThreadsUserId" placeholder="1784..."></label>
-    <p class="hint">Meta for Developers でThreadsアプリを作成し、threads_basic / threads_content_publish 権限のトークンを取得してください。未設定の間はデモモード（実際には投稿されません）。</p>
+    <h3>Threadsアカウント（最大10個）</h3>
+    <p class="hint">Meta for Developers でThreadsアプリを作成し、threads_basic / threads_content_publish 権限のトークンを取得してください。アカウント未登録の間はデモモード（実際には投稿されません）。投稿ごとに使うアカウントを選べます。</p>
+    <div id="accountList"></div>
+    <button class="ghost-btn" id="addAccountBtn">＋ アカウントを追加</button>
     <h3>楽天ウェブサービス</h3>
     <label>アプリID (applicationId)<input type="text" id="setRakutenAppId" placeholder="10..."></label>
     <label>アフィリエイトID<input type="text" id="setRakutenAffId" placeholder="例: 4a1b2c3d.e5f6g7h8..."></label>
     <p class="hint">未設定の間はデモ商品データで動作します。</p>
-    <h3>短縮URL</h3>
-    <label>ベースURL<input type="text" id="setShortBase" placeholder="http://127.0.0.1:4310"></label>
     <h3>カスタムセールイベント（公式発表で上書き）</h3>
     <div id="customEventList"></div>
     <button class="ghost-btn" id="addCustomEventBtn">＋ イベントを追加</button>

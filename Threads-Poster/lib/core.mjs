@@ -11,28 +11,17 @@ export function formatPrice(price) {
 /**
  * 投稿本文のプレースホルダを商品情報で解決する。
  * 対応: {商品名} {価格} {URL} {name} {price} {url}
+ * {URL} は楽天アフィリエイトリンク（無ければ商品ページ）に直接飛ぶ。
  */
-export function resolvePlaceholders(text, product, shortUrl) {
+export function resolvePlaceholders(text, product) {
   if (!text) return "";
   const name = product?.itemName || "";
   const price = formatPrice(product?.itemPrice);
-  const url = shortUrl || product?.affiliateUrl || product?.itemUrl || "";
+  const url = product?.affiliateUrl || product?.itemUrl || "";
   return text
     .replace(/\{商品名\}|\{name\}/g, name)
     .replace(/\{価格\}|\{price\}/g, price)
     .replace(/\{URL\}|\{url\}/g, url);
-}
-
-/** 楽天っぽい短縮スラッグを生成（例: ichiba-k3f9x2ab） */
-export function makeSlug(existing = new Set()) {
-  const prefixes = ["ichiba", "rk", "sale", "item"];
-  for (let i = 0; i < 100; i++) {
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const body = Math.random().toString(36).slice(2, 10);
-    const slug = `${prefix}-${body}`;
-    if (!existing.has(slug)) return slug;
-  }
-  return `rk-${Date.now().toString(36)}`;
 }
 
 /**

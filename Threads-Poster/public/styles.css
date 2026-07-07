@@ -210,17 +210,6 @@ textarea { resize: vertical; min-height: 96px; line-height: 1.8; }
 .toggle { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
 .toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
 
-/* ---------- 短縮URL ---------- */
-.link-list { display: flex; flex-direction: column; gap: 10px; }
-.link-item {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 10px; padding: 12px 18px; font-size: 12.5px;
-}
-.link-item .short { color: var(--accent); font-weight: 600; letter-spacing: 0.03em; }
-.link-item .dest { color: var(--ink-faint); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 380px; }
-.link-item .hits { color: var(--gold); white-space: nowrap; }
-
 /* ---------- モーダル ---------- */
 .modal {
   position: fixed; inset: 0; background: rgba(10, 8, 6, 0.72);
@@ -240,6 +229,14 @@ textarea { resize: vertical; min-height: 96px; line-height: 1.8; }
 }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .custom-event-row { display: grid; grid-template-columns: 1fr 150px 150px 34px; gap: 8px; align-items: center; }
+.account-row {
+  display: grid; grid-template-columns: 110px 1fr 1fr 34px; gap: 8px; align-items: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.account-row .acc-no { font-size: 11px; color: var(--gold); letter-spacing: 0.1em; grid-column: 1 / -1; }
+.account-row input, .custom-event-row input { min-width: 0; width: 100%; }
+.editor-meta { grid-template-columns: 1fr 240px 220px; }
 
 /* ---------- マスコット ---------- */
 .mascot {
