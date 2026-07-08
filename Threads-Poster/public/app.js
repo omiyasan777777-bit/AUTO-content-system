@@ -179,6 +179,7 @@ function renderTree() {
             ${node.product.imageUrl ? `<img src="${esc(node.product.imageUrl)}" alt="">` : ""}
             <span class="p-name">${esc(node.product.itemName)}</span>
             <span class="p-price">${yen(node.product.itemPrice)}${Number(node.product.availability) === 0 ? " ⚠️在庫切れ" : ""}</span>
+            <button class="mini-btn" data-nact="copylink" title="アフィリエイトリンクをコピー">🔗 URLコピー</button>
             <button class="mini-btn danger" data-nact="detach">解除</button>
           </div>` : `
           <div class="inline-search">
@@ -232,6 +233,11 @@ function renderTree() {
         renderTree();
       }
       if (act === "detach") { node.product = null; renderTree(); }
+      if (act === "copylink") {
+        const url = node.product?.affiliateUrl || node.product?.itemUrl || "";
+        if (url) { navigator.clipboard.writeText(url); toast("🔗 アフィリエイトリンクをコピーしました"); }
+        else toast("URLがありません");
+      }
       if (act === "search") await runSearch(card, node);
       if (act === "ranking") await runRanking(card);
       if (e.target.closest?.("[data-attach]")) {

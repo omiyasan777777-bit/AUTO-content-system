@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import {
   resolvePlaceholders, buildSaleCalendar, nextSaleEvent,
   decidePrePublishAction, applyPriceUpdate, normalizeRakutenItem, formatPrice,
+  ensureAffiliateUrl,
 } from "./lib/core.mjs";
 
 const root = fileURLToPath(new URL("./public/", import.meta.url));
@@ -103,6 +104,36 @@ function rakutenHeaders() {
   return (variants[idx] || variants[0]).headers;
 }
 
+/**
+ * レート制限付き楽天APIフェッチ。
+ * 新APIはリクエスト頻度に厳しく、連続で叩くと429/503を返すため、
+ * ・全楽天API呼び出しを直列化して最低1.1秒間隔に
+ * ・429/503は自動リトライ（2秒→5秒→10秒）
+ */
+const waitMs = (ms) => new Promise((r) => setTimeout(r, ms));
+let rakutenQueue = Promise.resolve();
+let lastRakutenCallAt = 0;
+
+function rakutenFetch(url, headers, { maxRetries = 3 } = {}) {
+  const task = rakutenQueue.then(async () => {
+    const RETRY_DELAYS = [2000, 5000, 10000];
+    for (let attempt = 0; ; attempt++) {
+      const gap = 1100 - (Date.now() - lastRakutenCallAt);
+      if (gap > 0) await waitMs(gap);
+      lastRakutenCallAt = Date.now();
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
+      if ((res.status === 429 || res.status === 503) && attempt < Math.min(maxRetries, RETRY_DELAYS.length)) {
+        await waitMs(RETRY_DELAYS[attempt]);
+        continue;
+      }
+      return res;
+    }
+  });
+  // 後続の呼び出しはこのタスク完了後に実行（エラーでも列は継続）
+  rakutenQueue = task.catch(() => {});
+  return task;
+}
+
 function rakutenAuthParams() {
   const { rakutenAppId, rakutenAccessKey, rakutenAffiliateId } = store.settings;
   const params = new URLSearchParams({ applicationId: rakutenAppId, format: "json", formatVersion: "2" });
@@ -143,7 +174,7 @@ async function rakutenError(res) {
     404: "APIが見つかりません。時間をおいて再試行してください",
     429: "リクエストが多すぎます。数秒待ってから再試行してください",
     500: "楽天側の一時的なエラーです。時間をおいて再試行してください",
-    503: "楽天側がメンテナンス中の可能性があります",
+    503: "楽天側が混雑中か一時的な制限です（自動で数回リトライ済み）。30秒〜1分ほど待ってからもう一度お試しください。続く場合は楽天ウェブサービスの障害情報を確認してください",
   };
   const hint = hints[res.status] || "";
   return new Error(`楽天API エラー (HTTP ${res.status})${detail ? `: ${detail}` : ""}${hint ? ` — ${hint}` : ""}`);
@@ -162,10 +193,12 @@ async function rakutenSearch({ keyword = "", itemCode = "", hits = 10 }) {
   params.set("hits", String(Math.min(30, hits)));
   if (itemCode) params.set("itemCode", itemCode);
   else params.set("keyword", keyword.trim());
-  const res = await fetch(`${RAKUTEN_ENDPOINT}?${params}`, { headers: rakutenHeaders() });
+  const res = await rakutenFetch(`${RAKUTEN_ENDPOINT}?${params}`, rakutenHeaders());
   if (!res.ok) throw await rakutenError(res);
   const data = await res.json();
-  const items = (data.Items || []).map(normalizeRakutenItem);
+  const items = (data.Items || [])
+    .map(normalizeRakutenItem)
+    .map((it) => ensureAffiliateUrl(it, store.settings.rakutenAffiliateId));
   return { demo: false, items };
 }
 
@@ -207,10 +240,12 @@ async function rakutenRanking({ genreId = "", genreName = "総合" }) {
   if (!rakutenAppId || !rakutenAccessKey) return { demo: true, items: mockRankingItems(genreName) };
   const params = rakutenAuthParams();
   if (genreId) params.set("genreId", String(genreId));
-  const res = await fetch(`${RAKUTEN_RANKING_ENDPOINT}?${params}`, { headers: rakutenHeaders() });
+  const res = await rakutenFetch(`${RAKUTEN_RANKING_ENDPOINT}?${params}`, rakutenHeaders());
   if (!res.ok) throw await rakutenError(res);
   const data = await res.json();
-  const items = (data.Items || []).slice(0, 15).map(normalizeRakutenItem);
+  const items = (data.Items || []).slice(0, 15)
+    .map(normalizeRakutenItem)
+    .map((it) => ensureAffiliateUrl(it, store.settings.rakutenAffiliateId));
   return { demo: false, items };
 }
 
@@ -308,6 +343,11 @@ async function publishPost(post) {
     }
 
     // プレースホルダ解決（{URL} は楽天アフィリエイトリンクに直接飛ぶ）
+    // アフィリエイトURLが無い商品は、アフィリエイトIDから標準形式で生成して補完
+    if (product) {
+      product = ensureAffiliateUrl(product, store.settings.rakutenAffiliateId);
+      node.product = product;
+    }
     const text = resolvePlaceholders(node.text, product);
     const imageUrl = node.imageUrl || (node.useProductImage && product?.imageUrl) || "";
 
@@ -540,7 +580,7 @@ const server = http.createServer(async (req, res) => {
       const diag = [];
       for (let i = 0; i < variants.length; i++) {
         try {
-          const r = await fetch(`${RAKUTEN_ENDPOINT}?${params}`, { headers: variants[i].headers });
+          const r = await rakutenFetch(`${RAKUTEN_ENDPOINT}?${params}`, variants[i].headers, { maxRetries: 1 });
           if (r.ok) {
             const data = await r.json();
             const item = (data.Items || []).map(normalizeRakutenItem)[0];

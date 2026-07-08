@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   formatPrice, resolvePlaceholders, buildSaleCalendar, nextSaleEvent,
   decidePrePublishAction, applyPriceUpdate, normalizeRakutenItem,
+  buildAffiliateUrl, ensureAffiliateUrl,
 } from "../lib/core.mjs";
 
 test("formatPrice: カンマ区切り+円", () => {
@@ -29,6 +30,28 @@ test("resolvePlaceholders: {URL}はアフィリエイトリンク直行、無け
     resolvePlaceholders("{URL}", { itemUrl: "https://item.rakuten.co.jp/1" }),
     "https://item.rakuten.co.jp/1",
   );
+});
+
+test("buildAffiliateUrl: 標準hgc形式で生成・URLエンコード済み", () => {
+  const url = buildAffiliateUrl("https://item.rakuten.co.jp/shop/abc/?x=1", "4a1b2c3d.e5f6g7h8");
+  assert.equal(
+    url,
+    "https://hb.afl.rakuten.co.jp/hgc/4a1b2c3d.e5f6g7h8/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fshop%2Fabc%2F%3Fx%3D1&m=https%3A%2F%2Fitem.rakuten.co.jp%2Fshop%2Fabc%2F%3Fx%3D1",
+  );
+  assert.equal(buildAffiliateUrl("", "id"), "");
+  assert.equal(buildAffiliateUrl("https://x", ""), "");
+});
+
+test("ensureAffiliateUrl: 無ければ生成、正規のアフィリエイトURLはそのまま", () => {
+  const affId = "4a1b2c3d.e5f6g7h8";
+  // affiliateUrlがitemUrlのコピー（=アフィリエイトでない）→ 生成される
+  const plain = { itemUrl: "https://item.rakuten.co.jp/s/1/", affiliateUrl: "https://item.rakuten.co.jp/s/1/" };
+  assert.match(ensureAffiliateUrl(plain, affId).affiliateUrl, /^https:\/\/hb\.afl\.rakuten\.co\.jp\/hgc\//);
+  // 正規のアフィリエイトURLは変更しない
+  const real = { itemUrl: "https://item.rakuten.co.jp/s/1/", affiliateUrl: "https://hb.afl.rakuten.co.jp/hgc/xxx/?pc=y" };
+  assert.equal(ensureAffiliateUrl(real, affId).affiliateUrl, "https://hb.afl.rakuten.co.jp/hgc/xxx/?pc=y");
+  // アフィリエイトID未設定なら現状維持
+  assert.equal(ensureAffiliateUrl(plain, "").affiliateUrl, plain.affiliateUrl);
 });
 
 test("buildSaleCalendar: スーパーSALEは3,6,9,12月、それ以外はマラソン", () => {

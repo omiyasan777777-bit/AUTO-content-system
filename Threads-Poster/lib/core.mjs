@@ -112,6 +112,25 @@ export function applyPriceUpdate(product, latest) {
   return { product: updated, change: null };
 }
 
+/**
+ * 楽天アフィリエイトのリンクURLを生成する。
+ * 標準形式: https://hb.afl.rakuten.co.jp/hgc/{アフィリエイトID}/?pc={商品URL}&m={商品URL}
+ * APIがaffiliateUrlを返さない場合のフォールバックとして使う。
+ */
+export function buildAffiliateUrl(itemUrl, affiliateId) {
+  if (!itemUrl || !affiliateId) return "";
+  const enc = encodeURIComponent(itemUrl);
+  return `https://hb.afl.rakuten.co.jp/hgc/${affiliateId}/?pc=${enc}&m=${enc}`;
+}
+
+/** 商品にアフィリエイトURLが無ければ生成して補完する */
+export function ensureAffiliateUrl(item, affiliateId) {
+  if (!item) return item;
+  if (item.affiliateUrl && item.affiliateUrl.includes("hb.afl.rakuten.co.jp")) return item;
+  const built = buildAffiliateUrl(item.itemUrl, affiliateId);
+  return built ? { ...item, affiliateUrl: built } : item;
+}
+
 /** 楽天APIレスポンスの1商品を内部形式に正規化 */
 export function normalizeRakutenItem(raw) {
   const item = raw?.Item || raw || {};
