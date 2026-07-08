@@ -141,7 +141,7 @@ async function openEditor(post) {
   editing = post
     ? JSON.parse(JSON.stringify(post))
     : { title: "", scheduledAt: "", accountId: "", tree: [blankNode()] };
-  $("#editorTitle").textContent = post ? "投稿を編集" : "投稿を作成";
+  $("#editorTitle").textContent = post?.id ? "投稿を編集" : "投稿を作成";
   $("#postTitle").value = editing.title || "";
   const dt = editing.scheduledAt ? new Date(editing.scheduledAt) : new Date(Date.now() + 3600000);
   dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
@@ -259,13 +259,19 @@ function renderResults(box, items, demo, note = "") {
   if (!items.length) { box.innerHTML = `<div class="hint">見つかりませんでした</div>`; return; }
   box.innerHTML = (demo ? `<div class="hint">※楽天アプリID未設定のためデモ商品を表示中（⚙️設定から登録）</div>` : "") +
     (note ? `<div class="hint">${note}</div>` : "") +
-    items.map((it) => `
+    `<div class="hint" style="margin-bottom:4px">💡 商品名をクリックすると楽天アフィリエイトのページが開きます</div>` +
+    items.map((it) => {
+      const link = it.affiliateUrl || it.itemUrl || "";
+      return `
     <div class="result-item">
-      ${it.imageUrl ? `<img src="${esc(it.imageUrl)}" alt="">` : `<img alt="">`}
-      <span class="r-name">${esc(it.itemName).slice(0, 60)}</span>
+      <a class="r-link" href="${esc(link)}" target="_blank" rel="noopener sponsored" title="楽天アフィリエイトのページを開く">
+        ${it.imageUrl ? `<img src="${esc(it.imageUrl)}" alt="">` : `<img alt="">`}
+        <span class="r-name">${esc(it.itemName).slice(0, 60)} ↗</span>
+      </a>
       <span class="r-meta"><span class="price">${yen(it.itemPrice)}</span>${esc(it.shopName)}${Number(it.availability) === 0 ? " ⚠️在庫切れ" : ""}</span>
       <button class="mini-btn" data-attach="${encodeURIComponent(JSON.stringify(it))}">添付</button>
-    </div>`).join("");
+    </div>`;
+    }).join("");
 }
 
 async function runSearch(card, node) {
@@ -316,8 +322,150 @@ $("#savePostBtn").addEventListener("click", async () => {
   }
 });
 
+/* ---------- 投稿テンプレ集（ツリー構成済み・楽天アフィリ用） ---------- */
+const TEMPLATES = [
+  {
+    name: "王道レビュー型", genre: "汎用", desc: "実体験風レビュー→詳細→締めの3ツリー",
+    tree: [
+      "これ、正直ナメてた。\n\n{商品名}\n\n使って3日で手放せなくなった。\n理由はツリーに続く👇",
+      "良かったところ3つ\n\n✅ 想像以上の使い心地\n✅ コスパが異常（{価格}）\n✅ 迷ってる時間がもったいなかった\n\n気になる人はここから見てみて👇\n{URL}",
+      "ちなみに楽天ポイント還元も考えると実質もっと安い。\n\nセール中なら更にお得なので、在庫あるうちにチェック推奨🔥\n{URL}",
+    ],
+  },
+  {
+    name: "ランキング紹介型", genre: "汎用", desc: "「いま売れてるTOP3」を1商品=1ツリーで紹介",
+    tree: [
+      "【保存版】いま楽天で売れてるアイテムTOP3🏆\n\n実際にランキング上位のものだけ厳選しました。\n\n第3位から発表👇",
+      "🥉 第3位\n\n{商品名}\n\n{価格}\n👉 {URL}",
+      "🥈 第2位\n\n{商品名}\n\n{価格}\n👉 {URL}",
+      "🥇 第1位\n\n{商品名}\n\n{価格}\n\n迷ったらコレ一択です👇\n{URL}",
+    ],
+  },
+  {
+    name: "セール速報型", genre: "セール", desc: "スーパーSALE・マラソン開始の告知と目玉商品",
+    tree: [
+      "⚡楽天セールついに開始⚡\n\n今回の目玉、先に共有します。\n\n買い忘れると次まで待つことになるので保存推奨🔖👇",
+      "目玉①\n\n{商品名}\n\nセール価格: {価格}\n👉 {URL}",
+      "ポイント倍率が上がる買い回りを狙うなら、1,000円台の消耗品から埋めるのがコツ。\n\n目玉②はこちら👇\n{商品名}（{価格}）\n{URL}",
+    ],
+  },
+  {
+    name: "Before/After型", genre: "コスメ・美容", desc: "悩み→変化→商品紹介の共感フロー",
+    tree: [
+      "3ヶ月前の自分に教えたい。\n\nずっと悩んでたのに、変えたのはたった1つだけだった。",
+      "変えたのはコレ👇\n\n{商品名}\n\n最初は半信半疑だったけど、続けてよかった。\n{価格}なら試す価値あり。",
+      "同じ悩みの人、多いと思うので置いておきます🕊️\n\n👉 {URL}\n\n※合う合わないはあるので、レビューも見てみてください",
+    ],
+  },
+  {
+    name: "悩み解決型", genre: "汎用", desc: "あるある悩み→解決策として商品を提示",
+    tree: [
+      "「◯◯がツラい…」って人、実は解決策あります。\n\n私も1年悩んでたけど、コレで一発でした👇",
+      "{商品名}\n\n✔ 悩みポイントに直接アプローチ\n✔ 口コミ評価も高い\n✔ {価格}で試せる\n\n👉 {URL}",
+      "正直もっと早く買えばよかったやつ。\n\n同じ悩みの人の参考になれば🙌\n{URL}",
+    ],
+  },
+  {
+    name: "比較検討型", genre: "家電", desc: "迷いがちな2択→結論を提示する構成",
+    tree: [
+      "家電選びで消耗してる人へ。\n\n「安いやつ」と「ちょっといいやつ」、結論から言うとこっちでした👇",
+      "{商品名}\n\n決め手は3つ:\n① 毎日使うものはケチらない\n② レビューの星の数より「件数」を見る\n③ 型落ちセールが最強（いま{価格}）\n\n👉 {URL}",
+      "ちなみに楽天だと保証やポイントも含めて実質差額はもっと縮まる。\n\n比較して決めたい人はここから👇\n{URL}",
+    ],
+  },
+  {
+    name: "食レポ型", genre: "食品・スイーツ", desc: "五感に訴える食レポ→お取り寄せ誘導",
+    tree: [
+      "お取り寄せ、当たりを引いた🎯\n\n{商品名}\n\n開けた瞬間からもう良い匂いする…",
+      "実食レポ:\n\n・一口目で語彙力なくなる\n・家族の分まで取られる\n・気づいたらリピート確定\n\n{価格}でこの満足度はずるい。",
+      "冷凍庫にストックしておくと幸福度が上がるタイプのやつです🧊\n\n👉 {URL}",
+    ],
+  },
+  {
+    name: "暮らし改善型", genre: "インテリア・収納", desc: "部屋の悩み→ビフォーアフター→商品",
+    tree: [
+      "部屋が片付かない原因、「収納が足りない」じゃなくて「収納が使いにくい」でした。\n\nコレに変えたら一気に解決👇",
+      "{商品名}\n\n✔ デッドスペースが収納に変わる\n✔ 出し入れがストレスゼロ\n✔ {価格}で部屋の景色が変わる\n\n👉 {URL}",
+      "引っ越しシーズンは売り切れがちなので、見つけたときが買いどきです🏠\n{URL}",
+    ],
+  },
+  {
+    name: "プレゼント提案型", genre: "ギフト", desc: "贈り物の悩み→この1品でOKという提案",
+    tree: [
+      "プレゼント選び、毎回悩んで結局無難なものにしてない？\n\n「センスいいね」って言われたやつ、共有します🎁",
+      "{商品名}\n\n・見た目が良い（開けた瞬間勝ち）\n・実用的で残る\n・{価格}なのに高見え\n\n👉 {URL}",
+      "母の日・誕生日・ちょっとしたお礼まで全部これでいける。\n\nラッピング対応かどうかもチェックしてみて👇\n{URL}",
+    ],
+  },
+  {
+    name: "時短・便利グッズ型", genre: "キッチン・日用品", desc: "家事の時短効果を数字で見せる構成",
+    tree: [
+      "毎日の家事、1日30分削れたら年間180時間。\n\n私が時短できた神グッズがこちら👇",
+      "{商品名}\n\nビフォー: 毎日イライラしながら手作業\nアフター: ほったらかしで完了\n\n{価格}で年180時間買えるなら安い。\n👉 {URL}",
+      "「もっと早く買えばよかった」系の代表格です。\n\n迷ってる時間も家事してる時間ももったいない👇\n{URL}",
+    ],
+  },
+  {
+    name: "コーデ提案型", genre: "ファッション", desc: "着回し・コーデの文脈で商品を紹介",
+    tree: [
+      "「服はあるのに着る服がない」現象、コレ1枚で解決した。\n\n合わせるだけで成立する万能アイテム👇",
+      "{商品名}\n\n✔ 手持ちの服と何でも合う\n✔ 体型カバーもできる\n✔ {価格}でプチプラなのにきれいめ\n\n👉 {URL}",
+      "サイズ・カラー展開があるうちが買いどき。\n人気色から売り切れます🏃‍♀️\n{URL}",
+    ],
+  },
+  {
+    name: "ストーリー共感型", genre: "汎用", desc: "体験談を語ってから自然に商品へ繋ぐ長尺型",
+    tree: [
+      "正直に話します。\n\n半年前まで、私は◯◯で本当に消耗してました。\n\n毎日イライラして、家族にも当たって、自己嫌悪して…の繰り返し。",
+      "変わったきっかけは、フォロワーさんに教えてもらった1つのアイテム。\n\n最初は「どうせ変わらないでしょ」と思ってた。\n\nでも1週間で生活が変わった。",
+      "それがこれ👇\n\n{商品名}\n\n{価格}。\n正直、悩んでた時間のほうが高くついた。\n\n👉 {URL}",
+      "同じところでつまずいてる人の参考になれば嬉しいです。\n\n質問あればリプで聞いてください🕊️\n{URL}",
+    ],
+  },
+];
+
+function renderTemplates() {
+  const filter = $("#tplGenreFilter").value;
+  const list = TEMPLATES.filter((t) => !filter || t.genre === filter);
+  $("#templateList").innerHTML = list.map((t, i) => `
+    <div class="template-card">
+      <div class="tpl-head">
+        <span class="tpl-name">${esc(t.name)}</span>
+        <span class="chip">${esc(t.genre)}</span>
+        <span class="chip">🧵 ${t.tree.length}ツリー</span>
+        <button class="mini-btn" data-tpl-use="${TEMPLATES.indexOf(t)}">使う</button>
+        <button class="mini-btn" data-tpl-preview="${TEMPLATES.indexOf(t)}">👁 プレビュー</button>
+      </div>
+      <div class="tpl-desc">${esc(t.desc)}</div>
+      <div class="tpl-preview hidden">${t.tree.map((txt, n) => `<div class="tpl-node"><b>${n === 0 ? "① メイン" : `${"①②③④⑤⑥⑦⑧⑨⑩"[n]} ツリー`}</b>\n${esc(txt)}</div>`).join("")}</div>
+    </div>`).join("");
+
+  $$("[data-tpl-use]").forEach((b) => b.addEventListener("click", () => {
+    const t = TEMPLATES[Number(b.dataset.tplUse)];
+    openEditor({
+      title: `${t.name}（${t.genre}）`,
+      scheduledAt: "",
+      accountId: "",
+      tree: t.tree.map((text) => ({ ...blankNode(), text })),
+    });
+    toast(`📝 テンプレ「${t.name}」を流し込みました。商品を添付してください`);
+  }));
+  $$("[data-tpl-preview]").forEach((b) => b.addEventListener("click", () => {
+    b.closest(".template-card").querySelector(".tpl-preview").classList.toggle("hidden");
+  }));
+}
+
+// ジャンルフィルタを構築
+(() => {
+  const genres = [...new Set(TEMPLATES.map((t) => t.genre))];
+  $("#tplGenreFilter").innerHTML = `<option value="">すべてのジャンル（${TEMPLATES.length}種）</option>` +
+    genres.map((g) => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
+  $("#tplGenreFilter").addEventListener("change", renderTemplates);
+})();
+
 /* ---------- セールカレンダー ---------- */
 async function loadSales() {
+  renderTemplates();
   const { calendar, next, autoGenerate } = await api("/api/sales");
   $("#saleAutoGen").checked = !!autoGenerate;
   $("#saleList").innerHTML = calendar.map((ev) => {
