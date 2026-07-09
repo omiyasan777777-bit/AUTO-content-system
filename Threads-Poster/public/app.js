@@ -119,7 +119,7 @@ $("#refreshProductsBtn").addEventListener("click", async () => {
 let editing = null; // {id?, title, scheduledAt, tree:[...]}
 
 function blankNode() {
-  return { text: "", imageUrl: "", useProductImage: true, product: null, outOfStockMode: "skip", replaceKeyword: "" };
+  return { text: "", imageUrl: "", useProductImage: true, product: null, outOfStockMode: "skip", replaceKeyword: "", customUrl: "" };
 }
 
 // 楽天ランキングの主要ジャンル（「いま売れてる商品」用）
@@ -196,6 +196,9 @@ function renderTree() {
         <div class="node-row">
           <label>画像URL（空欄なら下のチェックで商品画像を使用）
             <input type="text" data-field="imageUrl" value="${esc(node.imageUrl)}" placeholder="https://...jpg">
+          </label>
+          <label>短縮URL（任意・楽天アフィリの a.r10.to を貼ると {URL} に使用）
+            <input type="text" data-field="customUrl" value="${esc(node.customUrl || "")}" placeholder="https://a.r10.to/xxxxx">
           </label>
           <div class="node-opts">
             <label class="inline"><input type="checkbox" data-field="useProductImage" ${node.useProductImage ? "checked" : ""}>商品画像を添付</label>
@@ -462,6 +465,92 @@ function renderTemplates() {
     genres.map((g) => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
   $("#tplGenreFilter").addEventListener("change", renderTemplates);
 })();
+
+/* ---------- AIプロンプト生成（ChatGPT/Claude/Gemini貼り付け用） ---------- */
+const CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩";
+
+function buildAiPrompt(template) {
+  const products = editing.tree.filter((n) => n.product).map((n) => n.product);
+  const productLines = products.length
+    ? products.map((p, i) => [
+        `商品${i + 1}:`,
+        `・商品名: ${p.itemName}`,
+        `・価格: ${Number(p.itemPrice).toLocaleString("ja-JP")}円`,
+        p.shopName ? `・ショップ: ${p.shopName}` : "",
+        p.reviewAverage ? `・レビュー平均: ★${p.reviewAverage}` : "",
+      ].filter(Boolean).join("\n")).join("\n\n")
+    : "（商品情報なし。一般的な魅力訴求で書いてください）";
+  const treeLines = template.tree.map((txt, i) =>
+    `${CIRCLED[i]}${i === 0 ? "（メイン投稿）" : "（ぶら下げツリー）"}:\n${txt}`).join("\n\n");
+
+  return `あなたはThreads（SNS）運用と楽天アフィリエイトに精通したプロのコピーライターです。
+以下の商品情報と構成テンプレをもとに、Threadsのツリー投稿文を作成してください。
+
+【商品情報】
+${productLines}
+
+【構成テンプレ（${template.name} / 全${template.tree.length}ツリー）】
+${treeLines}
+
+【ルール】
+- 上のテンプレはあくまで「構成と流れ」の見本。言い回しは商品に合わせて自然に書き換える
+- 各ツリーは500文字以内。スマホで読みやすいよう2〜3行ごとに改行
+- 1ツリー目は続きが読みたくなるフックにする（結論を少しだけ見せる）
+- {商品名} {価格} {URL} という表記は置き換えずそのまま残す（投稿ツールが最新情報に自動置換するため）
+- 誇大表現・効果効能の断定はNG（薬機法・景表法に配慮）
+- 絵文字は各ツリー2〜4個まで
+- ステマ規制対応のため、1ツリー目に #PR または「広告」表記を自然に入れる
+- 出力形式: 各ツリーを ${CIRCLED.slice(0, template.tree.length).split("").join(" ")} の番号で区切り、番号の次の行から本文を書く。番号と本文以外の解説は不要`;
+}
+
+function openPromptModal() {
+  const sel = $("#promptTemplate");
+  sel.innerHTML = TEMPLATES.map((t, i) => `<option value="${i}">${esc(t.name)}（${esc(t.genre)}・${t.tree.length}ツリー）</option>`).join("");
+  const regen = () => { $("#promptOutput").value = buildAiPrompt(TEMPLATES[Number(sel.value)]); };
+  sel.onchange = regen;
+  regen();
+  $("#promptCopied").textContent = "";
+  $("#aiResultInput").value = "";
+  $("#promptModal").classList.remove("hidden");
+}
+
+/** AIの回答（①②③…形式）をパースして各ツリー本文に反映 */
+function parseAiResult(text) {
+  const parts = [];
+  let current = null;
+  for (const line of text.split("\n")) {
+    const m = line.match(/^\s*[（(]?([①②③④⑤⑥⑦⑧⑨⑩])[）)]?\s*[:：.）)]?\s*(.*)$/);
+    if (m) {
+      if (current) parts.push(current.join("\n").trim());
+      current = m[2] ? [m[2]] : [];
+    } else if (current) {
+      current.push(line);
+    }
+  }
+  if (current) parts.push(current.join("\n").trim());
+  return parts.filter((p) => p);
+}
+
+$("#aiPromptBtn").addEventListener("click", () => {
+  if (!editing) return;
+  openPromptModal();
+});
+$("#closePromptBtn").addEventListener("click", () => $("#promptModal").classList.add("hidden"));
+$("#copyPromptBtn").addEventListener("click", () => {
+  navigator.clipboard.writeText($("#promptOutput").value);
+  $("#promptCopied").textContent = "✅ コピーしました。ChatGPT / Claude / Gemini に貼り付けてください";
+});
+$("#applyAiResultBtn").addEventListener("click", () => {
+  const parts = parseAiResult($("#aiResultInput").value);
+  if (!parts.length) { toast("①②③…の形式が見つかりませんでした。AIの回答をそのまま貼り付けてください"); return; }
+  const tpl = TEMPLATES[Number($("#promptTemplate").value)];
+  while (editing.tree.length < parts.length) editing.tree.push(blankNode());
+  parts.forEach((text, i) => { editing.tree[i].text = text; });
+  if (!$("#postTitle").value.trim()) $("#postTitle").value = `${tpl.name}（AI生成）`;
+  $("#promptModal").classList.add("hidden");
+  renderTree();
+  toast(`✅ ${parts.length}ツリーに反映しました。商品の添付と日時を確認してください`);
+});
 
 /* ---------- セールカレンダー ---------- */
 async function loadSales() {

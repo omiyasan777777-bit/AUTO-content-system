@@ -348,7 +348,7 @@ async function publishPost(post) {
       product = ensureAffiliateUrl(product, store.settings.rakutenAffiliateId);
       node.product = product;
     }
-    const text = resolvePlaceholders(node.text, product);
+    const text = resolvePlaceholders(node.text, product, (node.customUrl || "").trim());
     const imageUrl = node.imageUrl || (node.useProductImage && product?.imageUrl) || "";
 
     try {

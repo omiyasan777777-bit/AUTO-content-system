@@ -64,7 +64,10 @@
     <p class="hint">💡 本文に <code>{商品名}</code> <code>{価格}</code> <code>{URL}</code> と書くと、投稿する瞬間の最新情報に自動で置き換わります（価格変動に自動追従）。{URL} は楽天アフィリエイトのページに直接飛びます。</p>
     <div id="treeList"></div>
     <div class="editor-actions">
-      <button class="ghost-btn" id="addNodeBtn">＋ ツリーを追加（ぶら下げ投稿）</button>
+      <span class="row-gap">
+        <button class="ghost-btn" id="addNodeBtn">＋ ツリーを追加（ぶら下げ投稿）</button>
+        <button class="ghost-btn" id="aiPromptBtn" title="添付した商品とテンプレから、ChatGPT/Claude/Gemini用のプロンプトを生成">🤖 AIで投稿文を作る</button>
+      </span>
       <button class="primary-btn" id="savePostBtn">💾 予約を保存</button>
     </div>
   </section>
@@ -122,6 +125,31 @@
     <div class="modal-actions">
       <button class="ghost-btn" id="closeSettingsBtn">閉じる</button>
       <button class="primary-btn" id="saveSettingsBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AIプロンプト生成モーダル ============ -->
+<div id="promptModal" class="modal hidden">
+  <div class="modal-box modal-wide">
+    <h2>🤖 AIで投稿文を作る</h2>
+    <p class="hint">① 型を選ぶ → ② プロンプトをコピーして ChatGPT / Claude / Gemini に貼り付け → ③ AIの回答をそのまま下に貼り付けて「ツリーに反映」。<code>{価格}</code> <code>{URL}</code> はそのまま残してもらう指示入りなので、投稿時に最新情報へ自動置換されます。</p>
+    <label>投稿の型（テンプレ）
+      <select id="promptTemplate"></select>
+    </label>
+    <label>生成されたプロンプト（コピーしてAIに貼り付け）
+      <textarea id="promptOutput" rows="10" readonly></textarea>
+    </label>
+    <div class="row-gap">
+      <button class="primary-btn" id="copyPromptBtn">📋 プロンプトをコピー</button>
+      <span id="promptCopied" class="hint" style="margin:0"></span>
+    </div>
+    <label>AIの回答を貼り付け（①②③…の形式のまま）
+      <textarea id="aiResultInput" rows="8" placeholder="ChatGPT等が生成した投稿文をここに貼り付けてください"></textarea>
+    </label>
+    <div class="modal-actions">
+      <button class="ghost-btn" id="closePromptBtn">閉じる</button>
+      <button class="primary-btn" id="applyAiResultBtn">✅ ツリーに反映</button>
     </div>
   </div>
 </div>

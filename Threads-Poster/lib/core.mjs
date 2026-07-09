@@ -11,13 +11,13 @@ export function formatPrice(price) {
 /**
  * 投稿本文のプレースホルダを商品情報で解決する。
  * 対応: {商品名} {価格} {URL} {name} {price} {url}
- * {URL} は楽天アフィリエイトリンク（無ければ商品ページ）に直接飛ぶ。
+ * {URL} の優先順位: ユーザー指定の短縮URL（a.r10.to等）> アフィリエイトURL > 商品ページ
  */
-export function resolvePlaceholders(text, product) {
+export function resolvePlaceholders(text, product, customUrl = "") {
   if (!text) return "";
   const name = product?.itemName || "";
   const price = formatPrice(product?.itemPrice);
-  const url = product?.affiliateUrl || product?.itemUrl || "";
+  const url = customUrl || product?.affiliateUrl || product?.itemUrl || "";
   return text
     .replace(/\{商品名\}|\{name\}/g, name)
     .replace(/\{価格\}|\{price\}/g, price)

@@ -32,6 +32,13 @@ test("resolvePlaceholders: {URL}はアフィリエイトリンク直行、無け
   );
 });
 
+test("resolvePlaceholders: 短縮URL（a.r10.to）指定時はそれを最優先", () => {
+  assert.equal(
+    resolvePlaceholders("{URL}", { affiliateUrl: "https://hb.afl.rakuten.co.jp/1" }, "https://a.r10.to/abc12"),
+    "https://a.r10.to/abc12",
+  );
+});
+
 test("buildAffiliateUrl: 標準hgc形式で生成・URLエンコード済み", () => {
   const url = buildAffiliateUrl("https://item.rakuten.co.jp/shop/abc/?x=1", "4a1b2c3d.e5f6g7h8");
   assert.equal(
