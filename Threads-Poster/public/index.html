@@ -101,7 +101,10 @@
   <div class="modal-box">
     <h2>⚙️ 設定</h2>
     <h3>Threadsアカウント（最大10個）</h3>
-    <p class="hint">Meta for Developers でThreadsアプリを作成し、threads_basic / threads_content_publish 権限のトークンを取得してください。アカウント未登録の間はデモモード（実際には投稿されません）。投稿ごとに使うアカウントを選べます。</p>
+    <p class="hint">
+      <a href="https://developers.facebook.com/" target="_blank" rel="noopener" style="color:var(--gold)">Meta for Developers</a> でアプリを作成（ユースケース: Threads API）→ threads_basic / threads_content_publish 権限を付与 → <b>長期アクセストークン（60日有効）</b>を取得して貼り付けてください。<br>
+      ユーザーIDは<b>空欄でOK</b>（「🔌 テスト」でトークンから自動取得します）。⚠️ 短期トークン（1時間）だとすぐエラーになります。長期トークンも60日で切れるため、投稿エラーが出たら再取得してください。アカウント未登録の間はデモモード（実際には投稿されません）。
+    </p>
     <div id="accountList"></div>
     <button class="ghost-btn" id="addAccountBtn">＋ アカウントを追加</button>
     <h3>楽天ウェブサービス（2026年 新API対応）</h3>

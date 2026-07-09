@@ -253,13 +253,49 @@ async function rakutenRanking({ genreId = "", genreName = "総合" }) {
 const THREADS_BASE = "https://graph.threads.net/v1.0";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Threads APIのエラーを、原因がわかる日本語メッセージに変換 */
+function threadsErrorMessage(err, status) {
+  const msg = err?.message || `HTTP ${status}`;
+  const code = err?.code;
+  const hints = [];
+  if (code === 190 || /expired|invalid.*token|session/i.test(msg)) {
+    hints.push("アクセストークンが無効か期限切れです。短期トークン（1時間）ではなく長期トークン（60日）を取得し直してください");
+  } else if (code === 10 || /permission|scope/i.test(msg)) {
+    hints.push("権限不足です。トークンに threads_basic と threads_content_publish の権限が付いているか確認してください");
+  } else if (/does not exist|cannot be loaded|unknown path/i.test(msg)) {
+    hints.push("ユーザーIDが違う可能性があります。⚙️設定でユーザーIDを空欄にすると自動取得されます");
+  } else if (/rate|limit/i.test(msg)) {
+    hints.push("投稿数の上限（24時間で250件）に達した可能性があります。時間をおいてください");
+  } else if (/image|media|url/i.test(msg)) {
+    hints.push("画像URLが公開されていない可能性があります。https:// で誰でも開ける画像URLを指定してください");
+  }
+  return `${msg}${hints.length ? ` — ${hints[0]}` : ""}`;
+}
+
+/** トークンからThreadsのユーザー情報を取得（接続テスト・ユーザーID自動取得用） */
+async function threadsMe(token) {
+  const res = await fetch(`${THREADS_BASE}/me?fields=id,username&access_token=${encodeURIComponent(token)}`, {
+    signal: AbortSignal.timeout(15000),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.id) throw new Error(threadsErrorMessage(data.error, res.status));
+  return data; // {id, username}
+}
+
 async function threadsCreateAndPublish(account, { text, imageUrl, replyToId }) {
   const token = account?.accessToken;
-  const userId = account?.userId;
-  if (!token || !userId) {
+  let userId = account?.userId;
+  if (!token) {
     // デモモード: 実投稿せず成功扱い
     await sleep(300);
     return { id: `demo-${Date.now()}`, demo: true };
+  }
+  if (!userId) {
+    // ユーザーID未設定ならトークンから自動取得して保存
+    const me = await threadsMe(token);
+    userId = me.id;
+    account.userId = me.id;
+    saveStore("settings").catch(() => {});
   }
   const params = new URLSearchParams({ access_token: token });
   if (imageUrl) {
@@ -274,14 +310,14 @@ async function threadsCreateAndPublish(account, { text, imageUrl, replyToId }) {
   const createRes = await fetch(`${THREADS_BASE}/${userId}/threads`, { method: "POST", body: params });
   const created = await createRes.json().catch(() => ({}));
   if (!createRes.ok || !created.id) {
-    throw new Error(`Threads作成エラー: ${created.error?.message || `HTTP ${createRes.status}`}`);
+    throw new Error(`Threads作成エラー: ${threadsErrorMessage(created.error, createRes.status)}`);
   }
   if (imageUrl) await sleep(15000); // 画像はサーバー側処理を待つ（公式推奨は30秒だが実用上短縮）
   const pubParams = new URLSearchParams({ access_token: token, creation_id: created.id });
   const pubRes = await fetch(`${THREADS_BASE}/${userId}/threads_publish`, { method: "POST", body: pubParams });
   const published = await pubRes.json().catch(() => ({}));
   if (!pubRes.ok || !published.id) {
-    throw new Error(`Threads公開エラー: ${published.error?.message || `HTTP ${pubRes.status}`}`);
+    throw new Error(`Threads公開エラー: ${threadsErrorMessage(published.error, pubRes.status)}`);
   }
   return { id: published.id, demo: false };
 }
@@ -557,6 +593,25 @@ const server = http.createServer(async (req, res) => {
       await priceWatchTick();
       return json(res, 200, { ok: true });
     }
+    // Threadsアカウント接続テスト（設定画面の各アカウント「テスト」ボタン）
+    if (path === "/api/threads/test" && req.method === "POST") {
+      const body = await readBody(req);
+      const account = (store.settings.threadsAccounts || []).find((a) => a.id === body.accountId);
+      if (!account) return json(res, 200, { ok: false, message: "アカウントが見つかりません。先に設定を保存してください" });
+      if (!account.accessToken) return json(res, 200, { ok: false, message: "アクセストークンが未入力です" });
+      try {
+        const me = await threadsMe(account.accessToken);
+        // ユーザーIDを自動取得して保存
+        if (!account.userId || account.userId !== me.id) {
+          account.userId = me.id;
+          await saveStore("settings");
+        }
+        return json(res, 200, { ok: true, message: `✅ 接続成功！ @${me.username}（ID: ${me.id} を自動設定しました）`, userId: me.id, username: me.username });
+      } catch (e) {
+        return json(res, 200, { ok: false, message: `接続失敗: ${e.message}` });
+      }
+    }
+
     // 楽天API接続テスト（設定画面の「接続テスト」ボタン）
     if (path === "/api/rakuten/test" && req.method === "POST") {
       const { rakutenAppId, rakutenAccessKey } = store.settings;

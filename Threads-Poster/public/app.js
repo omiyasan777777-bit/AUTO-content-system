@@ -594,10 +594,13 @@ async function openSettings() {
 function renderAccounts() {
   $("#accountList").innerHTML = editAccounts.map((a, i) => `
     <div class="account-row" data-i="${i}">
-      <span class="acc-no">アカウント ${i + 1} / 10</span>
+      <span class="acc-no">アカウント ${i + 1} / 10
+        <button class="mini-btn" data-f="test" title="トークンを検証し、ユーザーIDを自動取得">🔌 テスト</button>
+        <span class="acc-test-result"></span>
+      </span>
       <input type="text" data-f="name" value="${esc(a.name || "")}" placeholder="表示名">
-      <input type="text" data-f="userId" value="${esc(a.userId || "")}" placeholder="ThreadsユーザーID">
-      <input type="password" data-f="accessToken" value="${esc(a.accessToken || "")}" placeholder="アクセストークン">
+      <input type="text" data-f="userId" value="${esc(a.userId || "")}" placeholder="ユーザーID（空欄でOK・テストで自動取得）">
+      <input type="password" data-f="accessToken" value="${esc(a.accessToken || "")}" placeholder="アクセストークン（長期）">
       <button class="mini-btn danger" data-f="del" title="削除">✕</button>
     </div>`).join("");
   $("#addAccountBtn").disabled = editAccounts.length >= 10;
@@ -612,6 +615,25 @@ function renderAccounts() {
       if (!confirm(`アカウント「${editAccounts[i].name || i + 1}」を削除しますか？`)) return;
       editAccounts.splice(i, 1);
       renderAccounts();
+    });
+    $('[data-f="test"]', row).addEventListener("click", async () => {
+      const out = $(".acc-test-result", row);
+      out.textContent = "テスト中…";
+      out.style.color = "";
+      try {
+        // 入力中の内容を先に保存してからテスト（トークンのマスクはサーバー側で元値を保持）
+        await api("/api/settings", { method: "POST", body: { threadsAccounts: editAccounts.filter((a) => a.name || a.userId || a.accessToken) } });
+        const r = await api("/api/threads/test", { method: "POST", body: { accountId: editAccounts[i].id } });
+        out.textContent = r.message;
+        out.style.color = r.ok ? "var(--green)" : "var(--red)";
+        if (r.ok && r.userId) {
+          editAccounts[i].userId = r.userId;
+          $('[data-f="userId"]', row).value = r.userId;
+        }
+      } catch (e) {
+        out.textContent = `テスト失敗: ${e.message}`;
+        out.style.color = "var(--red)";
+      }
     });
   });
 }
