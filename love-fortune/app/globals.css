@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/*
+ * ============================================================
+ * テーマカラー
+ * アプリの配色を変えたい場合は、この @theme ブロックの色だけを
+ * 編集すればよい（各画面はこのトークン経由で色を参照している）。
+ * ※仮置き: メインカラーはモーブピンク系。公開前に好みで調整可
+ * ============================================================
+ */
+@theme {
+  /* 背景系: アイボリー〜淡いラベンダー */
+  --color-cream: #faf7f2;
+  --color-blush: #f7ecef;
+  --color-lavender: #f1ecf6;
+
+  /* メイン: くすみピンク〜モーブ */
+  --color-mauve-100: #f3e4ec;
+  --color-mauve-200: #e5c8d7;
+  --color-mauve-300: #d0a3bb;
+  --color-mauve-400: #b97f9f;
+  --color-mauve-500: #a26385;
+  --color-mauve-600: #874e6c;
+  --color-mauve-700: #6c3d56;
+  --color-mauve-800: #512e41;
+
+  /* アクセント: 控えめなゴールド */
+  --color-gold: #ab8b4d;
+  --color-gold-soft: #d9c9a5;
+
+  /* 文字色: ダークパープル系グレー */
+  --color-ink: #3c3143;
+  --color-ink-soft: #6d6175;
+  --color-ink-faint: #948a9b;
+
+  /* フォント */
+  --font-sans:
+    "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic Medium",
+    "Yu Gothic", "Noto Sans JP", "Meiryo", system-ui, sans-serif;
+  --font-serif:
+    "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", "Georgia", serif;
+
+  /* 占い演出用アニメーション */
+  --animate-twinkle: twinkle 2.4s ease-in-out infinite;
+  --animate-float: float 5s ease-in-out infinite;
+  --animate-rise: rise 0.5s ease-out both;
+
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: scale(0.9);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* 長文の結果をスマホで読みやすくするための行間 */
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* キーボード操作時のフォーカスを明確にする */
+:focus-visible {
+  outline: 2px solid var(--color-mauve-500);
+  outline-offset: 2px;
+}
+
+/* 動きに敏感な利用者への配慮: 全アニメーションを実質停止する */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
