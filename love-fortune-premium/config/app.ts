@@ -55,6 +55,7 @@ export const appConfig = {
     share: "この占いを共有する",
     copyResult: "結果をコピーする",
     saveImage: "結果を画像で保存する",
+    savePdf: "鑑定書をPDFで保存する",
     back: "戻る",
   },
 
