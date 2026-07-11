@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, ImageDown, Share2 } from "lucide-react";
+import { Check, Copy, FileDown, ImageDown, Share2 } from "lucide-react";
 import type { PremiumFortuneResult } from "@/types/fortune";
 import { FORTUNE_SECTION_ORDER } from "@/types/fortune";
 import { premiumSectionTitles } from "@/lib/fortune/premiumTemplates";
 import { saveResultImage } from "@/lib/resultImage";
+import { saveCertificatePdf } from "@/lib/certificatePdf";
 import { appConfig } from "@/config/app";
 
 interface Props {
@@ -40,6 +41,7 @@ type Feedback = { kind: "success" | "error"; text: string } | null;
 export function ShareActions({ result }: Props) {
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [saving, setSaving] = useState(false);
+  const [pdfSaving, setPdfSaving] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -116,6 +118,29 @@ export function ShareActions({ result }: Props) {
     }
   };
 
+  // 鑑定書を正式なA4のPDFに組んで保存
+  const handleSavePdf = async () => {
+    if (pdfSaving) return;
+    setPdfSaving(true);
+    try {
+      const how = await saveCertificatePdf(result);
+      showFeedback({
+        kind: "success",
+        text:
+          how === "shared"
+            ? "鑑定書を共有しました。"
+            : "鑑定書を保存しました。（ダウンロードに保存されています）",
+      });
+    } catch {
+      showFeedback({
+        kind: "error",
+        text: "鑑定書を作成できませんでした。時間をおいてお試しください。",
+      });
+    } finally {
+      setPdfSaving(false);
+    }
+  };
+
   const secondaryButton =
     "inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full border border-gold-soft bg-transparent px-5 text-sm font-bold text-gold transition-colors hover:bg-night-card";
 
@@ -123,9 +148,18 @@ export function ShareActions({ result }: Props) {
     <div>
       <button
         type="button"
+        onClick={handleSavePdf}
+        disabled={pdfSaving}
+        className={`${secondaryButton} w-full ${pdfSaving ? "opacity-60" : ""}`}
+      >
+        <FileDown aria-hidden="true" className="h-4 w-4" />
+        {pdfSaving ? "鑑定書を作成中…" : appConfig.buttons.savePdf}
+      </button>
+      <button
+        type="button"
         onClick={handleSaveImage}
         disabled={saving}
-        className={`${secondaryButton} w-full ${saving ? "opacity-60" : ""}`}
+        className={`${secondaryButton} mt-2 w-full ${saving ? "opacity-60" : ""}`}
       >
         <ImageDown aria-hidden="true" className="h-4 w-4" />
         {saving ? "画像を作成中…" : appConfig.buttons.saveImage}
