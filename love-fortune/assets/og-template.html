@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: linear-gradient(150deg, #faf7f2 0%, #f7ecef 45%, #f1ecf6 100%);
+    font-family: "Noto Sans CJK JP", "Noto Sans JP", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; color: #3c3143;
+  }
+  .frame {
+    position: absolute; inset: 28px;
+    border: 2px solid #d9c9a5; border-radius: 24px;
+  }
+  .inner { text-align: center; position: relative; z-index: 1; }
+  .eyebrow { font-size: 26px; letter-spacing: 14px; color: #ab8b4d; }
+  .moon {
+    width: 110px; height: 110px; margin: 20px auto 0; border-radius: 50%;
+    background: #f1ecf6; display: flex; align-items: center; justify-content: center;
+  }
+  h1 {
+    margin-top: 28px; font-size: 92px; font-weight: 700; letter-spacing: 14px;
+    font-family: "Noto Serif CJK JP", "Noto Serif JP", serif; color: #3c3143;
+  }
+  .tagline { margin-top: 30px; font-size: 34px; color: #6d6175; letter-spacing: 2px; }
+  .badge {
+    display: inline-block; margin-top: 28px; padding: 12px 44px;
+    background: #874e6c; color: #fff; border-radius: 999px;
+    font-size: 28px; font-weight: 700; letter-spacing: 4px;
+  }
+  .star { position: absolute; color: #ab8b4d; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+  <div class="frame"></div>
+  <span class="star" style="left:120px;top:110px">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="#d9c9a5"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>
+  </span>
+  <span class="star" style="right:150px;top:170px">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#d0a3bb"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>
+  </span>
+  <span class="star" style="left:200px;bottom:140px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#d0a3bb"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>
+  </span>
+  <span class="star" style="right:220px;bottom:110px">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="#d9c9a5"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>
+  </span>
+  <div class="inner">
+    <div class="eyebrow">LOVE FORTUNE</div>
+    <div class="moon">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#a26385" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </div>
+    <h1>恋のしるべ</h1>
+    <div class="tagline">あの人との恋に迷った夜、今のあなたに必要なメッセージを。</div>
+    <div class="badge">登録不要・スマホですぐ占える</div>
+  </div>
+</body>
+</html>
