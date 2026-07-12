@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E&%23128717;%3C/text%3E%3C/svg%3E">
+<title>POSTERIE — 楽天アフィリ投稿アトリエ</title>
+<style>
+:root{
+  --paper:#FBF6F4;
+  --paper-2:#FFFFFF;
+  --paper-3:#F4EAE7;
+  --ink:#241A22;
+  --ink-2:#6E5F6B;
+  --ink-3:#A2929E;
+  --line:#E8DCD9;
+  --accent:#C22B5A;
+  --accent-soft:#F7E3EA;
+  --accent-ink:#FFFFFF;
+  --ok:#2F8F63;
+  --ok-soft:#E2F1E9;
+  --warn:#B77416;
+  --warn-soft:#F8ECD9;
+  --bad:#C24040;
+  --bad-soft:#F8E4E2;
+  --shadow:0 1px 2px rgba(52,28,44,.05),0 10px 30px -12px rgba(52,28,44,.14);
+  --r:14px;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic","Noto Sans JP","Meiryo",sans-serif;
+  --mono:"SF Mono","Cascadia Code","Consolas","Menlo",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#17111C;
+    --paper-2:#221A28;
+    --paper-3:#2C2233;
+    --ink:#F2E9EE;
+    --ink-2:#B5A5B1;
+    --ink-3:#7E6E7B;
+    --line:#3A2E41;
+    --accent:#E85585;
+    --accent-soft:#3B2231;
+    --accent-ink:#1E0E17;
+    --ok:#5BBE8F;
+    --ok-soft:#1E3229;
+    --warn:#DFA34B;
+    --warn-soft:#3A2E1A;
+    --bad:#E27070;
+    --bad-soft:#3D2224;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="light"]{
+  --paper:#FBF6F4; --paper-2:#FFFFFF; --paper-3:#F4EAE7;
+  --ink:#241A22; --ink-2:#6E5F6B; --ink-3:#A2929E; --line:#E8DCD9;
+  --accent:#C22B5A; --accent-soft:#F7E3EA; --accent-ink:#FFFFFF;
+  --ok:#2F8F63; --ok-soft:#E2F1E9; --warn:#B77416; --warn-soft:#F8ECD9;
+  --bad:#C24040; --bad-soft:#F8E4E2;
+  --shadow:0 1px 2px rgba(52,28,44,.05),0 10px 30px -12px rgba(52,28,44,.14);
+}
+:root[data-theme="dark"]{
+  --paper:#17111C; --paper-2:#221A28; --paper-3:#2C2233;
+  --ink:#F2E9EE; --ink-2:#B5A5B1; --ink-3:#7E6E7B; --line:#3A2E41;
+  --accent:#E85585; --accent-soft:#3B2231; --accent-ink:#1E0E17;
+  --ok:#5BBE8F; --ok-soft:#1E3229; --warn:#DFA34B; --warn-soft:#3A2E1A;
+  --bad:#E27070; --bad-soft:#3D2224;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -12px rgba(0,0,0,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  background-image:radial-gradient(1100px 480px at 85% -10%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%);
+  color:var(--ink);
+  line-height:1.75;
+  min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:34px 0 26px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand svg{flex:none}
+.brand h1{font-family:var(--serif);font-weight:600;font-size:1.9rem;letter-spacing:.06em;line-height:1.2}
+.brand h1 em{font-style:normal;color:var(--accent)}
+.brand .tagline{font-size:.8rem;color:var(--ink-2);letter-spacing:.12em;margin-top:2px}
+.head-actions{display:flex;gap:8px}
+.ghost-btn{background:var(--paper-2);border:1px solid var(--line);border-radius:99px;padding:7px 15px;font-size:.8rem;color:var(--ink-2);transition:border-color .15s,color .15s}
+.ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:390px 1fr;gap:22px;align-items:start}
+@media (max-width:940px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px 0}
+.panel-h h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;letter-spacing:.05em}
+.eyebrow{font-size:.66rem;letter-spacing:.22em;color:var(--accent);font-weight:700;text-transform:uppercase;display:block;margin-bottom:2px}
+.panel-b{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+
+/* ---------- form ---------- */
+label.f{display:block}
+label.f .lt{font-size:.76rem;font-weight:700;color:var(--ink-2);letter-spacing:.06em;display:flex;justify-content:space-between;margin-bottom:5px}
+label.f .lt small{font-weight:400;color:var(--ink-3)}
+.tx,textarea.tx{
+  width:100%;border:1px solid var(--line);border-radius:10px;background:var(--paper);
+  padding:10px 12px;font-size:.92rem;line-height:1.6;transition:border-color .15s;
+}
+.tx:focus{border-color:var(--accent);outline:none}
+textarea.tx{resize:vertical;min-height:64px}
+.url-row{display:flex;gap:8px}
+.url-row .tx{flex:1;min-width:0}
+.fetch-note{font-size:.74rem;color:var(--ink-3);line-height:1.6}
+.fetch-note a{color:var(--accent)}
+.fetch-status{font-size:.78rem;border-radius:8px;padding:7px 10px;display:none;line-height:1.5}
+.fetch-status.on{display:block}
+.fetch-status.ok{background:var(--ok-soft);color:var(--ok)}
+.fetch-status.warn{background:var(--warn-soft);color:var(--warn)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+
+/* tone segmented */
+.tones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tone{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 10px;text-align:left;transition:border-color .15s,background .15s}
+.tone .tn{font-size:.84rem;font-weight:700;display:block}
+.tone .td{font-size:.7rem;color:var(--ink-3);display:block;line-height:1.4}
+.tone[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.tone[aria-pressed="true"] .tn{color:var(--accent)}
+
+.gen-btn{
+  width:100%;border:none;border-radius:12px;padding:14px;
+  background:var(--accent);color:var(--accent-ink);
+  font-size:1rem;font-weight:700;letter-spacing:.1em;
+  box-shadow:0 8px 20px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition:transform .12s,filter .15s;
+}
+.gen-btn:hover{filter:brightness(1.07)}
+.gen-btn:active{transform:scale(.98)}
+.gen-btn:disabled{opacity:.5;cursor:wait}
+
+details.adv{border-top:1px dashed var(--line);padding-top:12px}
+details.adv summary{font-size:.78rem;color:var(--ink-2);cursor:pointer;letter-spacing:.05em;list-style:none;display:flex;align-items:center;gap:6px}
+details.adv summary::before{content:"▸";color:var(--accent);transition:transform .15s;display:inline-block}
+details.adv[open] summary::before{transform:rotate(90deg)}
+details.adv .panel-b{padding:12px 0 0}
+
+/* ---------- results ---------- */
+.results{display:flex;flex-direction:column;gap:22px;min-width:0}
+.empty{
+  border:1.5px dashed var(--line);border-radius:var(--r);
+  padding:60px 24px;text-align:center;color:var(--ink-3);
+}
+.empty .big{font-family:var(--serif);font-size:1.2rem;color:var(--ink-2);margin-bottom:8px;letter-spacing:.06em}
+.empty p{font-size:.85rem;max-width:34em;margin:0 auto}
+
+.post-card .panel-h{padding:16px 20px 0}
+.pf{display:flex;align-items:center;gap:10px}
+.pf .pf-ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--paper-3);color:var(--ink)}
+.pf .pf-name{font-weight:700;font-size:.95rem;letter-spacing:.04em}
+.pf .pf-sub{font-size:.7rem;color:var(--ink-3);display:block;line-height:1.3}
+.card-tools{display:flex;gap:6px;flex-wrap:wrap}
+.tool-btn{
+  border:1px solid var(--line);background:var(--paper);border-radius:8px;
+  padding:6px 12px;font-size:.78rem;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;
+  transition:border-color .15s,color .15s,background .15s;
+}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tool-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.tool-btn.primary:hover{filter:brightness(1.07);color:var(--accent-ink)}
+.post-body{
+  margin:14px 20px 0;border:1px solid var(--line);border-radius:10px;background:var(--paper);
+  padding:14px 16px;font-size:.92rem;line-height:1.9;white-space:pre-wrap;word-break:break-word;
+  min-height:120px;
+}
+.post-foot{display:flex;align-items:center;gap:12px;padding:10px 20px 16px;flex-wrap:wrap}
+.meter{flex:1;min-width:140px;height:5px;border-radius:99px;background:var(--paper-3);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--ok);transition:width .25s,background .25s}
+.meter i.warn{background:var(--warn)}
+.meter i.over{background:var(--bad)}
+.count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.76rem;color:var(--ink-2);white-space:nowrap}
+.count b{color:var(--ink)}
+.count.over b{color:var(--bad)}
+
+/* ---------- CTA bank ---------- */
+.cta-list{display:flex;flex-direction:column;gap:8px;padding:14px 20px 20px}
+.cta-item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--paper)}
+.cta-item span{flex:1;font-size:.86rem;min-width:0}
+.cta-item .tool-btn{flex:none}
+
+/* ---------- NG check ---------- */
+.ng-sum{display:flex;gap:8px;flex-wrap:wrap;padding:14px 20px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:4px 12px;font-size:.76rem;font-weight:700}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.ng-list{display:flex;flex-direction:column;gap:10px;padding:14px 20px 20px}
+.ng-item{border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:10px 14px;background:var(--paper)}
+.ng-item.high{border-left-color:var(--bad)}
+.ng-item.low{border-left-color:var(--ink-3)}
+.ng-item .ng-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.ng-item .word{font-weight:700;font-size:.9rem}
+.ng-item .cat{font-size:.66rem;letter-spacing:.08em;border-radius:5px;padding:2px 7px;background:var(--paper-3);color:var(--ink-2);font-weight:700}
+.ng-item .where{font-size:.68rem;color:var(--ink-3)}
+.ng-item .why{font-size:.8rem;color:var(--ink-2)}
+.ng-item .fix{font-size:.8rem;margin-top:3px}
+.ng-item .fix b{color:var(--ok)}
+.ng-ok{padding:8px 20px 20px;font-size:.86rem;color:var(--ok);display:flex;align-items:center;gap:8px}
+.free-check{padding:0 20px 20px;display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);margin-top:4px;padding-top:14px}
+.free-check .row{display:flex;gap:8px;justify-content:flex-end}
+
+/* ---------- modal ---------- */
+dialog{
+  border:1px solid var(--line);border-radius:var(--r);background:var(--paper-2);color:var(--ink);
+  max-width:460px;width:calc(100vw - 40px);padding:0;box-shadow:var(--shadow);
+}
+dialog::backdrop{background:rgba(20,10,18,.5);backdrop-filter:blur(2px)}
+dialog .panel-h{padding-top:18px}
+dialog .panel-b{padding-bottom:22px}
+dialog .row{display:flex;justify-content:flex-end;gap:8px}
+
+/* ---------- toast ---------- */
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--paper);border-radius:99px;padding:9px 20px;
+  font-size:.84rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{margin-top:46px;border-top:1px solid var(--line);padding-top:18px;font-size:.74rem;color:var(--ink-3);line-height:1.9}
+footer b{color:var(--ink-2)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <svg width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="42" height="42" rx="12" fill="var(--accent)"/>
+      <path d="M15 19h16l-1.6 15a2.5 2.5 0 0 1-2.5 2.2H19.1a2.5 2.5 0 0 1-2.5-2.2L15 19Z" fill="var(--accent-ink)" opacity=".92"/>
+      <path d="M18.5 22v-5.5a4.5 4.5 0 0 1 9 0V22" stroke="var(--accent-ink)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <circle cx="34.5" cy="12.5" r="1.8" fill="#FFD8E4"/>
+      <path d="M11 9.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z" fill="#FFD8E4"/>
+    </svg>
+    <div>
+      <h1>POSTERIE<em>.</em></h1>
+      <div class="tagline">RAKUTEN AFFILIATE POST ATELIER — URLひとつで、投稿文が仕上がる。</div>
+    </div>
+  </div>
+  <div class="head-actions">
+    <button class="ghost-btn" id="settingsBtn" type="button">⚙ API設定</button>
+    <button class="ghost-btn" id="themeBtn" type="button" aria-label="テーマ切り替え">◐ テーマ</button>
+  </div>
+</header>
+
+<div class="cols">
+
+  <!-- ============ INPUT ============ -->
+  <section class="panel" aria-label="商品情報の入力">
+    <div class="panel-h">
+      <h2><span class="eyebrow">Step 1</span>商品を教えてください</h2>
+    </div>
+    <div class="panel-b">
+
+      <label class="f">
+        <span class="lt">楽天の商品URL <small>アフィリエイトリンクもOK</small></span>
+        <div class="url-row">
+          <input class="tx" id="url" type="url" inputmode="url" placeholder="https://item.rakuten.co.jp/... / hb.afl.rakuten.co.jp/...">
+          <button class="tool-btn" id="fetchBtn" type="button" title="楽天APIから商品情報を取得">取得</button>
+        </div>
+      </label>
+      <div class="fetch-status" id="fetchStatus" role="status"></div>
+      <p class="fetch-note" id="fetchNote">💡 「⚙ API設定」で楽天アプリIDを登録すると、URLから商品名・価格・レビューを自動取得できます。未設定でも下の欄に手入力すればOK。</p>
+
+      <label class="f">
+        <span class="lt">商品名 <small>必須</small></span>
+        <input class="tx" id="pname" type="text" placeholder="例: 山善 電気ケトル 0.8L">
+      </label>
+
+      <div class="grid2">
+        <label class="f">
+          <span class="lt">価格 <small>任意</small></span>
+          <input class="tx" id="pprice" type="text" inputmode="numeric" placeholder="例: 3,480">
+        </label>
+        <label class="f">
+          <span class="lt">ジャンル</span>
+          <select class="tx" id="pgenre">
+            <option value="lifestyle">インテリア・日用品</option>
+            <option value="cosme">コスメ・美容</option>
+            <option value="fashion">ファッション</option>
+            <option value="food">グルメ・食品</option>
+            <option value="gadget">家電・ガジェット</option>
+            <option value="baby">ベビー・キッズ</option>
+            <option value="health">健康・フィットネス</option>
+            <option value="other">その他</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="f">
+        <span class="lt">推しポイント <small>読点・改行区切りで3つまで</small></span>
+        <textarea class="tx" id="ppoints" rows="2" placeholder="例: 沸くのが早い、注ぎ口が細くてドリップ向き、見た目がかわいい"></textarea>
+      </label>
+
+      <label class="f">
+        <span class="lt">こんな人に届けたい <small>任意</small></span>
+        <input class="tx" id="ptarget" type="text" placeholder="例: 朝バタバタしがちな一人暮らしの人">
+      </label>
+
+      <div>
+        <span class="lt" style="font-size:.76rem;font-weight:700;color:var(--ink-2);letter-spacing:.06em;display:block;margin-bottom:6px">トーン</span>
+        <div class="tones" role="group" aria-label="投稿のトーン">
+          <button class="tone" type="button" data-tone="casual" aria-pressed="true"><span class="tn">🫶 カジュアル</span><span class="td">友達に話すみたいに</span></button>
+          <button class="tone" type="button" data-tone="polite" aria-pressed="false"><span class="tn">🕊 上品ていねい</span><span class="td">暮らし系・しっとり</span></button>
+          <button class="tone" type="button" data-tone="fever" aria-pressed="false"><span class="tn">🔥 ガチレビュー</span><span class="td">熱量高め・結論から</span></button>
+          <button class="tone" type="button" data-tone="minimal" aria-pressed="false"><span class="tn">🌙 ミニマル</span><span class="td">短く、余白で語る</span></button>
+        </div>
+      </div>
+
+      <button class="gen-btn" id="genBtn" type="button">投稿文をつくる</button>
+
+      <details class="adv">
+        <summary>PR表記・そのほかの設定</summary>
+        <div class="panel-b">
+          <label class="f">
+            <span class="lt">PR表記</span>
+            <select class="tx" id="prstyle">
+              <option value="tag">#PR をハッシュタグで入れる</option>
+              <option value="head">冒頭に【PR】を入れる</option>
+              <option value="ad">#ad を入れる</option>
+            </select>
+          </label>
+          <p class="fetch-note">2023年10月施行のステマ規制により、アフィリエイト投稿にはPR表記が必要です。POSTERIEは全プラットフォームの投稿に自動で入れます。</p>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <div class="results" id="results">
+
+    <div class="empty" id="emptyState">
+      <div class="big">まだ何も仕上がっていません</div>
+      <p>左に楽天の商品URLと商品名を入れて「投稿文をつくる」を押すと、X・Threads・Instagram の3投稿+CTA+NG表現チェックが一度に仕上がります。</p>
+    </div>
+
+    <section class="panel post-card" id="cardX" hidden aria-label="X用の投稿">
+      <div class="panel-h">
+        <div class="pf">
+          <span class="pf-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-6.4L6.4 22H3.3l7.3-8.3L1.6 2H8l4.4 5.9L18.9 2Zm-1.1 18.1h1.7L7.1 3.8H5.3l12.5 16.3Z"/></svg></span>
+          <div><span class="pf-name">X (Twitter)</span><span class="pf-sub">280ユニット/全角2カウント・URLは23換算</span></div>
+        </div>
+        <div class="card-tools">
+          <button class="tool-btn" data-regen="x" type="button">🎲 別パターン</button>
+          <button class="tool-btn primary" data-copy="x" type="button">コピー</button>
+        </div>
+      </div>
+      <div class="post-body" id="bodyX"></div>
+      <div class="post-foot">
+        <div class="meter"><i id="meterX"></i></div>
+        <span class="count" id="countX"></span>
+      </div>
+    </section>
+
+    <section class="panel post-card" id="cardTh" hidden aria-label="Threads用の投稿">
+      <div class="panel-h">
+        <div class="pf">
+          <span class="pf-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12.6 11.2c2.9.2 4.9 1.5 4.9 3.6 0 2.4-2 4.2-5.3 4.2-3.9 0-6.7-2.9-6.7-7S8.2 5 12.1 5c2.8 0 4.9 1.4 5.9 3.6"/><path d="M9.9 14.7c0-1.3 1.1-2.2 2.8-2.2 1 0 1.9.2 2.6.5 0 2.4-1.1 3.9-2.9 3.9-1.5 0-2.5-.9-2.5-2.2Z"/></svg></span>
+          <div><span class="pf-name">Threads</span><span class="pf-sub">500字・会話系が伸びやすい</span></div>
+        </div>
+        <div class="card-tools">
+          <button class="tool-btn" data-regen="th" type="button">🎲 別パターン</button>
+          <button class="tool-btn primary" data-copy="th" type="button">コピー</button>
+        </div>
+      </div>
+      <div class="post-body" id="bodyTh"></div>
+      <div class="post-foot">
+        <div class="meter"><i id="meterTh"></i></div>
+        <span class="count" id="countTh"></span>
+      </div>
+    </section>
+
+    <section class="panel post-card" id="cardIg" hidden aria-label="Instagram用のキャプション">
+      <div class="panel-h">
+        <div class="pf">
+          <span class="pf-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+          <div><span class="pf-name">Instagram</span><span class="pf-sub">キャプション2,200字・リンクはプロフ/ストーリーズへ</span></div>
+        </div>
+        <div class="card-tools">
+          <button class="tool-btn" data-regen="ig" type="button">🎲 別パターン</button>
+          <button class="tool-btn primary" data-copy="ig" type="button">コピー</button>
+        </div>
+      </div>
+      <div class="post-body" id="bodyIg"></div>
+      <div class="post-foot">
+        <div class="meter"><i id="meterIg"></i></div>
+        <span class="count" id="countIg"></span>
+      </div>
+    </section>
+
+    <section class="panel" id="cardCta" hidden aria-label="CTAフレーズ集">
+      <div class="panel-h">
+        <h2><span class="eyebrow">CTA Bank</span>差し替え用CTAフレーズ</h2>
+      </div>
+      <div class="cta-list" id="ctaList"></div>
+    </section>
+
+    <section class="panel" id="cardNg" hidden aria-label="NG表現チェック">
+      <div class="panel-h">
+        <h2><span class="eyebrow">Compliance</span>NG表現チェック</h2>
+      </div>
+      <div class="ng-sum" id="ngSum"></div>
+      <div class="ng-list" id="ngList"></div>
+      <div class="free-check">
+        <label class="f">
+          <span class="lt">自分で書いた文章もチェックできます</span>
+          <textarea class="tx" id="freeText" rows="3" placeholder="投稿予定の文章を貼り付けてください"></textarea>
+        </label>
+        <div class="row"><button class="tool-btn" id="freeCheckBtn" type="button">チェックする</button></div>
+        <div class="ng-list" id="freeNgList" style="padding:0"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<footer>
+  <b>ご利用にあたって:</b> NG表現チェックは薬機法・景品表示法・ステマ規制(景表法5条3号)の代表的な注意表現を機械的に検出する簡易チェックです。最終的な適法性の判断はご自身でご確認ください。価格・在庫は変動するため、投稿には「執筆時点」等の断りを入れることをおすすめします。<br>
+  POSTERIE — RAKUTEN AFFILIATE POST ATELIER
+</footer>
+
+</div>
+
+<dialog id="settingsDlg">
+  <div class="panel-h"><h2><span class="eyebrow">Settings</span>楽天API設定</h2></div>
+  <div class="panel-b">
+    <p class="fetch-note">楽天ウェブサービス(<span style="word-break:break-all">webservice.rakuten.co.jp</span>)で無料発行できる<b>アプリID</b>を登録すると、URLから商品情報を自動取得できます。IDはこの端末(localStorage)にのみ保存されます。</p>
+    <label class="f">
+      <span class="lt">アプリID / applicationId</span>
+      <input class="tx" id="appId" type="text" autocomplete="off" placeholder="10xxxxxxxxxxxxxxxxx">
+    </label>
+    <label class="f">
+      <span class="lt">アフィリエイトID <small>任意</small></span>
+      <input class="tx" id="affId" type="text" autocomplete="off" placeholder="1a2b3c4d.5e6f7g8h...">
+    </label>
+    <div class="row">
+      <button class="tool-btn" id="settingsCancel" type="button">閉じる</button>
+      <button class="tool-btn primary" id="settingsSave" type="button">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ================= theme ================= */
+const root = document.documentElement;
+const savedTheme = localStorage.getItem("posterie_theme");
+if (savedTheme) root.dataset.theme = savedTheme;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = root.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  root.dataset.theme = next;
+  localStorage.setItem("posterie_theme", next);
+});
+
+/* ================= helpers ================= */
+const $ = (id) => document.getElementById(id);
+const toastEl = $("toast");
+let toastTimer;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("on"), 1800);
+}
+function pick(arr, seed){ return arr[seed % arr.length]; }
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy"); ta.remove();
+  }
+  toast("コピーしました ✓");
+}
+
+/* X weighted count: CJK/fullwidth = 2 units, URL = 23, limit 280 */
+function xWeightedLen(text){
+  let total = 0;
+  const parts = text.split(/(https?:\/\/\S+)/);
+  for (const part of parts){
+    if (/^https?:\/\//.test(part)) { total += 23; continue; }
+    for (const ch of part){
+      const cp = ch.codePointAt(0);
+      const wide = (cp >= 0x1100 && cp <= 0x11FF) || (cp >= 0x2E80 && cp <= 0xA4CF) ||
+                   (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) ||
+                   (cp >= 0xFE30 && cp <= 0xFE4F) || (cp >= 0xFF00 && cp <= 0xFF60) ||
+                   (cp >= 0xFFE0 && cp <= 0xFFE6) || cp >= 0x20000;
+      total += wide ? 2 : 1;
+    }
+  }
+  return total;
+}
+function plainLen(text){ return [...text].length; }
+
+/* ================= rakuten url parsing ================= */
+function extractItemCode(raw){
+  let url;
+  try { url = new URL(raw.trim()); } catch { return null; }
+  // affiliate wrapper → unwrap pc / m param
+  if (/hb\.afl\.rakuten\.co\.jp$/.test(url.hostname)){
+    const inner = url.searchParams.get("pc") || url.searchParams.get("m");
+    if (inner) return extractItemCode(decodeURIComponent(inner));
+    return null;
+  }
+  if (/^item\.rakuten\.co\.jp$/.test(url.hostname)){
+    const seg = url.pathname.split("/").filter(Boolean);
+    if (seg.length >= 2) return seg[0] + ":" + seg[1];
+  }
+  return null; // a.r10.to 等の短縮URLは展開不可 → 手入力へ
+}
+
+/* ================= rakuten API (JSONP) ================= */
+function jsonp(url){
+  return new Promise((resolve, reject) => {
+    const cb = "__posterie_cb" + Date.now();
+    const s = document.createElement("script");
+    const timer = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 8000);
+    function cleanup(){ clearTimeout(timer); delete window[cb]; s.remove(); }
+    window[cb] = (data) => { cleanup(); resolve(data); };
+    s.onerror = () => { cleanup(); reject(new Error("network")); };
+    s.src = url + "&callback=" + cb;
+    document.head.appendChild(s);
+  });
+}
+const fetchStatus = $("fetchStatus");
+function setFetchStatus(kind, msg){
+  fetchStatus.className = "fetch-status on " + kind;
+  fetchStatus.textContent = msg;
+}
+let fetchedMeta = null; // {review, reviewCount, shop}
+async function fetchProduct(){
+  const raw = $("url").value.trim();
+  if (!raw) { toast("先にURLを入れてください"); return; }
+  const appId = localStorage.getItem("posterie_appid") || "";
+  if (!appId){ setFetchStatus("warn", "楽天アプリIDが未設定です。「⚙ API設定」から登録するか、商品名を手入力してください。"); return; }
+  const itemCode = extractItemCode(raw);
+  if (!itemCode){ setFetchStatus("warn", "このURLからは商品コードを読み取れませんでした(短縮URLは非対応)。商品ページのURL(item.rakuten.co.jp/…)を貼るか、手入力してください。"); return; }
+  const btn = $("fetchBtn");
+  btn.disabled = true; btn.textContent = "…";
+  setFetchStatus("warn", "楽天APIに問い合わせ中…");
+  try {
+    const api = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&formatVersion=2"
+      + "&applicationId=" + encodeURIComponent(appId)
+      + "&itemCode=" + encodeURIComponent(itemCode);
+    const data = await jsonp(api);
+    const item = data && data.Items && data.Items[0];
+    if (!item) throw new Error("notfound");
+    $("pname").value = shortenName(item.itemName || "");
+    if (item.itemPrice) $("pprice").value = Number(item.itemPrice).toLocaleString("ja-JP");
+    fetchedMeta = {
+      review: item.reviewAverage > 0 ? item.reviewAverage : null,
+      reviewCount: item.reviewCount || 0,
+      shop: item.shopName || ""
+    };
+    if (item.affiliateUrl) $("url").value = item.affiliateUrl;
+    setFetchStatus("ok", "✓ 取得しました: " + (item.itemName || "").slice(0, 40) + "…"
+      + (fetchedMeta.review ? `(レビュー★${fetchedMeta.review}・${fetchedMeta.reviewCount}件)` : ""));
+  } catch (e) {
+    setFetchStatus("warn", "自動取得できませんでした(" + e.message + ")。ネットワーク制限のある環境では動きません。商品名を手入力してください。");
+  } finally {
+    btn.disabled = false; btn.textContent = "取得";
+  }
+}
+function shortenName(name){
+  let n = name.replace(/【[^】]*】/g, " ").replace(/[\[\(（][^)\]）]*[\)\]）]/g, " ")
+              .replace(/\s+/g, " ").trim();
+  if (plainLen(n) > 26) n = [...n].slice(0, 26).join("").replace(/[ 、,・/]+$/, "") ;
+  return n || name.slice(0, 26);
+}
+$("fetchBtn").addEventListener("click", fetchProduct);
+
+/* ================= settings dialog ================= */
+const dlg = $("settingsDlg");
+$("settingsBtn").addEventListener("click", () => {
+  $("appId").value = localStorage.getItem("posterie_appid") || "";
+  $("affId").value = localStorage.getItem("posterie_affid") || "";
+  dlg.showModal();
+});
+$("settingsCancel").addEventListener("click", () => dlg.close());
+$("settingsSave").addEventListener("click", () => {
+  localStorage.setItem("posterie_appid", $("appId").value.trim());
+  localStorage.setItem("posterie_affid", $("affId").value.trim());
+  dlg.close(); toast("保存しました ✓");
+});
+
+/* ================= tone selector ================= */
+let tone = "casual";
+document.querySelectorAll(".tone").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tone").forEach(b => b.setAttribute("aria-pressed", "false"));
+    btn.setAttribute("aria-pressed", "true");
+    tone = btn.dataset.tone;
+    if (lastProduct) generateAll();
+  });
+});
+
+/* ================= copy bank ================= */
+const GENRES = {
+  cosme:    { emoji:["🌸","🫧","💄","🤍"], tags:["#コスメ好きさんと繋がりたい","#スキンケア好き","#美容垢","#楽天コスメ"] },
+  fashion:  { emoji:["🧥","👜","🤍","✨"], tags:["#今日のコーデ","#プチプラファッション","#楽天ファッション","#大人カジュアル"] },
+  food:     { emoji:["🍽","🫶","😋","🛒"], tags:["#お取り寄せグルメ","#おうちごはん","#楽天グルメ","#ご褒美ごはん"] },
+  gadget:   { emoji:["⚡","🖤","🔌","📦"], tags:["#ガジェット好きと繋がりたい","#QOL爆上げ","#買ってよかったもの","#デスク環境"] },
+  lifestyle:{ emoji:["🏠","🕯","🤍","🧺"], tags:["#暮らしを整える","#楽天インテリア","#丁寧な暮らし","#購入品紹介"] },
+  baby:     { emoji:["🧸","🍼","🤍","🌼"], tags:["#子育てグッズ","#ベビー用品","#楽天ベビー","#育児便利グッズ"] },
+  health:   { emoji:["🏃","💪","🌿","✨"], tags:["#セルフケア","#健康習慣","#宅トレ","#ボディケア"] },
+  other:    { emoji:["✨","🛒","🤍","📦"], tags:["#買ってよかった","#楽天購入品","#お気に入り","#愛用品"] }
+};
+const COMMON_TAGS = ["#楽天市場","#楽天room","#お買い物マラソン"];
+
+const HOOKS = {
+  casual: [
+    (p) => `${p.name}、届いてから毎日使ってる…`,
+    (p) => `ずっと迷ってた${p.name}、やっと買いました!`,
+    (p) => `これはもっと早く知りたかった、${p.name}。`,
+    (p) => `最近の当たり買い物、${p.name}です🤍`
+  ],
+  polite: [
+    (p) => `暮らしがすこし整う、${p.name}のご紹介です。`,
+    (p) => `最近のお気に入り、${p.name}。`,
+    (p) => `毎日にそっと寄り添ってくれる、${p.name}を選びました。`,
+    (p) => `「良いものを長く」派の方へ。${p.name}です。`
+  ],
+  fever: [
+    (p) => `【結論:買ってよかった】${p.name}を本音レビュー。`,
+    (p) => `${p.name}、想像の上をいきました。理由は3つ。`,
+    (p) => `迷ってる人に届いてほしい。${p.name}のリアルな感想です。`,
+    (p) => `${p.name}を1週間使い倒した感想↓`
+  ],
+  minimal: [
+    (p) => `${p.name}。`,
+    (p) => `今日の一品:${p.name}`,
+    (p) => `良かったので置いておきます。${p.name}。`,
+    (p) => `${p.name}、静かにおすすめ。`
+  ]
+};
+const CLOSERS = {
+  casual:  ["気になった人はのぞいてみて👇","リンク貼っておくね👇","詳しくはここから見られます👇","口コミもぜひ見てみて👇"],
+  polite:  ["詳細はこちらからご覧いただけます。","気になる方は、下のリンクからどうぞ。","口コミも参考になりますので、ぜひ。","リンクを置いておきますね。"],
+  fever:   ["レビュー・詳細はここからチェック👇","迷ってるなら一度見てみて👇","詳細スペックはリンク先で確認できます👇","気になったら今のうちにチェック👇"],
+  minimal: ["詳細はこちら。","つづきはリンク先で。","気になる方はどうぞ。","→ 詳細"]
+};
+const CTA_BANK = [
+  { t: "気になった方はプロフィールのリンクからどうぞ🔗", for: "Instagram" },
+  { t: "詳細・みんなの口コミはこちらから見られます👇", for: "X / Threads" },
+  { t: "価格は変わることがあるので、最新はリンク先でチェックしてみてください✔", for: "共通" },
+  { t: "同じことで悩んでる人の参考になったらうれしいです🫶", for: "共感型" },
+  { t: "質問があればリプ・コメントで聞いてください、使用感お答えします!", for: "交流型" },
+  { t: "保存しておくと、お買い物マラソンのときに便利です📌", for: "Instagram" }
+];
+
+/* ================= post builders ================= */
+function prMark(){
+  const v = $("prstyle").value;
+  if (v === "head") return { head: "【PR】", tag: "" };
+  if (v === "ad")   return { head: "", tag: "#ad" };
+  return { head: "", tag: "#PR" };
+}
+function pointsLines(p, mark){
+  return p.points.map(pt => `${mark} ${pt}`).join("\n");
+}
+function priceLine(p, tone_){
+  if (!p.price) return "";
+  return tone_ === "polite" ? `お値段は ${p.price}円 でした(執筆時点)。` : `${p.price}円(執筆時点)`;
+}
+
+function buildX(p, seed){
+  const pr = prMark();
+  const hook = pick(HOOKS[tone], seed)(p);
+  const closer = pick(CLOSERS[tone], seed);
+  const g = GENRES[p.genre];
+  const tags = [pr.tag, COMMON_TAGS[0], g.tags[seed % g.tags.length]].filter(Boolean).join(" ");
+  const mark = tone === "minimal" ? "・" : "✔";
+  let body = [
+    pr.head + hook,
+    "",
+    pointsLines(p, mark),
+    p.price ? priceLine(p, tone) : null,
+    "",
+    closer,
+    p.url,
+    tags
+  ].filter(v => v !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+
+  // trim points to fit 280 weighted units
+  let guard = 0;
+  while (xWeightedLen(body) > 280 && guard < 4){
+    guard++;
+    const lines = body.split("\n");
+    const idx = lines.findLastIndex(l => l.startsWith(mark + " "));
+    if (idx === -1) break;
+    lines.splice(idx, 1);
+    body = lines.join("\n").replace(/\n{3,}/g, "\n\n");
+  }
+  return body;
+}
+
+function buildTh(p, seed){
+  const pr = prMark();
+  const hook = pick(HOOKS[tone], (seed + 1))(p);
+  const closer = pick(CLOSERS[tone], (seed + 1));
+  const mark = tone === "minimal" ? "・" : "✔";
+  const talk = {
+    casual:  [`正直、期待してなかったんだけど…使ってみたら手放せなくなったやつです。`,`${p.target ? p.target + "には特に刺さると思う。" : "同じの探してた人、多いはず。"}`],
+    polite:  [`使うたびに「これにしてよかったな」と思える一品です。`,`${p.target ? p.target + "の方に、特におすすめしたいです。" : "毎日使うものこそ、気に入ったものを。"}`],
+    fever:   [`何がすごいって、この3点。`,`${p.target ? "特に" + p.target + "は体感が変わるはず。" : "この価格帯では頭ひとつ抜けてる。"}`],
+    minimal: [`理由はシンプル。`,`${p.target ? p.target + "向け。" : "それだけで十分。"}`]
+  }[tone];
+  return [
+    pr.head + hook,
+    "",
+    talk[0],
+    "",
+    pointsLines(p, mark),
+    p.price ? "\n" + priceLine(p, tone) : null,
+    "",
+    talk[1],
+    "",
+    closer,
+    p.url,
+    pr.tag
+  ].filter(v => v !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+function buildIg(p, seed){
+  const pr = prMark();
+  const g = GENRES[p.genre];
+  const em = g.emoji;
+  const hook = pick(HOOKS[tone], (seed + 2))(p);
+  const revLine = fetchedMeta && fetchedMeta.review ? `レビュー★${fetchedMeta.review}(${fetchedMeta.reviewCount}件)も納得でした。` : null;
+  const tagSet = [...new Set([pr.tag, ...g.tags, ...COMMON_TAGS, "#購入品紹介"])].filter(Boolean);
+  return [
+    pr.head + hook + " " + em[0],
+    "",
+    (tone === "polite"
+      ? "使い始めてから、ちいさなストレスがひとつ減りました。"
+      : tone === "fever"
+      ? "先に言います。これは買いです。"
+      : tone === "minimal"
+      ? "気に入っている点だけ、置いておきます。"
+      : "何がよかったか、ざっくりまとめると…"),
+    "",
+    p.points.map(pt => `${em[1]} ${pt}`).join("\n"),
+    "",
+    [priceLine(p, tone) || null, revLine].filter(Boolean).join("\n") || null,
+    p.target ? `${p.target}に、いちばん届いてほしい ${em[2]}` : null,
+    "",
+    `🔗 商品リンクはプロフィール/ストーリーズから飛べます`,
+    `📌 保存しておくと、セールのとき見返せて便利です`,
+    "",
+    tagSet.join(" ")
+  ].filter(v => v !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+/* ================= NG dictionary ================= */
+const NG_DICT = [
+  { re: /完治|治る|治った|治り(?:ます)?/, w: "治る・完治", cat: "薬機法", lv: "high",
+    why: "医薬品的な効能効果の断定は、健康食品・化粧品・雑貨では薬機法違反のおそれがあります。",
+    fix: "「すっきりした気がする」「私には合っていた」など個人の感想+断定回避に。" },
+  { re: /痩せる|痩せた|脂肪が(?:燃える|落ちる)|ダイエット効果/, w: "痩せる・ダイエット効果", cat: "薬機法", lv: "high",
+    why: "痩身効果の標ぼうは薬機法・健康増進法で規制されるおそれがあります。",
+    fix: "「運動のおともに」「置き換えに使っています」など用途・習慣の紹介に。" },
+  { re: /シミが消える|シワが(?:消える|なくなる)|美白効果|若返(?:る|り)/, w: "シミが消える・若返る 等", cat: "薬機法", lv: "high",
+    why: "化粧品で認められる効能の範囲(56項目)を超える表現は薬機法違反のおそれがあります。",
+    fix: "「メイクのりが良くなった気がする」「乾燥による小ジワを目立たなくする(効能評価試験済の場合)」等に。" },
+  { re: /副作用(?:が|は)?(?:ない|ありません)|安全性は保証/, w: "副作用がない", cat: "薬機法", lv: "high",
+    why: "安全性の保証表現は認められていません。",
+    fix: "「私は問題なく使えています(個人の感想)」に。" },
+  { re: /飲むだけで|塗るだけで|貼るだけで.{0,6}(?:効|痩|治)/, w: "〜だけで効く", cat: "薬機法", lv: "mid",
+    why: "簡便性+効果の組み合わせは効能の暗示とみなされやすい表現です。",
+    fix: "「続けやすいのが気に入っています」など使い勝手の話に切り分ける。" },
+  { re: /日本一|世界一|世界初|日本初|業界初|唯一無二の効果/, w: "日本一・世界初 等", cat: "景表法", lv: "high",
+    why: "No.1・初表示は客観的根拠と出典・時点の明記がないと優良誤認になります。",
+    fix: "根拠がある場合のみ「◯◯調べ(2026年◯月時点)」を併記。なければ削除。" },
+  { re: /No\.?\s?1|ナンバーワン|ランキング1位/i, w: "No.1・ランキング1位", cat: "景表法", lv: "mid",
+    why: "1位表示は調査元・カテゴリ・時点の明記が必要です(楽天ランキングは取得日を書く)。",
+    fix: "「楽天◯◯ランキング1位(2026/7/12時点)」のように出典+日付を併記。" },
+  { re: /最安値|どこよりも安い|業界最安/, w: "最安値", cat: "景表法", lv: "high",
+    why: "価格の最上級表現は有利誤認のおそれ。他店価格は常に変動します。",
+    fix: "「セール中でした(執筆時点)」「私が見た中ではお手頃」に。" },
+  { re: /絶対(?:に)?(?:おすすめ|買うべき|損しない|効く)|100[%％]|間違いな(?:い|く効)/, w: "絶対・100%", cat: "断定・保証", lv: "mid",
+    why: "効果や満足の保証表現はトラブル・優良誤認の元になります。",
+    fix: "「私はかなり気に入っています」「イチオシです」に。" },
+  { re: /必ず(?:痩せ|効|儲|稼)/, w: "必ず〜できる", cat: "断定・保証", lv: "high",
+    why: "成果の保証は景表法・特商法上のリスクが高い表現です。",
+    fix: "体験ベース(「私の場合は〜でした」)に言い換える。" },
+  { re: /誰でも(?:簡単に)?(?:稼げる|儲かる|痩せる)/, w: "誰でも稼げる・痩せる", cat: "断定・保証", lv: "high",
+    why: "再現性の保証は誇大広告と判断されやすい典型表現です。",
+    fix: "「初心者の私でも使いこなせた」など自分の事実に限定する。" },
+  { re: /今だけ|本日限り|残り\s?わずか|在庫\s?わずか/, w: "今だけ・残りわずか", cat: "景表法", lv: "low",
+    why: "事実でない限定・希少表示は有利誤認(あおり)になります。事実なら根拠を持って。",
+    fix: "実際のセール期間を明記「◯日までセール(公式ページ参照)」に。" },
+  { re: /医(?:師|者)(?:も|が)?(?:推奨|絶賛|おすすめ)|病院で処方/, w: "医師が推奨", cat: "薬機法", lv: "high",
+    why: "医療関係者の推薦表現は化粧品・健康食品等の広告で原則禁止です。",
+    fix: "削除するか、公式が公開している客観的情報のみ引用。" },
+  { re: /永久に|半永久/, w: "永久", cat: "断定・保証", lv: "mid",
+    why: "効果の持続を保証する表現は根拠の立証が困難です。",
+    fix: "「長く使えそう」「耐久性に期待」に。" },
+  { re: /激やせ|爆売れ確定|買わなきゃ損/, w: "激やせ・買わなきゃ損", cat: "断定・保証", lv: "mid",
+    why: "煽り系の断定表現は誇大広告と受け取られやすく、アカウントの信頼も下げます。",
+    fix: "具体的な使用感・数字(自分の実測)で語る。" }
+];
+function scanNG(text, sourceLabel){
+  const found = [];
+  for (const d of NG_DICT){
+    const m = text.match(d.re);
+    if (m) found.push({ ...d, hit: m[0], src: sourceLabel });
+  }
+  return found;
+}
+function prPresent(text){
+  return /#PR\b|#ad\b|【PR】|＃PR|プロモーション/i.test(text);
+}
+
+/* ================= render ================= */
+let lastProduct = null;
+const seeds = { x: 0, th: 0, ig: 0 };
+const posts = { x: "", th: "", ig: "" };
+
+function readProduct(){
+  const name = $("pname").value.trim();
+  if (!name) { toast("商品名を入れてください"); $("pname").focus(); return null; }
+  const pointsRaw = $("ppoints").value.trim();
+  let points = pointsRaw ? pointsRaw.split(/[、,\n]/).map(s => s.trim()).filter(Boolean).slice(0, 3) : [];
+  if (!points.length) points = ["使い勝手がいい", "デザインが好み", "価格とのバランスがいい"];
+  return {
+    name,
+    price: $("pprice").value.trim().replace(/円$/, ""),
+    points,
+    target: $("ptarget").value.trim(),
+    genre: $("pgenre").value,
+    url: $("url").value.trim() || "(商品URLをここに)"
+  };
+}
+
+const LIMITS = { x: 280, th: 500, ig: 2200 };
+function renderPost(key){
+  const p = lastProduct;
+  const text = key === "x" ? buildX(p, seeds.x) : key === "th" ? buildTh(p, seeds.th) : buildIg(p, seeds.ig);
+  posts[key] = text;
+  const id = key === "x" ? "X" : key === "th" ? "Th" : "Ig";
+  $("body" + id).textContent = text;
+  const len = key === "x" ? xWeightedLen(text) : plainLen(text);
+  const limit = LIMITS[key];
+  const pct = Math.min(100, len / limit * 100);
+  const meter = $("meter" + id);
+  meter.style.width = pct + "%";
+  meter.className = len > limit ? "over" : (pct > 85 ? "warn" : "");
+  const c = $("count" + id);
+  c.innerHTML = `<b>${len.toLocaleString()}</b> / ${limit.toLocaleString()}` + (key === "x" ? " units" : " 字");
+  c.classList.toggle("over", len > limit);
+}
+
+function renderCta(){
+  const list = $("ctaList");
+  list.innerHTML = "";
+  for (const c of CTA_BANK){
+    const div = document.createElement("div");
+    div.className = "cta-item";
+    const span = document.createElement("span");
+    span.textContent = c.t;
+    const tag = document.createElement("span");
+    tag.className = "cat"; tag.style.cssText = "flex:none;font-size:.64rem;letter-spacing:.06em;border-radius:5px;padding:2px 7px;background:var(--paper-3);color:var(--ink-3);font-weight:700";
+    tag.textContent = c.for;
+    const btn = document.createElement("button");
+    btn.className = "tool-btn"; btn.type = "button"; btn.textContent = "コピー";
+    btn.addEventListener("click", () => copyText(c.t));
+    div.append(span, tag, btn);
+    list.appendChild(div);
+  }
+}
+
+function renderNgItems(container, issues){
+  container.innerHTML = "";
+  for (const i of issues){
+    const div = document.createElement("div");
+    div.className = "ng-item " + i.lv;
+    const top = document.createElement("div"); top.className = "ng-top";
+    const word = document.createElement("span"); word.className = "word"; word.textContent = `「${i.hit}」`;
+    const cat = document.createElement("span"); cat.className = "cat"; cat.textContent = i.cat;
+    top.append(word, cat);
+    if (i.src){ const wh = document.createElement("span"); wh.className = "where"; wh.textContent = i.src; top.appendChild(wh); }
+    const why = document.createElement("div"); why.className = "why"; why.textContent = i.why;
+    const fix = document.createElement("div"); fix.className = "fix"; fix.innerHTML = "<b>言い換え →</b> ";
+    fix.appendChild(document.createTextNode(i.fix));
+    div.append(top, why, fix);
+    container.appendChild(div);
+  }
+}
+
+function renderNg(){
+  const all = [
+    ...scanNG(posts.x, "X"),
+    ...scanNG(posts.th, "Threads"),
+    ...scanNG(posts.ig, "Instagram")
+  ];
+  const sum = $("ngSum");
+  sum.innerHTML = "";
+  const prOk = ["x","th","ig"].every(k => prPresent(posts[k]));
+  const mk = (cls, txt) => { const s = document.createElement("span"); s.className = "pill " + cls; s.textContent = txt; sum.appendChild(s); };
+  mk(prOk ? "ok" : "bad", prOk ? "✓ PR表記あり(ステマ規制OK)" : "✗ PR表記が見つかりません");
+  const high = all.filter(i => i.lv === "high").length;
+  const rest = all.length - high;
+  if (!all.length) mk("ok", "✓ NG表現は検出されませんでした");
+  if (high) mk("bad", `要修正 ${high}件`);
+  if (rest) mk("warn", `注意 ${rest}件`);
+  const list = $("ngList");
+  renderNgItems(list, all);
+  if (!all.length){
+    const ok = document.createElement("div");
+    ok.className = "ng-ok";
+    ok.textContent = "🌿 生成された3投稿とも、辞書に登録された薬機法・景表法・断定系のNG表現は含まれていません。";
+    list.appendChild(ok);
+  }
+}
+
+function generateAll(){
+  lastProduct = readProduct();
+  if (!lastProduct) return;
+  $("emptyState").hidden = true;
+  ["cardX","cardTh","cardIg","cardCta","cardNg"].forEach(id => $(id).hidden = false);
+  renderPost("x"); renderPost("th"); renderPost("ig");
+  renderCta(); renderNg();
+  if (matchMedia("(max-width:940px)").matches) $("cardX").scrollIntoView({ behavior: "smooth" });
+}
+
+$("genBtn").addEventListener("click", () => {
+  const btn = $("genBtn");
+  btn.disabled = true;
+  seeds.x = seeds.th = seeds.ig = Math.floor(Math.random() * 97);
+  generateAll();
+  btn.disabled = false;
+});
+
+document.querySelectorAll("[data-regen]").forEach(b => b.addEventListener("click", () => {
+  if (!lastProduct) return;
+  const k = b.dataset.regen;
+  seeds[k]++;
+  renderPost(k); renderNg();
+}));
+document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.copy;
+  if (posts[k]) copyText(posts[k]);
+}));
+
+$("freeCheckBtn").addEventListener("click", () => {
+  const t = $("freeText").value.trim();
+  const box = $("freeNgList");
+  if (!t){ box.innerHTML = ""; toast("文章を貼り付けてください"); return; }
+  const issues = scanNG(t, "貼り付けた文章");
+  if (!prPresent(t)){
+    issues.unshift({ hit: "PR表記なし", cat: "ステマ規制", lv: "high", src: "貼り付けた文章",
+      why: "アフィリエイト投稿には「#PR」「#ad」「【PR】」等の広告である旨の明示が必要です(2023年10月〜)。",
+      fix: "冒頭かハッシュタグに #PR を追加。" });
+  }
+  renderNgItems(box, issues);
+  if (!issues.length){
+    box.innerHTML = "";
+    const ok = document.createElement("div");
+    ok.className = "ng-ok"; ok.style.padding = "0";
+    ok.textContent = "🌿 NG表現は検出されませんでした。";
+    box.appendChild(ok);
+  }
+});
+
+/* URL貼り付けで自動的にコード抽出できたら軽く反応 */
+$("url").addEventListener("change", () => {
+  const code = extractItemCode($("url").value);
+  if (code && (localStorage.getItem("posterie_appid") || "")) fetchProduct();
+});
+</script>
+</body>
+</html>
