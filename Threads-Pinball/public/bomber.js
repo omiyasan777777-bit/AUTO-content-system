@@ -190,9 +190,13 @@
     p.moving = !!(dx || dy);
     moveEntity(p, dx, dy, true);
 
-    // 置いた爆弾のタイルから離れたら通行不可に
+    // 置いた爆弾は、体が完全にそのマスから離れるまで通過可能。
+    // （中心点がマスを出た瞬間に壁化すると、体半分が残ったまま挟まって動けなくなる）
     for (const b of state.bombs) {
-      if (b.walkable && (tileC(p.px) !== b.cx || tileC(p.py) !== b.cy)) b.walkable = false;
+      const overlapping =
+        Math.abs(p.px - center(b.cx)) < TILE / 2 + RADIUS &&
+        Math.abs(p.py - center(b.cy)) < TILE / 2 + RADIUS;
+      if (b.walkable && !overlapping) b.walkable = false;
       b.timer -= 1;
     }
     for (const b of [...state.bombs]) if (b.timer <= 0) explode(b);
