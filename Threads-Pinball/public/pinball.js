@@ -284,7 +284,9 @@
   function setFlip(side, pressed) {
     flippers[side].pressed = pressed;
   }
+  window.ACTIVE_GAME = window.ACTIVE_GAME || "pinball";
   document.addEventListener("keydown", (e) => {
+    if (window.ACTIVE_GAME !== "pinball") return;
     if (e.code === "ArrowLeft") { setFlip(0, true); e.preventDefault(); }
     if (e.code === "ArrowRight") { setFlip(1, true); e.preventDefault(); }
     if (e.code === "Space" && document.activeElement.tagName !== "TEXTAREA" && document.activeElement.tagName !== "INPUT") {
@@ -292,6 +294,7 @@
     }
   });
   document.addEventListener("keyup", (e) => {
+    if (window.ACTIVE_GAME !== "pinball") return;
     if (e.code === "ArrowLeft") setFlip(0, false);
     if (e.code === "ArrowRight") setFlip(1, false);
   });

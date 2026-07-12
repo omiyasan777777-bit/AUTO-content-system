@@ -25,21 +25,48 @@
   </header>
 
   <main class="layout">
-    <!-- 左: ピンボール -->
+    <!-- 左: ミニゲーム（ピンボール / ボンバー） -->
     <section class="card pinball-card">
-      <div class="pinball-head">
-        <h2>🕹️ ピンボール</h2>
-        <div class="pinball-score">
-          SCORE <span id="score">0</span>　BEST <span id="best">0</span>　BALL <span id="balls">3</span>
+      <div class="game-tabs">
+        <button class="game-tab active" id="tabPinball">🕹️ ピンボール</button>
+        <button class="game-tab" id="tabBomber">💣 ボンバー</button>
+      </div>
+
+      <div id="pinballGame">
+        <div class="pinball-head">
+          <div class="pinball-score">
+            SCORE <span id="score">0</span>　BEST <span id="best">0</span>　BALL <span id="balls">3</span>
+          </div>
         </div>
+        <canvas id="pinball" width="360" height="560"></canvas>
+        <div class="pinball-controls">
+          <button class="flip-btn" id="btnLeft">◀ 左フリッパー</button>
+          <button class="flip-btn primary" id="btnLaunch">● 発射 (Space)</button>
+          <button class="flip-btn" id="btnRight">右フリッパー ▶</button>
+        </div>
+        <p class="hint">PC: ←→キーでフリッパー / Spaceで発射。次の予約投稿までの待ち時間にどうぞ。</p>
       </div>
-      <canvas id="pinball" width="360" height="560"></canvas>
-      <div class="pinball-controls">
-        <button class="flip-btn" id="btnLeft">◀ 左フリッパー</button>
-        <button class="flip-btn primary" id="btnLaunch">● 発射 (Space)</button>
-        <button class="flip-btn" id="btnRight">右フリッパー ▶</button>
+
+      <div id="bomberGame" class="hidden">
+        <div class="pinball-head">
+          <div class="pinball-score">
+            SCORE <span id="bScore">0</span>　BEST <span id="bBest">0</span>　❤️ <span id="bLives">3</span>
+          </div>
+        </div>
+        <canvas id="bomber" width="390" height="330"></canvas>
+        <div class="bomber-controls">
+          <div class="dpad">
+            <button class="flip-btn" id="bUp">▲</button>
+            <div class="dpad-mid">
+              <button class="flip-btn" id="bLeft">◀</button>
+              <button class="flip-btn" id="bDown">▼</button>
+              <button class="flip-btn" id="bRight">▶</button>
+            </div>
+          </div>
+          <button class="flip-btn primary bomb-btn" id="bBomb">💣 爆弾 (Space)</button>
+        </div>
+        <p class="hint">矢印キー/WASDで移動、Spaceで爆弾。ブロックを壊して敵を全滅させよう。🔥=火力UP / 💣=爆弾数UP</p>
       </div>
-      <p class="hint">PC: ←→キーでフリッパー / Spaceで発射。次の予約投稿までの待ち時間にどうぞ。</p>
     </section>
 
     <!-- 右: 予約投稿 -->
@@ -98,6 +125,7 @@
   </div>
 
   <script src="pinball.js"></script>
+  <script src="bomber.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
