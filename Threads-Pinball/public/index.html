@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threads Pinball Scheduler</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="favicon.svg" alt="Threads Pinball" class="brand-icon">
+      <div>
+        <h1>Threads Pinball Scheduler</h1>
+        <p class="tagline">予約投稿を待つあいだ、ピンボールで遊ぼう 🎮</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="original-url" id="originalUrl" title="あなただけのオリジナルURL">🔗 …</div>
+      <label class="theme-picker" title="ツールの色を変更">
+        🎨 <input type="color" id="themeColor" value="#7c5cff">
+      </label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- 左: ピンボール -->
+    <section class="card pinball-card">
+      <div class="pinball-head">
+        <h2>🕹️ ピンボール</h2>
+        <div class="pinball-score">
+          SCORE <span id="score">0</span>　BEST <span id="best">0</span>　BALL <span id="balls">3</span>
+        </div>
+      </div>
+      <canvas id="pinball" width="360" height="560"></canvas>
+      <div class="pinball-controls">
+        <button class="flip-btn" id="btnLeft">◀ 左フリッパー</button>
+        <button class="flip-btn primary" id="btnLaunch">● 発射 (Space)</button>
+        <button class="flip-btn" id="btnRight">右フリッパー ▶</button>
+      </div>
+      <p class="hint">PC: ←→キーでフリッパー / Spaceで発射。次の予約投稿までの待ち時間にどうぞ。</p>
+    </section>
+
+    <!-- 右: 予約投稿 -->
+    <section class="right-col">
+      <div class="card">
+        <div class="card-head">
+          <h2>👤 アカウント <span class="count" id="accountCount">0/3</span></h2>
+          <button class="btn small" id="btnAddAccount">＋ 追加</button>
+        </div>
+        <div class="account-tabs" id="accountTabs"></div>
+      </div>
+
+      <div class="card" id="composeCard">
+        <h2>📝 予約を作成</h2>
+        <textarea id="postText" maxlength="500" rows="4" placeholder="Threadsに投稿する本文（500文字まで）"></textarea>
+        <div class="compose-row">
+          <span class="char-count"><span id="charCount">0</span>/500</span>
+          <input type="datetime-local" id="postAt">
+          <button class="btn primary" id="btnSchedule">⏰ 予約する</button>
+        </div>
+        <p class="form-msg" id="composeMsg"></p>
+      </div>
+
+      <div class="card">
+        <h2>📅 予約一覧 <span class="sub" id="listOwner"></span></h2>
+        <div class="post-list" id="postList"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- アカウント追加モーダル -->
+  <div class="modal-backdrop hidden" id="accountModal">
+    <div class="modal">
+      <h2>Threads アカウントを追加</h2>
+      <ol class="api-steps">
+        <li><a href="https://developers.facebook.com/" target="_blank" rel="noopener">Meta for Developers</a> でアプリを作成し「Threads API」を追加</li>
+        <li>ユースケース設定で <code>threads_basic</code> と <code>threads_content_publish</code> を有効化</li>
+        <li>「アクセストークン」ツールで自分のThreadsアカウントの<strong>長期アクセストークン</strong>を発行</li>
+        <li>下に貼り付けて登録（トークンはこのPCの <code>data.json</code> にのみ保存されます）</li>
+      </ol>
+      <label>表示名（このツール内での呼び名）
+        <input type="text" id="accLabel" placeholder="例: メイン垢">
+      </label>
+      <label>アクセストークン
+        <input type="password" id="accToken" placeholder="THAA...">
+      </label>
+      <label>Threads ユーザーID（省略可・通常は自動取得）
+        <input type="text" id="accUserId" placeholder="空欄でOK">
+      </label>
+      <p class="form-msg" id="accountMsg"></p>
+      <div class="modal-actions">
+        <button class="btn" id="btnCancelAccount">キャンセル</button>
+        <button class="btn primary" id="btnSaveAccount">登録して接続テスト</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="pinball.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+/* テーマカラーは --accent を起点に派生させる（JSから書き換え） */
+:root {
+  --accent: #7c5cff;
+  --accent-soft: rgba(124, 92, 255, 0.16);
+  --accent-strong: #6547e6;
+  --bg: #0f1020;
+  --card: #191b30;
+  --card-2: #22243d;
+  --text: #eceaf6;
+  --muted: #9a97b5;
+  --danger: #ff5c7a;
+  --ok: #3fd68f;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  background: radial-gradient(1200px 600px at 20% -10%, var(--accent-soft), transparent), var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+a { color: var(--accent); }
+h1, h2 { margin: 0; }
+
+.topbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 14px 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon { width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 4px 14px var(--accent-soft); }
+.brand h1 { font-size: 19px; }
+.tagline { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.original-url {
+  font-size: 12px; color: var(--muted);
+  background: var(--card); border: 1px solid rgba(255,255,255,0.08);
+  padding: 7px 12px; border-radius: 999px; cursor: pointer; user-select: all;
+}
+.theme-picker {
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  background: var(--card); border: 1px solid rgba(255,255,255,0.08);
+  padding: 5px 10px; border-radius: 999px; font-size: 14px;
+}
+.theme-picker input { width: 26px; height: 26px; border: none; background: none; padding: 0; cursor: pointer; }
+
+.layout {
+  display: grid; grid-template-columns: 400px 1fr; gap: 18px;
+  padding: 18px 22px; max-width: 1200px; margin: 0 auto;
+}
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px; padding: 16px;
+}
+.card h2 { font-size: 15px; margin-bottom: 10px; }
+.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.card-head h2 { margin-bottom: 0; }
+.count, .sub { color: var(--muted); font-size: 12px; font-weight: normal; }
+.right-col { display: flex; flex-direction: column; gap: 18px; }
+
+/* ---- ピンボール ---- */
+.pinball-card { align-self: start; }
+.pinball-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.pinball-score { font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
+.pinball-score span { color: var(--accent); font-weight: bold; font-size: 14px; }
+#pinball {
+  width: 100%; border-radius: 12px; display: block;
+  background: #0a0b18; border: 1px solid rgba(255,255,255,0.08);
+  touch-action: none;
+}
+.pinball-controls { display: flex; gap: 8px; margin-top: 10px; }
+.flip-btn {
+  flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);
+  background: var(--card-2); color: var(--text); cursor: pointer; font-size: 12px;
+}
+.flip-btn:active { background: var(--accent-strong); }
+.flip-btn.primary { background: var(--accent); border-color: transparent; font-weight: bold; }
+.hint { font-size: 11px; color: var(--muted); margin: 8px 0 0; }
+
+/* ---- アカウント ---- */
+.account-tabs { display: flex; flex-direction: column; gap: 8px; }
+.account-tab {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card-2); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 10px 12px; cursor: pointer;
+}
+.account-tab.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.account-tab .avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent-soft); display: flex; align-items: center; justify-content: center;
+  font-size: 16px; overflow: hidden; flex-shrink: 0;
+}
+.account-tab .avatar img { width: 100%; height: 100%; object-fit: cover; }
+.account-tab .info { flex: 1; min-width: 0; }
+.account-tab .name { font-size: 14px; font-weight: bold; }
+.account-tab .meta { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; }
+.badge.ok { background: rgba(63,214,143,0.15); color: var(--ok); }
+.badge.ng { background: rgba(255,92,122,0.15); color: var(--danger); }
+.icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; }
+.icon-btn:hover { color: var(--danger); }
+.empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+
+/* ---- 予約作成 ---- */
+textarea, input[type="text"], input[type="password"], input[type="datetime-local"] {
+  width: 100%; background: var(--card-2); color: var(--text);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  padding: 10px 12px; font-size: 14px; font-family: inherit;
+}
+textarea { resize: vertical; }
+textarea:focus, input:focus { outline: none; border-color: var(--accent); }
+.compose-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.compose-row input[type="datetime-local"] { width: auto; flex: 1; min-width: 180px; }
+.char-count { font-size: 12px; color: var(--muted); }
+.btn {
+  padding: 9px 16px; border-radius: 10px; cursor: pointer; font-size: 13px;
+  background: var(--card-2); color: var(--text); border: 1px solid rgba(255,255,255,0.14);
+}
+.btn.primary { background: var(--accent); border-color: transparent; font-weight: bold; }
+.btn.primary:hover { background: var(--accent-strong); }
+.btn.small { padding: 6px 12px; font-size: 12px; }
+.form-msg { font-size: 12px; margin: 8px 0 0; min-height: 1em; color: var(--muted); }
+.form-msg.error { color: var(--danger); }
+.form-msg.ok { color: var(--ok); }
+
+/* ---- 予約一覧 ---- */
+.post-list { display: flex; flex-direction: column; gap: 8px; }
+.post-item {
+  background: var(--card-2); border-radius: 12px; padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.post-item.posted { border-left-color: var(--ok); opacity: 0.75; }
+.post-item.error { border-left-color: var(--danger); }
+.post-item .body { flex: 1; min-width: 0; }
+.post-item .text { font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+.post-item .when { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.post-item .err { font-size: 11px; color: var(--danger); margin-top: 4px; }
+.status-chip { font-size: 10px; padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
+.status-chip.scheduled { background: var(--accent-soft); color: var(--accent); }
+.status-chip.posted { background: rgba(63,214,143,0.15); color: var(--ok); }
+.status-chip.error { background: rgba(255,92,122,0.15); color: var(--danger); }
+
+/* ---- モーダル ---- */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px;
+}
+.modal-backdrop.hidden { display: none; }
+.modal {
+  background: var(--card); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; padding: 22px; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal h2 { font-size: 16px; margin-bottom: 12px; }
+.modal label { display: block; font-size: 12px; color: var(--muted); margin-top: 12px; }
+.modal input { margin-top: 6px; }
+.api-steps { font-size: 12px; color: var(--muted); padding-left: 18px; line-height: 1.8; margin: 0; }
+.api-steps code { background: var(--card-2); padding: 1px 6px; border-radius: 6px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
