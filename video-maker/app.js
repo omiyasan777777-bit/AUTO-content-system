@@ -55,6 +55,8 @@ const S = {
   scrim: 0.2,
   progressBar: true,
   fadeOut: true,
+  prompt: "",
+  fx: null, // parsePrompt() の結果（init で設定）
 };
 
 const canvas = document.getElementById("canvas");
@@ -116,6 +118,138 @@ function wrapText(text, maxWidth) {
   return lines;
 }
 
+// ---------- プロンプト演出（日本語プロンプト → エフェクト設定） ----------
+
+const FX_FILTERS = {
+  warm:  "sepia(0.28) saturate(1.35) hue-rotate(-8deg) brightness(1.03)",
+  cool:  "saturate(1.1) hue-rotate(15deg) brightness(1.02) contrast(1.02)",
+  mono:  "grayscale(1) contrast(1.08)",
+  sepia: "sepia(0.85) contrast(1.02)",
+  vivid: "saturate(1.6) contrast(1.08)",
+};
+
+// ctx.filter 対応判定（Safari 旧版などは非対応 → フィルタのみスキップ）
+const filterSupported = (() => {
+  try {
+    ctx.filter = "grayscale(1)";
+    const ok = typeof ctx.filter === "string" && ctx.filter.includes("grayscale");
+    ctx.filter = "none";
+    return ok;
+  } catch { return false; }
+})();
+
+// 順序が重要：具体的なキーワード（ズームアウト）を汎用（ズーム）より先に置く
+const FX_KEYWORDS = [
+  // カメラワーク（最初にマッチしたものを採用）
+  { re: /ズームアウト|引いて|引きで|zoom\s*out/i,            cam: "zoomout",  chip: "📷 ズームアウト" },
+  { re: /ズームイン|ズーム|寄って|寄せて|アップに|zoom/i,     cam: "zoomin",   chip: "📷 ズームイン" },
+  { re: /ケンバーンズ|シネマ|映画風|映画っぽ/i,               cam: "kenburns", chip: "🎞️ ケンバーンズ" },
+  { re: /左(へ|に)?(パン|スライド|流|移動)|パン.*左/i,        cam: "panleft",  chip: "📷 左へパン" },
+  { re: /右(へ|に)?(パン|スライド|流|移動)|パン.*右/i,        cam: "panright", chip: "📷 右へパン" },
+  { re: /上(へ|に)?(パン|スライド|流|移動)|パン.*上/i,        cam: "panup",    chip: "📷 上へパン" },
+  { re: /下(へ|に)?(パン|スライド|流|移動)|パン.*下/i,        cam: "pandown",  chip: "📷 下へパン" },
+  // モーション修飾
+  { re: /揺れ|揺らし|シェイク|手ブレ|振動/i,  set: (f) => { f.shake = true; },  chip: "📳 揺れ" },
+  { re: /鼓動|パルス|ドキドキ|脈打/i,         set: (f) => { f.pulse = true; },  chip: "💓 鼓動" },
+  { re: /回転|回りながら|回して|rotate/i,     set: (f) => { f.rotate = true; }, chip: "🌀 回転" },
+  // オーバーレイ
+  { re: /光の粒|パーティクル|粒子/i,          ov: "particles", chip: "✨ 光の粒" },
+  { re: /キラキラ|スパークル|星屑|きらめ/i,    ov: "sparkle",   chip: "🌟 キラキラ" },
+  { re: /雪|スノー/i,                          ov: "snow",      chip: "❄️ 雪" },
+  { re: /雨|レイン/i,                          ov: "rain",      chip: "🌧 雨" },
+  { re: /桜|さくら|花びら/i,                   ov: "sakura",    chip: "🌸 桜吹雪" },
+  { re: /光線|光が差|後光|木漏れ日|レイ(?!ン)/i, ov: "rays",     chip: "🔆 光線" },
+  { re: /玉ボケ|ボケ感|ぼかし玉|ボケ/i,        ov: "bokeh",     chip: "🫧 玉ボケ" },
+  // 開始演出
+  { re: /フラッシュ|閃光|光って始/i,  set: (f) => { f.flash = true; }, chip: "⚡ フラッシュ開始" },
+  // 色調（最初にマッチしたものを採用）
+  { re: /セピア|レトロ|ノスタル|昔の写真/i,        flt: "sepia", chip: "🎨 セピア" },
+  { re: /モノクロ|白黒|グレースケール/i,           flt: "mono",  chip: "🎨 モノクロ" },
+  { re: /暖か|温か|夕焼け|オレンジっぽ|ぬくも/i,   flt: "warm",  chip: "🎨 暖色" },
+  { re: /寒色|涼し|クール|青っぽ|冷た/i,           flt: "cool",  chip: "🎨 寒色" },
+  { re: /鮮やか|ビビッド|カラフル|色鮮/i,          flt: "vivid", chip: "🎨 ビビッド" },
+  // スピード
+  { re: /ゆっくり|スロー|静かに|穏やか/i,      set: (f) => { f.speed = 0.6; }, chip: "🐢 ゆっくり" },
+  { re: /速く|早く|激し|ダイナミック|勢いよく/i, set: (f) => { f.speed = 1.6; }, chip: "🐇 激しく" },
+];
+
+function parsePrompt(text) {
+  const fx = {
+    camera: null, shake: false, pulse: false, rotate: false,
+    overlays: [], filter: null, flash: false, speed: 1,
+    chips: [],
+  };
+  const src = (text || "").trim();
+  if (!src) return fx;
+  for (const rule of FX_KEYWORDS) {
+    if (!rule.re.test(src)) continue;
+    if (rule.cam) {
+      if (fx.camera) continue; // カメラは最初の1つだけ
+      fx.camera = rule.cam;
+    } else if (rule.ov) {
+      if (fx.overlays.includes(rule.ov)) continue;
+      fx.overlays.push(rule.ov);
+    } else if (rule.flt) {
+      if (fx.filter) continue; // 色調も最初の1つだけ
+      fx.filter = rule.flt;
+    } else if (rule.set) {
+      rule.set(fx);
+    }
+    fx.chips.push(rule.chip);
+  }
+  return fx;
+}
+
+function renderFxChips() {
+  const wrap = $("fxChips");
+  wrap.innerHTML = "";
+  if (!S.prompt.trim()) return;
+  if (S.fx.chips.length === 0) {
+    const el = document.createElement("span");
+    el.className = "chip none";
+    el.textContent = "キーワードが見つかりません（下の例を参考にどうぞ）";
+    wrap.appendChild(el);
+    return;
+  }
+  for (const label of S.fx.chips) {
+    const el = document.createElement("span");
+    el.className = "chip";
+    el.textContent = label;
+    wrap.appendChild(el);
+  }
+}
+
+// プロンプト由来のカメラワーク。指定が無ければ null（従来動作にフォールバック）
+function promptCamera(t, W, H) {
+  const f = S.fx;
+  const hasMotion = f.camera || f.shake || f.pulse || f.rotate;
+  if (!hasMotion) return null;
+
+  const p = clamp(t / S.duration, 0, 1);
+  const sp = f.speed;
+  const panM = 0.045 * Math.min(sp, 1.3);
+  let scale = 1, dx = 0, dy = 0, rot = 0;
+
+  switch (f.camera) {
+    case "zoomin":   scale = 1 + 0.10 * sp * p; break;
+    case "zoomout":  scale = 1 + 0.10 * sp * (1 - p); break;
+    case "kenburns": scale = 1.05 + 0.10 * p; dx = (p - 0.5) * -0.05 * W; dy = (p - 0.5) * -0.03 * H; break;
+    case "panleft":  scale = 1.14; dx = (0.5 - p) * 2 * panM * W; break;
+    case "panright": scale = 1.14; dx = (p - 0.5) * 2 * panM * W; break;
+    case "panup":    scale = 1.14; dy = (0.5 - p) * 2 * panM * H; break;
+    case "pandown":  scale = 1.14; dy = (p - 0.5) * 2 * panM * H; break;
+  }
+  if (f.rotate) { rot = (p - 0.5) * 0.10 * sp; scale *= 1.12; }
+  if (f.pulse)  { scale *= 1 + 0.018 * sp * Math.sin(t * Math.PI * 2 * 1.4); }
+  if (f.shake) {
+    const a = 2.4 * sp * (W / 720);
+    dx += (Math.sin(t * 23) + Math.sin(t * 41) * 0.5) * a;
+    dy += (Math.cos(t * 29) + Math.sin(t * 37) * 0.5) * a;
+    scale *= 1.02;
+  }
+  return { scale, dx, dy, rot };
+}
+
 // ---------- 背景描画 ----------
 
 function drawGradient(t, W, H, colors) {
@@ -132,7 +266,8 @@ function drawGradient(t, W, H, colors) {
   g.addColorStop(0, colors[0]);
   g.addColorStop(1, colors[1]);
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
+  // 回転・シェイク時に端が見えないよう少し広めに塗る
+  ctx.fillRect(-W * 0.15, -H * 0.15, W * 1.3, H * 1.3);
 }
 
 function drawImageCover(img, W, H, scale) {
@@ -143,26 +278,42 @@ function drawImageCover(img, W, H, scale) {
   ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
 }
 
-function drawBackground(t, W, H) {
-  const zoom = S.bgMotion === "zoom" ? 1 + 0.08 * (t / S.duration) : 1;
-
+// 背景そのもの（画像 / 単色 / グラデ）をカメラ変形の内側で描く
+function drawBase(t, W, H, extraScale) {
   if (S.bgType === "image" && S.bgImage) {
-    drawImageCover(S.bgImage, W, H, zoom);
+    drawImageCover(S.bgImage, W, H, extraScale);
   } else if (S.bgType === "solid") {
     ctx.fillStyle = S.solidColor;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(-W * 0.15, -H * 0.15, W * 1.3, H * 1.3);
   } else {
+    drawGradient(t, W, H, S.gradient.colors);
+  }
+}
+
+function drawBackground(t, W, H) {
+  const cam = promptCamera(t, W, H);
+
+  ctx.save();
+  if (filterSupported && S.fx.filter) ctx.filter = FX_FILTERS[S.fx.filter];
+
+  if (cam) {
+    // プロンプト指定のカメラワーク
+    ctx.translate(W / 2 + cam.dx, H / 2 + cam.dy);
+    ctx.rotate(cam.rot);
+    ctx.scale(cam.scale, cam.scale);
+    ctx.translate(-W / 2, -H / 2);
+    drawBase(t, W, H, 1.06);
+  } else {
+    // 従来の「背景の動き」設定
+    const zoom = S.bgMotion === "zoom" ? 1 + 0.08 * (t / S.duration) : 1;
     if (S.bgMotion === "zoom") {
-      ctx.save();
       ctx.translate(W / 2, H / 2);
       ctx.scale(zoom, zoom);
       ctx.translate(-W / 2, -H / 2);
-      drawGradient(t, W, H, S.gradient.colors);
-      ctx.restore();
-    } else {
-      drawGradient(t, W, H, S.gradient.colors);
     }
+    drawBase(t, W, H, 1);
   }
+  ctx.restore();
 
   // 暗さオーバーレイ（文字の可読性用）
   if (S.scrim > 0) {
@@ -170,20 +321,134 @@ function drawBackground(t, W, H) {
     ctx.fillRect(0, 0, W, H);
   }
 
-  // パーティクル（下から上へ漂う光の粒・決定論的）
-  if (S.bgMotion === "particles") {
-    const N = 45;
-    for (let i = 0; i < N; i++) {
-      const speed = 0.04 + rand(i) * 0.08;
-      const x = rand(i * 3 + 1) * W + Math.sin(t * 1.2 + i) * 14;
-      const yFrac = (rand(i * 7 + 2) - speed * t + 100) % 1;
-      const y = yFrac * (H + 40) - 20;
-      const r = 1.5 + rand(i * 11 + 3) * 3.5;
-      const tw = 0.35 + 0.3 * Math.sin(t * 3 + i * 2.1); // またたき
-      ctx.fillStyle = `rgba(255, 255, 255, ${tw})`;
+  if (S.bgMotion === "particles" || S.fx.overlays.includes("particles")) {
+    drawParticles(t, W, H);
+  }
+  drawFxOverlays(t, W, H);
+}
+
+// パーティクル（下から上へ漂う光の粒・決定論的）
+function drawParticles(t, W, H) {
+  const sp = S.fx.speed;
+  for (let i = 0; i < 45; i++) {
+    const speed = (0.04 + rand(i) * 0.08) * sp;
+    const x = rand(i * 3 + 1) * W + Math.sin(t * 1.2 + i) * 14;
+    const yFrac = (rand(i * 7 + 2) - speed * t + 100) % 1;
+    const y = yFrac * (H + 40) - 20;
+    const r = 1.5 + rand(i * 11 + 3) * 3.5;
+    const tw = 0.35 + 0.3 * Math.sin(t * 3 + i * 2.1); // またたき
+    ctx.fillStyle = `rgba(255, 255, 255, ${tw})`;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// プロンプト演出のオーバーレイ群（すべて時刻 t から決定論的に描画）
+function drawFxOverlays(t, W, H) {
+  const ov = S.fx.overlays;
+  if (ov.length === 0) return;
+  const sp = S.fx.speed;
+  const u = W / 720;
+
+  if (ov.includes("rays")) {
+    ctx.save();
+    ctx.translate(W / 2, -H * 0.05);
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9 - 0.5) * Math.PI * 0.9 + Math.sin(t * 0.4 * sp + k) * 0.05;
+      const alpha = Math.max(0, 0.05 + 0.025 * Math.sin(t * 1.3 * sp + k * 1.8));
+      ctx.save();
+      ctx.rotate(a);
+      ctx.fillStyle = `rgba(255, 246, 214, ${alpha})`;
+      ctx.fillRect(-W * 0.025, 0, W * 0.05, H * 1.5);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  if (ov.includes("bokeh")) {
+    for (let i = 0; i < 14; i++) {
+      const r = (25 + rand(i) * 55) * u;
+      const x = rand(i * 3 + 1) * W + Math.sin(t * 0.3 * sp + i * 1.7) * 30 * u;
+      const y = rand(i * 7 + 2) * H + Math.cos(t * 0.25 * sp + i) * 24 * u;
+      const a = 0.05 + rand(i * 11 + 3) * 0.08;
+      const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
+      g.addColorStop(0, `rgba(255, 255, 255, ${a})`);
+      g.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  if (ov.includes("snow")) {
+    for (let i = 0; i < 60; i++) {
+      const fall = (0.06 + rand(i) * 0.08) * sp;
+      const x = rand(i * 5 + 1) * W + Math.sin(t * 0.9 + i) * 25 * u;
+      const y = ((rand(i * 7 + 2) + fall * t) % 1) * (H + 30) - 15;
+      const r = (1.5 + rand(i * 11 + 3) * 3) * u;
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + rand(i * 13 + 4) * 0.45})`;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  if (ov.includes("rain")) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(200, 220, 255, 0.35)";
+    ctx.lineWidth = 1.2 * u;
+    ctx.beginPath();
+    for (let i = 0; i < 70; i++) {
+      const fall = (0.9 + rand(i) * 0.5) * sp;
+      const x = ((rand(i * 3 + 1) + t * 0.03) % 1) * W;
+      const y = ((rand(i * 7 + 2) + fall * t) % 1) * (H + 40) - 20;
+      const len = (14 + rand(i * 11 + 3) * 10) * u;
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 4 * u, y + len);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (ov.includes("sakura")) {
+    for (let i = 0; i < 28; i++) {
+      const fall = (0.08 + rand(i) * 0.07) * sp;
+      const x = rand(i * 5 + 1) * W + Math.sin(t * 1.1 + i) * 40 * u;
+      const y = ((rand(i * 7 + 2) + fall * t) % 1) * (H + 60) - 30;
+      const size = (5 + rand(i * 11 + 3) * 6) * u;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(t * (1 + rand(i)) * 2 + i);
+      ctx.fillStyle = "rgba(255, 183, 206, 0.85)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, size, size * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  if (ov.includes("sparkle")) {
+    for (let i = 0; i < 26; i++) {
+      const x = rand(i * 3 + 1) * W;
+      const y = rand(i * 7 + 2) * H * 0.92;
+      const tw = Math.sin(t * 2.2 * sp + rand(i) * Math.PI * 2);
+      if (tw <= 0) continue;
+      const a = Math.pow(tw, 3) * 0.9;
+      const s = (3 + rand(i * 11 + 3) * 7) * u * tw;
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 255, 255, ${a})`;
+      ctx.lineWidth = 1.4 * u;
+      ctx.beginPath();
+      ctx.moveTo(x - s, y); ctx.lineTo(x + s, y);
+      ctx.moveTo(x, y - s); ctx.lineTo(x, y + s);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255, 255, 255, ${a})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.6 * u, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   }
 }
@@ -312,6 +577,13 @@ function drawFrame(t) {
     ctx.fillRect(0, H - barH, W, barH);
     ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
     ctx.fillRect(0, H - barH, W * p, barH);
+  }
+
+  // ⚡ フラッシュ開始（プロンプト演出）
+  if (S.fx.flash && t < 0.4) {
+    const a = 1 - t / 0.4;
+    ctx.fillStyle = `rgba(255, 255, 255, ${a * a})`;
+    ctx.fillRect(0, 0, W, H);
   }
 
   if (S.fadeOut) {
@@ -480,15 +752,34 @@ function bindControls() {
   });
   $("solidColor").addEventListener("input", (e) => { S.solidColor = e.target.value; });
 
-  $("bgImage").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const img = new Image();
-    img.onload = () => {
-      S.bgImage = img;
-      $("imageHint").textContent = `✅ ${file.name}（${img.width}×${img.height}）`;
-    };
-    img.src = URL.createObjectURL(file);
+  $("bgImage").addEventListener("change", (e) => loadImageFile(e.target.files[0]));
+
+  // 画像の貼り付け（Ctrl+V）
+  document.addEventListener("paste", (e) => {
+    const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith("image/"));
+    if (item) {
+      e.preventDefault();
+      loadImageFile(item.getAsFile());
+    }
+  });
+
+  // 画像のドラッグ&ドロップ（プレビュー上）
+  const wrap = $("canvasWrap");
+  ["dragover", "dragenter"].forEach((ev) =>
+    wrap.addEventListener(ev, (e) => { e.preventDefault(); wrap.classList.add("dragging"); }));
+  ["dragleave", "dragend"].forEach((ev) =>
+    wrap.addEventListener(ev, () => wrap.classList.remove("dragging")));
+  wrap.addEventListener("drop", (e) => {
+    e.preventDefault();
+    wrap.classList.remove("dragging");
+    loadImageFile(e.dataTransfer.files[0]);
+  });
+
+  // プロンプト演出
+  $("prompt").addEventListener("input", (e) => {
+    S.prompt = e.target.value;
+    S.fx = parsePrompt(S.prompt);
+    renderFxChips();
   });
 
   $("bgMotion").addEventListener("change", (e) => { S.bgMotion = e.target.value; });
@@ -515,10 +806,26 @@ function bindControls() {
   $("exportBtn").addEventListener("click", exportVideo);
 }
 
+// 画像ファイルを読み込んで背景に設定（ファイル選択・貼り付け・ドロップ共通）
+function loadImageFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const img = new Image();
+  img.onload = () => {
+    S.bgImage = img;
+    const radio = document.querySelector('input[name="bgType"][value="image"]');
+    radio.checked = true;
+    radio.dispatchEvent(new Event("change"));
+    $("imageHint").textContent = `✅ ${file.name || "貼り付け画像"}（${img.width}×${img.height}）`;
+  };
+  img.src = URL.createObjectURL(file);
+}
+
 function init() {
   S.mainText = $("mainText").value;
   S.subText = $("subText").value;
   S.badgeText = $("badgeText").value;
+  S.prompt = $("prompt").value;
+  S.fx = parsePrompt(S.prompt);
   applyAspect();
   buildSwatches();
   bindControls();

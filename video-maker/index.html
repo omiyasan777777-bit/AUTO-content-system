@@ -99,7 +99,7 @@
           <span>画像を選択（端末内で処理・アップロードなし）</span>
           <input type="file" id="bgImage" accept="image/*">
         </label>
-        <div class="hint" id="imageHint">未選択</div>
+        <div class="hint" id="imageHint">未選択 — Ctrl+V で貼り付け / プレビューにドラッグ&ドロップでもOK</div>
       </div>
       <label class="row">
         <span>背景の動き</span>
@@ -114,6 +114,21 @@
         <span>暗さオーバーレイ（文字を読みやすく） <b id="scrimLabel">20%</b></span>
         <input type="range" id="scrim" min="0" max="70" step="5" value="20">
       </label>
+    </section>
+
+    <section class="group">
+      <h2>✨ プロンプト演出</h2>
+      <label class="row">
+        <span>やりたい演出を日本語で入力（空欄なら通常モード）</span>
+        <textarea id="prompt" rows="2" placeholder="例: ゆっくりズームインしながらキラキラ、暖かい色味で"></textarea>
+      </label>
+      <div class="chips" id="fxChips"></div>
+      <div class="hint">
+        画像は <b>Ctrl+V 貼り付け</b> or <b>プレビューにドロップ</b>で設定できます。<br>
+        キーワード例: ズームイン / ズームアウト / 右へパン / ケンバーンズ / 揺れ / 鼓動 / 回転 /
+        光の粒 / キラキラ / 雪 / 雨 / 桜 / 光線 / 玉ボケ / フラッシュ /
+        セピア / モノクロ / 暖かく / 寒色 / 鮮やか / ゆっくり / 激しく
+      </div>
     </section>
 
     <section class="group">
