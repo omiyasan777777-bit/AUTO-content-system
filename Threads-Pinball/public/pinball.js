@@ -27,11 +27,11 @@
     { x: W * 0.5, y: 320, r: 16, score: 300, hit: 0 },
   ];
 
-  // フリッパー: pivot を中心に angle が動く線分
+  // フリッパー: pivot を中心に angle が動く線分（角度は先端の向きをそのまま表す）
   const FLIP_LEN = 78;
   const flippers = [
-    { x: W * 0.5 - 96, y: H - 70, rest: 0.5, active: -0.45, dir: 1, angle: 0.5, pressed: false },
-    { x: W * 0.5 + 96, y: H - 70, rest: Math.PI - 0.5, active: Math.PI + 0.45, dir: -1, angle: Math.PI - 0.5, pressed: false },
+    { x: W * 0.5 - 96, y: H - 70, rest: 0.5, active: -0.45, angle: 0.5, pressed: false },
+    { x: W * 0.5 + 96, y: H - 70, rest: Math.PI - 0.5, active: Math.PI + 0.45, angle: Math.PI - 0.5, pressed: false },
   ];
 
   // 外壁（斜めのガイドをフリッパーへ向けて配置）
@@ -87,7 +87,7 @@
   }
 
   function flipperTip(f) {
-    return { x: f.x + Math.cos(f.angle) * FLIP_LEN * f.dir, y: f.y + Math.sin(f.angle) * FLIP_LEN };
+    return { x: f.x + Math.cos(f.angle) * FLIP_LEN, y: f.y + Math.sin(f.angle) * FLIP_LEN };
   }
 
   // 線分との衝突: 最近接点までの距離が半径未満なら押し出して反射
