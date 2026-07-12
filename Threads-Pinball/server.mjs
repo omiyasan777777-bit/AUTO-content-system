@@ -78,17 +78,39 @@ async function verifyAccount(accessToken) {
   });
 }
 
-async function publishText(account, text) {
-  const container = await threadsPost(`/${account.threadsUserId || "me"}/threads`, {
+async function publishOne(account, text, replyToId) {
+  const params = {
     media_type: "TEXT",
     text,
     access_token: account.accessToken,
-  });
+  };
+  if (replyToId) params.reply_to_id = replyToId; // ツリー投稿: 直前の投稿へのリプライ
+  const container = await threadsPost(`/${account.threadsUserId || "me"}/threads`, params);
   const published = await threadsPost(`/${account.threadsUserId || "me"}/threads_publish`, {
     creation_id: container.id,
     access_token: account.accessToken,
   });
   return published.id;
+}
+
+// 旧データ（text のみ）も texts 配列に正規化する
+function postTexts(post) {
+  return Array.isArray(post.texts) && post.texts.length ? post.texts : [post.text || ""];
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ツリー全体を投稿。途中で失敗しても publishedIds に進捗が残り、再試行時は続きから
+async function publishTree(account, post) {
+  const texts = postTexts(post);
+  post.publishedIds = Array.isArray(post.publishedIds) ? post.publishedIds : [];
+  while (post.publishedIds.length < texts.length) {
+    const i = post.publishedIds.length;
+    const id = await publishOne(account, texts[i], i === 0 ? "" : post.publishedIds[i - 1]);
+    post.publishedIds.push(id);
+    if (post.publishedIds.length < texts.length) await sleep(2000);
+  }
+  return post.publishedIds[0];
 }
 
 // ---------- スケジューラ（30秒ごとに期限が来た予約を投稿） ----------
@@ -108,14 +130,16 @@ async function schedulerTick() {
         continue;
       }
       try {
-        post.threadsPostId = await publishText(account, post.text);
+        post.threadsPostId = await publishTree(account, post);
         post.status = "posted";
         post.postedAt = Date.now();
         post.error = "";
-        console.log(`[posted] @${account.username || account.label}: ${post.text.slice(0, 30)}…`);
+        console.log(`[posted] @${account.username || account.label}: ${postTexts(post)[0].slice(0, 30)}…`);
       } catch (err) {
         post.status = "error";
-        post.error = String(err.message || err);
+        const texts = postTexts(post);
+        const where = texts.length > 1 ? `ツリー${(post.publishedIds?.length || 0) + 1}件目で失敗: ` : "";
+        post.error = where + String(err.message || err);
         console.error(`[error] @${account.username || account.label}: ${post.error}`);
       }
     }
@@ -145,7 +169,7 @@ function publicState() {
     posts: db.posts
       .slice()
       .sort((a, b) => a.scheduledAt - b.scheduledAt)
-      .map((p) => ({ ...p })),
+      .map((p) => ({ ...p, texts: postTexts(p) })),
   };
 }
 
@@ -229,22 +253,30 @@ async function handleApi(req, res, path) {
       return json(res, 200, { ok: true, state: publicState() });
     }
 
-    // POST /api/posts { accountId, text, scheduledAt }
+    // POST /api/posts { accountId, texts | text, scheduledAt }
+    // texts が2件以上ならツリー投稿（2件目以降は直前へのリプライとして投稿）
     if (req.method === "POST" && path === "/api/posts") {
-      const { accountId, text, scheduledAt } = await readBody(req);
+      const body = await readBody(req);
+      const { accountId, scheduledAt } = body;
       const account = db.accounts.find((a) => a.id === accountId);
       if (!account) return json(res, 400, { error: "アカウントを選択してください" });
-      if (!text || !String(text).trim()) return json(res, 400, { error: "投稿する本文を入力してください" });
-      if (String(text).length > 500) return json(res, 400, { error: "Threadsの本文は500文字までです" });
+      const texts = (Array.isArray(body.texts) ? body.texts : [body.text]).map((t) => String(t ?? ""));
+      if (!texts.length || texts.some((t) => !t.trim())) {
+        return json(res, 400, { error: "投稿する本文を入力してください（ツリーの空欄は削除してください）" });
+      }
+      if (texts.length > 10) return json(res, 400, { error: "ツリーは最大10件までです" });
+      const over = texts.findIndex((t) => t.length > 500);
+      if (over >= 0) return json(res, 400, { error: `${over + 1}件目が500文字を超えています` });
       const at = Number(scheduledAt);
       if (!Number.isFinite(at)) return json(res, 400, { error: "予約日時が不正です" });
       db.posts.push({
         id: crypto.randomUUID(),
         accountId,
-        text: String(text),
+        texts,
         scheduledAt: at,
         status: "scheduled",
         createdAt: Date.now(),
+        publishedIds: [],
         error: "",
       });
       saveData(db);

@@ -54,9 +54,9 @@
 
       <div class="card" id="composeCard">
         <h2>📝 予約を作成</h2>
-        <textarea id="postText" maxlength="500" rows="4" placeholder="Threadsに投稿する本文（500文字まで）"></textarea>
+        <div id="treeItems"></div>
+        <button class="btn small" id="btnAddTree">🧵 ツリーに追加（2件目以降は自動でリプライ投稿）</button>
         <div class="compose-row">
-          <span class="char-count"><span id="charCount">0</span>/500</span>
           <input type="datetime-local" id="postAt">
           <button class="btn primary" id="btnSchedule">⏰ 予約する</button>
         </div>
@@ -76,7 +76,7 @@
       <h2>Threads アカウントを追加</h2>
       <ol class="api-steps">
         <li><a href="https://developers.facebook.com/" target="_blank" rel="noopener">Meta for Developers</a> でアプリを作成し「Threads API」を追加</li>
-        <li>ユースケース設定で <code>threads_basic</code> と <code>threads_content_publish</code> を有効化</li>
+        <li>ユースケース設定で <code>threads_basic</code> と <code>threads_content_publish</code> を有効化（ツリー投稿を使うなら <code>threads_manage_replies</code> も）</li>
         <li>「アクセストークン」ツールで自分のThreadsアカウントの<strong>長期アクセストークン</strong>を発行</li>
         <li>下に貼り付けて登録（トークンはこのPCの <code>data.json</code> にのみ保存されます）</li>
       </ol>

@@ -118,11 +118,17 @@
       list.innerHTML = `<p class="empty">予約はまだありません。左のピンボールでハイスコアを狙いつつ、上のフォームから予約しましょう。</p>`;
     } else {
       const chip = { scheduled: "⏳ 予約中", posted: "✅ 投稿済み", error: "⚠ エラー" };
+      const renderTexts = (p) => {
+        const texts = p.texts || [p.text];
+        if (texts.length === 1) return `<div class="text">${esc(texts[0])}</div>`;
+        return texts.map((t, i) =>
+          `<div class="text tree-line"><span class="tree-idx">${i + 1}</span><span>${esc(t)}</span></div>`).join("");
+      };
       list.innerHTML = posts.map((p) => `
         <div class="post-item ${p.status}">
           <div class="body">
-            <div class="text">${esc(p.text)}</div>
-            <div class="when">${p.status === "posted" ? "投稿: " + fmtDate(p.postedAt) : "予定: " + fmtDate(p.scheduledAt)}</div>
+            ${renderTexts(p)}
+            <div class="when">${(p.texts || []).length > 1 ? `🧵 ツリー${p.texts.length}件 ・ ` : ""}${p.status === "posted" ? "投稿: " + fmtDate(p.postedAt) : "予定: " + fmtDate(p.scheduledAt)}</div>
             ${p.error ? `<div class="err">${esc(p.error)}</div>` : ""}
           </div>
           <span class="status-chip ${p.status}">${chip[p.status] || p.status}</span>
@@ -144,10 +150,50 @@
     }
   }
 
-  // ---------- 予約作成 ----------
-  $("postText").addEventListener("input", () => {
-    $("charCount").textContent = $("postText").value.length;
-  });
+  // ---------- 予約作成（ツリー対応: 項目を増やすと2件目以降はリプライとして連鎖投稿） ----------
+  const MAX_TREE = 10;
+
+  function addTreeItem(focus) {
+    const container = $("treeItems");
+    if (container.children.length >= MAX_TREE) return;
+    const row = document.createElement("div");
+    row.className = "tree-item";
+    row.innerHTML = `
+      <span class="tree-no"></span>
+      <div class="tree-body">
+        <textarea maxlength="500" rows="3"></textarea>
+        <span class="char-count"><span class="cc">0</span>/500</span>
+      </div>
+      <button class="icon-btn tree-del" title="この項目を削除">✕</button>`;
+    const ta = row.querySelector("textarea");
+    ta.addEventListener("input", () => { row.querySelector(".cc").textContent = ta.value.length; });
+    row.querySelector(".tree-del").addEventListener("click", () => {
+      row.remove();
+      renumberTree();
+    });
+    container.appendChild(row);
+    renumberTree();
+    if (focus) ta.focus();
+  }
+
+  function renumberTree() {
+    const rows = [...$("treeItems").children];
+    rows.forEach((row, i) => {
+      row.querySelector(".tree-no").textContent = i + 1;
+      row.querySelector("textarea").placeholder =
+        i === 0 ? "Threadsに投稿する本文（500文字まで）" : `ツリー${i + 1}件目（${i}件目へのリプライになります）`;
+      row.querySelector(".tree-del").style.visibility = rows.length === 1 ? "hidden" : "visible";
+    });
+    $("btnAddTree").style.display = rows.length >= MAX_TREE ? "none" : "";
+  }
+
+  function resetTree() {
+    $("treeItems").innerHTML = "";
+    addTreeItem(false);
+  }
+
+  $("btnAddTree").addEventListener("click", () => addTreeItem(true));
+  resetTree();
 
   function setMsg(el, text, cls) {
     el.textContent = text;
@@ -156,22 +202,23 @@
 
   $("btnSchedule").addEventListener("click", async () => {
     const msg = $("composeMsg");
-    const text = $("postText").value;
+    const texts = [...$("treeItems").querySelectorAll("textarea")].map((ta) => ta.value);
     const atValue = $("postAt").value;
     if (!activeAccountId) return setMsg(msg, "先にアカウントを追加・選択してください", "error");
-    if (!text.trim()) return setMsg(msg, "本文を入力してください", "error");
+    if (texts.some((t) => !t.trim())) return setMsg(msg, "空欄の項目があります（不要なら ✕ で削除してください）", "error");
     if (!atValue) return setMsg(msg, "予約日時を選んでください", "error");
     const at = new Date(atValue).getTime();
     if (at < Date.now() - 60 * 1000) return setMsg(msg, "過去の日時は予約できません", "error");
     try {
       const result = await api("posts", {
         method: "POST",
-        body: JSON.stringify({ accountId: activeAccountId, text, scheduledAt: at }),
+        body: JSON.stringify({ accountId: activeAccountId, texts, scheduledAt: at }),
       });
       state = result.state;
-      $("postText").value = "";
-      $("charCount").textContent = "0";
-      setMsg(msg, `⏰ ${fmtDate(at)} に予約しました！`, "ok");
+      resetTree();
+      setMsg(msg, texts.length > 1
+        ? `⏰ ${fmtDate(at)} にツリー${texts.length}件を予約しました！`
+        : `⏰ ${fmtDate(at)} に予約しました！`, "ok");
       render();
     } catch (err) {
       setMsg(msg, err.message, "error");
