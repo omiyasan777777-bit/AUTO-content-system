@@ -8,6 +8,8 @@
   const GRAVITY = 0.22;
   const DAMPING = 0.995;
   const BALL_R = 8;
+  const MAX_SPEED = 11;      // 1フレームあたりの最大移動量（透過防止）
+  const SUBSTEP = 2;         // サブステップ1回あたりの最大移動px（半径より十分小さく）
 
   const state = {
     score: 0,
@@ -86,8 +88,16 @@
     document.getElementById("balls").textContent = Math.max(state.balls, 0);
   }
 
-  function flipperTip(f) {
-    return { x: f.x + Math.cos(f.angle) * FLIP_LEN, y: f.y + Math.sin(f.angle) * FLIP_LEN };
+  function flipperTip(f, angle = f.angle) {
+    return { x: f.x + Math.cos(angle) * FLIP_LEN, y: f.y + Math.sin(angle) * FLIP_LEN };
+  }
+
+  function clampSpeed(b) {
+    const sp = Math.hypot(b.vx, b.vy);
+    if (sp > MAX_SPEED) {
+      b.vx *= MAX_SPEED / sp;
+      b.vy *= MAX_SPEED / sp;
+    }
   }
 
   // 線分との衝突: 最近接点までの距離が半径未満なら押し出して反射
@@ -116,12 +126,12 @@
   }
 
   function step() {
-    // フリッパーのアニメーション
+    // フリッパーのアニメーション（1フレーム分の回転量 omega はキック力にも使う）
     for (const f of flippers) {
       const target = f.pressed ? f.active : f.rest;
-      const prev = f.angle;
+      f.prevAngle = f.angle;
       f.angle += (target - f.angle) * 0.45;
-      f.speed = Math.abs(f.angle - prev); // 動いている勢いをキック力に使う
+      f.omega = f.angle - f.prevAngle;
     }
 
     const b = state.ball;
@@ -130,42 +140,55 @@
     b.vy += GRAVITY;
     b.vx *= DAMPING;
     b.vy *= DAMPING;
-    b.x += b.vx;
-    b.y += b.vy;
+    clampSpeed(b);
 
-    // 天井
-    if (b.y < BALL_R + 10) { b.y = BALL_R + 10; b.vy = Math.abs(b.vy); }
+    // 透過防止: 1フレームの移動をサブステップに分割し、毎回すべての衝突を判定する。
+    // フリッパーの角度もサブステップごとに補間し、高速で振り上げ中でも当たりを拾う
+    const substeps = Math.max(1, Math.ceil(Math.hypot(b.vx, b.vy) / SUBSTEP));
+    for (let s = 1; s <= substeps; s++) {
+      b.x += b.vx / substeps;
+      b.y += b.vy / substeps;
 
-    // 外壁・ガイド
-    for (const w of walls) collideSegment(b, w.x1, w.y1, w.x2, w.y2, 0.6, 0);
+      // 天井
+      if (b.y < BALL_R + 10) { b.y = BALL_R + 10; b.vy = Math.abs(b.vy); }
 
-    // バンパー
-    for (const bp of bumpers) {
-      const dx = b.x - bp.x, dy = b.y - bp.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < BALL_R + bp.r && dist > 0) {
-        const nx = dx / dist, ny = dy / dist;
-        b.x = bp.x + nx * (BALL_R + bp.r + 0.5);
-        b.y = bp.y + ny * (BALL_R + bp.r + 0.5);
-        const dot = b.vx * nx + b.vy * ny;
-        b.vx -= 2 * dot * nx;
-        b.vy -= 2 * dot * ny;
-        b.vx += nx * 2.2;
-        b.vy += ny * 2.2;
-        bp.hit = 8;
-        addScore(bp.score);
+      // 外壁・ガイド
+      for (const w of walls) collideSegment(b, w.x1, w.y1, w.x2, w.y2, 0.6, 0);
+
+      // バンパー
+      for (const bp of bumpers) {
+        const dx = b.x - bp.x, dy = b.y - bp.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < BALL_R + bp.r && dist > 0) {
+          const nx = dx / dist, ny = dy / dist;
+          b.x = bp.x + nx * (BALL_R + bp.r + 0.5);
+          b.y = bp.y + ny * (BALL_R + bp.r + 0.5);
+          const dot = b.vx * nx + b.vy * ny;
+          b.vx -= 2 * dot * nx;
+          b.vy -= 2 * dot * ny;
+          b.vx += nx * 2.2;
+          b.vy += ny * 2.2;
+          bp.hit = 8;
+          addScore(bp.score);
+        }
       }
-      if (bp.hit > 0) bp.hit -= 1;
+
+      // フリッパー（振り上げ中はキック。上限付き）
+      for (const f of flippers) {
+        const angle = f.prevAngle + (f.angle - f.prevAngle) * (s / substeps);
+        const tip = flipperTip(f, angle);
+        const kick = Math.min(Math.abs(f.omega) * 25, 7);
+        collideSegment(b, f.x, f.y, tip.x, tip.y, 0.4, kick);
+      }
+
+      // 衝突で加速しても次のサブステップ幅を超えないよう都度クランプ
+      clampSpeed(b);
+
+      // ドレイン（落下）
+      if (b.y > H + BALL_R * 2) { loseBall(); return; }
     }
 
-    // フリッパー（動いている最中は強めに弾く）
-    for (const f of flippers) {
-      const tip = flipperTip(f);
-      collideSegment(b, f.x, f.y, tip.x, tip.y, 0.4, f.speed * 40);
-    }
-
-    // ドレイン（落下）
-    if (b.y > H + BALL_R * 2) loseBall();
+    for (const bp of bumpers) if (bp.hit > 0) bp.hit -= 1;
   }
 
   function draw() {
@@ -290,4 +313,7 @@
 
   updateHud();
   loop();
+
+  // デバッグ/動作検証用フック（UIからは使わない）
+  window.__pinball = { state, launch, W, H };
 })();
