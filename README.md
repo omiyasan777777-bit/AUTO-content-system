@@ -1,7 +1,12 @@
-# POSTERIE — 楽天アフィリ投稿アトリエ 🛍
+# POSTERIE — 楽天アフィリ投稿アトリエ 🛍(黒白ver.)
 
-楽天の商品URLを入れるだけで、**X / Threads / Instagram 用のアフィリエイト投稿文**を自動生成するローカルWebアプリ。
-サーバー不要・単一HTMLファイル。`index.html` をダブルクリックするだけで動きます。
+楽天の商品URLを入れるだけで、**X / Threads / Instagram 用のアフィリエイト投稿文**を自動生成するWebアプリ。
+サーバー不要・単一HTMLファイル。
+
+**🌐 公開URL: https://omiyasan777777-bit.github.io/AUTO-content-system/**
+(このフォルダに変更をプッシュすると GitHub Actions が自動で再デプロイします)
+
+ローカルで使う場合は `index.html` をダブルクリックするだけでも動きます。
 
 ## できること
 
