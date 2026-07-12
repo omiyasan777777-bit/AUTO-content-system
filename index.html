@@ -1,351 +1,1035 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KENSHIRO — The Side Income Programme</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --ink:      #0e0e0e;
-      --ink-2:    #1c1c1c;
-      --ink-3:    #2a2a2a;
-      --mist:     #f5f3ef;
-      --cream:    #faf8f4;
-      --warm-mid: #8a7f72;
-      --warm-lt:  #c9bfb0;
-      --accent:   #b5985a;
-      --accent-lt:#d4b87a;
-      --rule:     rgba(180,168,148,0.25);
-      --serif: 'Cormorant Garamond', Georgia, serif;
-      --sans:  'Inter', system-ui, sans-serif;
-      --ease: cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; font-size: 16px; }
-    body { font-family: var(--sans); background: var(--ink); color: var(--mist); line-height: 1.7; -webkit-font-smoothing: antialiased; }
-    a { color: inherit; text-decoration: none; }
-    img { display: block; max-width: 100%; }
-    .wrap   { max-width: 680px; margin: 0 auto; padding: 0 24px; }
-    .wrap--wide { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-    section { padding: 100px 0; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-    @media (max-width: 540px) { .row { grid-template-columns: 1fr; } }
-    .eyebrow { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 12px; }
-    .eyebrow::after { content: ''; display: block; height: 1px; width: 40px; background: var(--accent); opacity: 0.6; }
-    .display { font-family: var(--serif); font-weight: 300; font-size: clamp(40px, 8vw, 72px); line-height: 1.08; letter-spacing: -0.01em; }
-    .display em { font-style: italic; color: var(--accent-lt); }
-    .h2 { font-family: var(--serif); font-weight: 300; font-size: clamp(30px, 5vw, 48px); line-height: 1.15; letter-spacing: -0.01em; }
-    .h2 em { font-style: italic; color: var(--accent-lt); }
-    .h3 { font-family: var(--serif); font-size: clamp(20px, 3vw, 26px); font-weight: 400; line-height: 1.3; }
-    .body-lg { font-size: 15px; line-height: 1.85; color: var(--warm-lt); font-weight: 300; }
-    .body-sm { font-size: 13px; line-height: 1.8;  color: var(--warm-mid); font-weight: 300; }
-    .rule { border: none; border-top: 1px solid var(--rule); }
-    .mt-6  { margin-top: 6px; }
-    .mt-12 { margin-top: 12px; }
-    .mt-20 { margin-top: 20px; }
-    .mt-28 { margin-top: 28px; }
-    .mt-40 { margin-top: 40px; }
-    .mt-56 { margin-top: 56px; }
-    .btn { display: inline-block; font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; padding: 16px 36px; border: 1px solid currentColor; border-radius: 2px; cursor: pointer; transition: background 0.25s var(--ease), color 0.25s var(--ease); text-align: center; }
-    .btn--fill { background: var(--accent); color: var(--ink); border-color: var(--accent); }
-    .btn--fill:hover { background: var(--accent-lt); border-color: var(--accent-lt); }
-    .btn--ghost { background: transparent; color: var(--mist); border-color: rgba(245,243,239,0.3); }
-    .btn--ghost:hover { background: rgba(245,243,239,0.06); }
-    .btn--block { display: block; width: 100%; }
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: rgba(14,14,14,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--rule); }
-    .nav__inner { max-width: 960px; margin: 0 auto; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-    .nav__logo { font-family: var(--serif); font-size: 18px; font-weight: 400; letter-spacing: 0.06em; }
-    .nav__cta { display: none; }
-    @media (min-width: 540px) { .nav__cta { display: block; } }
-    .hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding-top: 56px; position: relative; overflow: hidden; }
-    .hero__bg { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 80% 20%, rgba(181,152,90,0.07) 0%, transparent 65%), radial-gradient(ellipse 50% 50% at 10% 80%, rgba(181,152,90,0.04) 0%, transparent 60%), linear-gradient(170deg, #121010 0%, #0e0e0e 100%); }
-    .hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--rule) 1px, transparent 1px), linear-gradient(90deg, var(--rule) 1px, transparent 1px); background-size: 80px 80px; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%); }
-    .hero__inner { position: relative; padding: 80px 24px 72px; max-width: 960px; margin: 0 auto; width: 100%; }
-    .hero__kicker { margin-bottom: 28px; }
-    .hero__title { max-width: 640px; }
-    .hero__body { max-width: 480px; margin-top: 24px; }
-    .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
-    .hero__stats { display: flex; flex-wrap: wrap; gap: 0; margin-top: 72px; border-top: 1px solid var(--rule); padding-top: 32px; }
-    .hero__stat { flex: 1 0 120px; padding: 0 32px 0 0; }
-    .hero__stat + .hero__stat { padding-left: 32px; border-left: 1px solid var(--rule); }
-    .hero__stat-val { font-family: var(--serif); font-size: clamp(28px, 5vw, 40px); font-weight: 300; color: var(--accent-lt); line-height: 1; }
-    .hero__stat-lbl { font-size: 11px; color: var(--warm-mid); margin-top: 6px; letter-spacing: 0.05em; }
-    .bg-ink2  { background: var(--ink-2); }
-    .bg-ink3  { background: var(--ink-3); }
-    .bg-cream { background: var(--cream); color: var(--ink); }
-    .bg-cream .body-lg { color: #5a5248; }
-    .bg-cream .body-sm { color: #8a7f72; }
-    .bg-cream .eyebrow { color: #8a6c32; }
-    .bg-cream .eyebrow::after { background: #8a6c32; }
-    .pain-list { margin-top: 48px; }
-    .pain-item { display: grid; grid-template-columns: 20px 1fr; gap: 20px; align-items: start; padding: 24px 0; border-bottom: 1px solid var(--rule); }
-    .pain-item:first-child { border-top: 1px solid var(--rule); }
-    .pain-num { font-family: var(--serif); font-size: 13px; color: var(--accent); font-style: italic; padding-top: 2px; }
-    .pain-text { font-size: 14px; line-height: 1.85; color: var(--warm-lt); font-weight: 300; }
-    .pain-text strong { color: var(--mist); font-weight: 500; }
-    .callout { margin-top: 40px; border: 1px solid var(--rule); border-left: 2px solid var(--accent); padding: 24px 28px; border-radius: 2px; }
-    .callout p { font-size: 14px; line-height: 1.9; color: var(--warm-lt); }
-    .callout strong { color: var(--mist); }
-    .method-steps { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
-    .method-step { display: grid; grid-template-columns: 48px 1fr; gap: 24px; padding: 32px 0; border-bottom: 1px solid var(--rule); align-items: start; }
-    .method-step:first-child { border-top: 1px solid var(--rule); }
-    .step-num { font-family: var(--serif); font-size: 36px; font-weight: 300; color: var(--accent); opacity: 0.5; line-height: 1; }
-    .step-title { font-family: var(--serif); font-size: 20px; font-weight: 400; line-height: 1.3; }
-    .step-body { margin-top: 8px; font-size: 14px; color: var(--warm-lt); line-height: 1.85; font-weight: 300; }
-    .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--rule); margin-top: 48px; }
-    .metric { background: var(--ink-2); padding: 36px 28px; }
-    .metric__label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warm-mid); }
-    .metric__val { font-family: var(--serif); font-size: clamp(28px, 6vw, 44px); font-weight: 300; color: var(--accent-lt); margin-top: 8px; line-height: 1; }
-    .metric__sub { font-size: 12px; color: var(--warm-mid); margin-top: 6px; }
-    @media (max-width: 420px) { .metrics { grid-template-columns: 1fr; } }
-    .chapters { margin-top: 48px; }
-    .chapter { border-top: 1px solid var(--rule); padding: 28px 0; }
-    .chapter:last-child { border-bottom: 1px solid var(--rule); }
-    .chapter__head { display: grid; grid-template-columns: 28px 1fr; gap: 20px; align-items: baseline; }
-    .chapter__index { font-family: var(--serif); font-size: 13px; color: var(--accent); font-style: italic; }
-    .chapter__title { font-size: 15px; font-weight: 500; color: var(--mist); }
-    .chapter__lessons { margin-top: 16px; padding-left: 48px; display: flex; flex-direction: column; gap: 8px; }
-    .lesson-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--warm-mid); font-weight: 300; }
-    .lesson-row::before { content: ''; display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); opacity: 0.5; flex-shrink: 0; }
-    .instructor { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
-    @media (max-width: 540px) { .instructor { grid-template-columns: 1fr; } }
-    .instructor__portrait { aspect-ratio: 3/4; background: linear-gradient(160deg, #2a2520 0%, #1a1a18 100%); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-size: 64px; color: var(--warm-mid); border-radius: 2px; }
-    .instructor__name { font-family: var(--serif); font-size: 32px; font-weight: 300; line-height: 1.1; }
-    .instructor__role { font-size: 12px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 8px; }
-    .instructor__figures { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--rule); }
-    .figure__val { font-family: var(--serif); font-size: 26px; font-weight: 300; color: var(--accent-lt); }
-    .figure__lbl { font-size: 11px; color: var(--warm-mid); margin-top: 4px; }
-    .instructor__bio { margin-top: 24px; font-size: 14px; line-height: 1.9; color: var(--warm-lt); font-weight: 300; }
-    .testimonials-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); margin-top: 48px; }
-    @media (max-width: 540px) { .testimonials-grid { grid-template-columns: 1fr; } }
-    .testi { background: var(--ink-2); padding: 32px 28px; }
-    .testi__stars { color: var(--accent); font-size: 12px; letter-spacing: 3px; margin-bottom: 16px; }
-    .testi__result { font-family: var(--serif); font-size: 22px; font-weight: 300; color: var(--accent-lt); margin-bottom: 16px; line-height: 1.2; }
-    .testi__body { font-size: 13px; line-height: 1.85; color: var(--warm-lt); font-weight: 300; }
-    .testi__meta { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--warm-mid); }
-    .price-card { margin-top: 48px; border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
-    .price-card__top { background: linear-gradient(135deg, #1e1a14 0%, #141210 100%); padding: 48px 40px; }
-    .price-original { font-size: 14px; color: var(--warm-mid); text-decoration: line-through; }
-    .price-amount { font-family: var(--serif); font-size: clamp(48px, 10vw, 72px); font-weight: 300; color: var(--accent-lt); line-height: 1; margin-top: 4px; }
-    .price-amount sup { font-size: 40%; vertical-align: super; margin-right: 4px; }
-    .price-amount sub { font-size: 22px; margin-left: 4px; font-family: var(--sans); color: var(--warm-mid); }
-    .price-tax { font-size: 12px; color: var(--warm-mid); margin-top: 8px; }
-    .price-card__body { padding: 36px 40px; }
-    .price-features { display: flex; flex-direction: column; gap: 14px; }
-    .price-feature { display: flex; align-items: flex-start; gap: 14px; font-size: 14px; color: var(--warm-lt); font-weight: 300; }
-    .pf-check { width: 18px; height: 18px; border: 1px solid var(--accent); border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--accent); margin-top: 2px; }
-    .price-guarantee { margin-top: 28px; padding: 20px 24px; border: 1px solid var(--rule); border-radius: 2px; font-size: 13px; color: var(--warm-mid); line-height: 1.75; }
-    .price-guarantee strong { color: var(--warm-lt); display: block; margin-bottom: 4px; }
-    .price-cta-block { margin-top: 32px; display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
-    .price-note { font-size: 12px; color: var(--warm-mid); text-align: center; }
-    .faqs { margin-top: 48px; }
-    .faq { border-top: 1px solid var(--rule); padding: 24px 0; }
-    .faq:last-child { border-bottom: 1px solid var(--rule); }
-    .faq__q { display: flex; align-items: flex-start; gap: 16px; font-size: 15px; font-weight: 500; color: var(--mist); line-height: 1.5; }
-    .faq__q-mark { font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--accent); flex-shrink: 0; line-height: 1.4; }
-    .faq__a { margin-top: 12px; padding-left: 30px; font-size: 14px; color: var(--warm-lt); line-height: 1.85; font-weight: 300; }
-    .closing { background: var(--ink); padding: 120px 24px; text-align: center; }
-    .closing__inner { max-width: 560px; margin: 0 auto; }
-    .closing__quote { font-family: var(--serif); font-size: clamp(26px, 5vw, 40px); font-weight: 300; line-height: 1.35; letter-spacing: -0.01em; }
-    .closing__quote em { font-style: italic; color: var(--accent-lt); }
-    .closing__sub { margin-top: 20px; font-size: 14px; color: var(--warm-mid); line-height: 1.8; font-weight: 300; }
-    footer { background: var(--ink-2); border-top: 1px solid var(--rule); padding: 40px 24px; }
-    .footer__inner { max-width: 960px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
-    .footer__logo { font-family: var(--serif); font-size: 18px; color: var(--warm-mid); }
-    .footer__links { display: flex; gap: 24px; flex-wrap: wrap; }
-    .footer__links a { font-size: 12px; color: var(--warm-mid); letter-spacing: 0.05em; }
-    .footer__copy { width: 100%; font-size: 11px; color: #3a3a3a; margin-top: 24px; }
-    .sticky { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(14,14,14,0.92); backdrop-filter: blur(20px); border-top: 1px solid var(--rule); padding: 12px 24px; z-index: 100; }
-    .sticky a { display: block; }
-    @media (min-width: 600px) { .sticky { display: none; } }
-    .bg-cream .h2 em   { color: #8a6c32; }
-    .bg-cream .chapter { border-color: rgba(0,0,0,0.1); }
-    .bg-cream .chapter__index { color: #8a6c32; }
-    .bg-cream .chapter__title { color: var(--ink); }
-    .bg-cream .lesson-row { color: #7a6e64; }
-    .bg-cream .lesson-row::before { background: #8a6c32; }
-    .bg-cream .faq__q { color: var(--ink); }
-    .bg-cream .faq__q-mark { color: #8a6c32; }
-    .bg-cream .faq__a { color: #5a5248; }
-    .bg-cream .faq { border-color: rgba(0,0,0,0.1); }
-    .bg-cream .callout { border-color: rgba(0,0,0,0.12); border-left-color: #8a6c32; }
-    .bg-cream .callout p { color: #5a5248; }
-    .bg-cream .callout strong { color: var(--ink); }
-    .bg-cream .eyebrow::after { background: #8a6c32; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E&%23128717;%3C/text%3E%3C/svg%3E">
+<title>POSTERIE — 楽天アフィリ投稿アトリエ</title>
+<style>
+/* ============ POSTERIE 黒白ver. ─ 扉絵スタイル ============ */
+:root{
+  --paper:#F1F0EC;
+  --paper-2:#FFFFFF;
+  --paper-3:#E4E2DB;
+  --ink:#121116;
+  --ink-2:#4C4A52;
+  --ink-3:#8B8892;
+  --line:#C9C6BD;
+  --edge:#121116;
+  --hard:#121116;
+  --accent:#BF1E24;
+  --accent-soft:#F3DCDB;
+  --accent-ink:#FFFFFF;
+  --ok:#20794D;
+  --ok-soft:#DFEDE4;
+  --warn:#9A6410;
+  --warn-soft:#F2E7CE;
+  --bad:#BF1E24;
+  --bad-soft:#F3DCDB;
+  --shadow:6px 6px 0 var(--hard);
+  --serif:Impact,"Arial Black","Hiragino Sans","Yu Gothic",sans-serif;
+  --sans:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic","Noto Sans JP","Meiryo",sans-serif;
+  --mono:"SF Mono","Cascadia Code","Consolas","Menlo",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0A0A0D;
+    --paper-2:#131217;
+    --paper-3:#1F1E25;
+    --ink:#F0EDE6;
+    --ink-2:#B9B6BD;
+    --ink-3:#716E79;
+    --line:#33313A;
+    --edge:#F0EDE6;
+    --hard:#F0EDE6;
+    --accent:#E5303B;
+    --accent-soft:#3A1A1E;
+    --accent-ink:#FFFFFF;
+    --ok:#4DBE88;
+    --ok-soft:#16281F;
+    --warn:#DCA23E;
+    --warn-soft:#302512;
+    --bad:#FF4A52;
+    --bad-soft:#3A1A1E;
+    --shadow:6px 6px 0 rgba(240,237,230,.9);
+  }
+}
+:root[data-theme="light"]{
+  --paper:#F1F0EC; --paper-2:#FFFFFF; --paper-3:#E4E2DB;
+  --ink:#121116; --ink-2:#4C4A52; --ink-3:#8B8892;
+  --line:#C9C6BD; --edge:#121116; --hard:#121116;
+  --accent:#BF1E24; --accent-soft:#F3DCDB; --accent-ink:#FFFFFF;
+  --ok:#20794D; --ok-soft:#DFEDE4; --warn:#9A6410; --warn-soft:#F2E7CE;
+  --bad:#BF1E24; --bad-soft:#F3DCDB;
+  --shadow:6px 6px 0 var(--hard);
+}
+:root[data-theme="dark"]{
+  --paper:#0A0A0D; --paper-2:#131217; --paper-3:#1F1E25;
+  --ink:#F0EDE6; --ink-2:#B9B6BD; --ink-3:#716E79;
+  --line:#33313A; --edge:#F0EDE6; --hard:#F0EDE6;
+  --accent:#E5303B; --accent-soft:#3A1A1E; --accent-ink:#FFFFFF;
+  --ok:#4DBE88; --ok-soft:#16281F; --warn:#DCA23E; --warn-soft:#302512;
+  --bad:#FF4A52; --bad-soft:#3A1A1E;
+  --shadow:6px 6px 0 rgba(240,237,230,.9);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  background-image:repeating-linear-gradient(115deg, transparent 0 34px, color-mix(in srgb, var(--ink) 4%, transparent) 34px 35px);
+  color:var(--ink);
+  line-height:1.75;
+  min-height:100vh;
+  border-top:6px solid var(--accent);
+}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:36px 0 30px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:16px}
+.brand svg{flex:none}
+.brand h1{
+  font-family:var(--serif);font-weight:900;font-size:clamp(2.2rem,5vw,3rem);
+  letter-spacing:.03em;line-height:1;text-transform:uppercase;
+}
+.brand h1 em{font-style:normal;color:var(--accent)}
+.brand h1::after{
+  content:"";display:block;width:110px;height:9px;margin-top:7px;
+  background:var(--accent);transform:skewX(-32deg);transform-origin:left bottom;
+}
+.brand .tagline{font-size:.78rem;color:var(--ink-2);letter-spacing:.14em;margin-top:8px;font-weight:700}
+.head-actions{display:flex;gap:8px}
+.ghost-btn{
+  background:transparent;border:1.5px solid var(--ink-2);border-radius:0;
+  padding:7px 15px;font-size:.78rem;font-weight:700;letter-spacing:.08em;color:var(--ink-2);
+  transition:background .12s,color .12s,border-color .12s;
+}
+.ghost-btn:hover{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:390px 1fr;gap:26px;align-items:start}
+@media (max-width:940px){.cols{grid-template-columns:1fr}}
+.panel{
+  position:relative;background:var(--paper-2);
+  border:1.5px solid var(--edge);box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 20px 0;position:relative;z-index:1}
+.panel-h h2{font-size:1.1rem;font-weight:900;letter-spacing:.06em}
+.eyebrow{
+  font-family:var(--serif);font-size:.64rem;letter-spacing:.3em;color:var(--accent);
+  font-weight:700;text-transform:uppercase;display:block;margin-bottom:2px;
+}
+.panel-b{padding:16px 20px 22px;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+
+/* ---------- form ---------- */
+label.f{display:block}
+label.f .lt{font-size:.76rem;font-weight:700;color:var(--ink-2);letter-spacing:.08em;display:flex;justify-content:space-between;margin-bottom:5px}
+label.f .lt small{font-weight:400;color:var(--ink-3)}
+.tx,textarea.tx{
+  width:100%;border:1.5px solid var(--line);border-radius:0;background:var(--paper);
+  padding:10px 12px;font-size:.92rem;line-height:1.6;transition:border-color .12s;
+}
+.tx:focus{border-color:var(--accent);outline:none}
+textarea.tx{resize:vertical;min-height:64px}
+.url-row{display:flex;gap:8px}
+.url-row .tx{flex:1;min-width:0}
+.fetch-note{font-size:.74rem;color:var(--ink-3);line-height:1.6}
+.fetch-note a{color:var(--accent)}
+.fetch-status{font-size:.78rem;padding:7px 10px;display:none;line-height:1.5;border-left:4px solid transparent}
+.fetch-status.on{display:block}
+.fetch-status.ok{background:var(--ok-soft);color:var(--ok);border-left-color:var(--ok)}
+.fetch-status.warn{background:var(--warn-soft);color:var(--warn);border-left-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+
+/* tone segmented */
+.tones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tone{
+  border:1.5px solid var(--line);background:var(--paper);border-radius:0;
+  padding:9px 10px;text-align:left;transition:background .12s,border-color .12s;
+}
+.tone .tn{font-size:.84rem;font-weight:700;display:block}
+.tone .td{font-size:.7rem;color:var(--ink-3);display:block;line-height:1.4}
+.tone:hover{border-color:var(--ink)}
+.tone[aria-pressed="true"]{border-color:var(--ink);background:var(--ink)}
+.tone[aria-pressed="true"] .tn{color:var(--paper)}
+.tone[aria-pressed="true"] .td{color:color-mix(in srgb, var(--paper) 70%, var(--ink))}
+
+.gen-btn{
+  width:100%;border:none;border-radius:0;padding:15px;
+  background:var(--accent);color:var(--accent-ink);
+  font-family:var(--serif);font-size:1.05rem;font-weight:900;letter-spacing:.18em;
+  transform:skewX(-6deg);
+  box-shadow:5px 5px 0 var(--hard);
+  transition:transform .1s,box-shadow .1s,filter .12s;
+}
+.gen-btn:hover{filter:brightness(1.1)}
+.gen-btn:active{transform:skewX(-6deg) translate(3px,3px);box-shadow:2px 2px 0 var(--hard)}
+.gen-btn:disabled{opacity:.5;cursor:wait}
+
+details.adv{border-top:1.5px dashed var(--line);padding-top:12px}
+details.adv summary{font-size:.78rem;color:var(--ink-2);cursor:pointer;letter-spacing:.06em;font-weight:700;list-style:none;display:flex;align-items:center;gap:6px}
+details.adv summary::before{content:"▸";color:var(--accent);transition:transform .12s;display:inline-block}
+details.adv[open] summary::before{transform:rotate(90deg)}
+details.adv .panel-b{padding:12px 0 0}
+
+/* ---------- results ---------- */
+.results{display:flex;flex-direction:column;gap:26px;min-width:0}
+.empty{
+  position:relative;border:1.5px solid var(--edge);background:var(--paper-2);
+  box-shadow:var(--shadow);padding:64px 24px;text-align:center;color:var(--ink-3);overflow:hidden;
+}
+.empty::after{
+  content:"未";position:absolute;right:-24px;bottom:-70px;
+  font-family:var(--serif);font-size:13rem;line-height:1;color:var(--ink);opacity:.05;pointer-events:none;
+}
+.empty .big{font-family:var(--serif);font-size:1.5rem;font-weight:900;letter-spacing:.22em;color:var(--ink);margin-bottom:10px}
+.empty .big i{font-style:normal;color:var(--accent)}
+.empty p{font-size:.85rem;max-width:34em;margin:0 auto;position:relative}
+
+.post-card::after{
+  content:attr(data-glyph);position:absolute;right:-14px;bottom:-56px;
+  font-family:var(--serif);font-size:11rem;line-height:1;font-weight:900;
+  color:var(--ink);opacity:.05;pointer-events:none;
+}
+.pf{display:flex;align-items:center;gap:10px}
+.pf .pf-ic{width:34px;height:34px;display:grid;place-items:center;background:var(--ink);color:var(--paper)}
+.pf .pf-name{font-weight:900;font-size:.95rem;letter-spacing:.05em}
+.pf .pf-sub{font-size:.7rem;color:var(--ink-3);display:block;line-height:1.3;font-weight:400}
+.card-tools{display:flex;gap:8px;flex-wrap:wrap}
+.tool-btn{
+  border:1.5px solid var(--edge);background:transparent;border-radius:0;
+  padding:6px 12px;font-size:.78rem;font-weight:700;letter-spacing:.04em;color:var(--ink);
+  display:inline-flex;align-items:center;gap:6px;
+  transition:background .12s,color .12s,border-color .12s;
+}
+.tool-btn:hover{background:var(--ink);color:var(--paper)}
+.tool-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tool-btn.primary:hover{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.post-body{
+  position:relative;z-index:1;margin:14px 20px 0;border:1.5px solid var(--line);background:var(--paper);
+  padding:14px 16px;font-size:.92rem;line-height:1.9;white-space:pre-wrap;word-break:break-word;
+  min-height:120px;
+}
+.post-foot{display:flex;align-items:center;gap:12px;padding:12px 20px 18px;flex-wrap:wrap;position:relative;z-index:1}
+.meter{flex:1;min-width:140px;height:8px;background:var(--paper-3);border:1px solid var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink);transition:width .25s,background .25s}
+.meter i.warn{background:var(--warn)}
+.meter i.over{background:var(--bad)}
+.count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.76rem;color:var(--ink-2);white-space:nowrap}
+.count b{color:var(--ink)}
+.count.over b{color:var(--bad)}
+
+/* ---------- CTA bank ---------- */
+.cta-list{display:flex;flex-direction:column;gap:8px;padding:14px 20px 22px;position:relative;z-index:1}
+.cta-item{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);padding:9px 12px;background:var(--paper)}
+.cta-item span{flex:1;font-size:.86rem;min-width:0}
+.cta-item .tool-btn{flex:none}
+
+/* ---------- NG check ---------- */
+.ng-sum{display:flex;gap:8px;flex-wrap:wrap;padding:14px 20px 0;position:relative;z-index:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;font-size:.76rem;font-weight:700;letter-spacing:.03em}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-left:4px solid var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-left:4px solid var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-left:4px solid var(--bad)}
+.ng-list{display:flex;flex-direction:column;gap:10px;padding:14px 20px 22px;position:relative;z-index:1}
+.ng-item{border:1.5px solid var(--line);border-left:5px solid var(--warn);padding:10px 14px;background:var(--paper)}
+.ng-item.high{border-left-color:var(--bad)}
+.ng-item.low{border-left-color:var(--ink-3)}
+.ng-item .ng-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.ng-item .word{font-weight:900;font-size:.9rem}
+.ng-item .cat{font-size:.66rem;letter-spacing:.1em;padding:2px 7px;background:var(--ink);color:var(--paper);font-weight:700}
+.ng-item .where{font-size:.68rem;color:var(--ink-3)}
+.ng-item .why{font-size:.8rem;color:var(--ink-2)}
+.ng-item .fix{font-size:.8rem;margin-top:3px}
+.ng-item .fix b{color:var(--ok)}
+.ng-ok{padding:8px 20px 22px;font-size:.86rem;color:var(--ok);display:flex;align-items:center;gap:8px;position:relative;z-index:1}
+.free-check{padding:0 20px 22px;display:flex;flex-direction:column;gap:8px;border-top:1.5px dashed var(--line);margin-top:4px;padding-top:14px;position:relative;z-index:1}
+.free-check .row{display:flex;gap:8px;justify-content:flex-end}
+
+/* ---------- modal ---------- */
+dialog{
+  border:1.5px solid var(--edge);border-radius:0;background:var(--paper-2);color:var(--ink);
+  max-width:460px;width:calc(100vw - 40px);padding:0;box-shadow:var(--shadow);
+}
+dialog::backdrop{background:rgba(6,5,8,.62)}
+dialog .panel-h{padding-top:18px}
+dialog .panel-b{padding-bottom:22px}
+dialog .row{display:flex;justify-content:flex-end;gap:8px}
+
+/* ---------- toast ---------- */
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) skewX(-6deg) translateY(20px);
+  background:var(--accent);color:var(--accent-ink);padding:9px 22px;
+  font-size:.84rem;font-weight:700;letter-spacing:.06em;
+  box-shadow:4px 4px 0 var(--hard);
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;
+}
+#toast.on{opacity:1;transform:translateX(-50%) skewX(-6deg) translateY(0)}
+
+footer{margin-top:48px;border-top:1.5px solid var(--edge);padding-top:18px;font-size:.74rem;color:var(--ink-3);line-height:1.9}
+footer b{color:var(--ink-2)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition:none !important;animation:none !important}
+}
+</style>
 </head>
 <body>
-<nav>
-  <div class="nav__inner">
-    <div class="nav__logo">Kenshiro</div>
-    <a class="btn btn--fill nav__cta" href="#enrol">Enrol Now</a>
-  </div>
-</nav>
-<section class="hero">
-  <div class="hero__bg"></div>
-  <div class="hero__grid"></div>
-  <div class="hero__inner">
-    <div class="hero__kicker"><span class="eyebrow">The Side Income Programme — 2024</span></div>
-    <h1 class="display hero__title">副業で<em>月10万円</em><br>を実現する、<br>最短の道。</h1>
-    <p class="body-lg hero__body">才能でも運でもなく、正しい設計と仕組みで。<br>初心者でも再現できる、完全ロードマップ。</p>
-    <div class="hero__actions">
-      <a class="btn btn--fill" href="#enrol">プログラムに参加する</a>
-      <a class="btn btn--ghost" href="#curriculum">カリキュラムを見る</a>
-    </div>
-    <div class="hero__stats">
-      <div class="hero__stat"><div class="hero__stat-val">1,240</div><div class="hero__stat-lbl">受講生</div></div>
-      <div class="hero__stat"><div class="hero__stat-val">97%</div><div class="hero__stat-lbl">満足度</div></div>
-      <div class="hero__stat"><div class="hero__stat-val">3ヶ月</div><div class="hero__stat-lbl">平均結果期間</div></div>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <svg width="52" height="52" viewBox="0 0 46 46" fill="none" aria-hidden="true">
+      <rect x="1" y="1" width="44" height="44" fill="var(--ink)"/>
+      <path d="M15 19h16l-1.6 15a2.5 2.5 0 0 1-2.5 2.2H19.1a2.5 2.5 0 0 1-2.5-2.2L15 19Z" fill="var(--paper)"/>
+      <path d="M18.5 22v-5.5a4.5 4.5 0 0 1 9 0V22" stroke="var(--paper)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <polygon points="31,0 39,0 15,46 7,46" fill="var(--accent)" opacity=".88"/>
+    </svg>
+    <div>
+      <h1>POSTERIE<em>.</em></h1>
+      <div class="tagline">RAKUTEN AFFILIATE POST ATELIER ─ URLひとつで、投稿文を解放する。</div>
     </div>
   </div>
-</section>
-<section class="bg-ink2">
-  <div class="wrap">
-    <span class="eyebrow">The Problem</span>
-    <h2 class="h2 mt-20">なぜ、多くの人が<br><em>副業で結果を出せないのか。</em></h2>
-    <div class="pain-list">
-      <div class="pain-item"><div class="pain-num">01</div><div class="pain-text">情報収集に数ヶ月費やすが、<strong>何が正しいか判断できない</strong>まま行動できずに終わる。</div></div>
-      <div class="pain-item"><div class="pain-num">02</div><div class="pain-text">仕事が忙しく<strong>まとまった時間が取れない</strong>。夜と週末だけでは何もできない気がする。</div></div>
-      <div class="pain-item"><div class="pain-num">03</div><div class="pain-text">SNSやYoutubeで独学するが再現性がなく、<strong>「自分には無理」という思い込み</strong>が強まる。</div></div>
-      <div class="pain-item"><div class="pain-num">04</div><div class="pain-text">一度チャレンジし挫折。以来、<strong>副業で稼げるのは特別な人だけ</strong>だと信じている。</div></div>
-      <div class="pain-item"><div class="pain-num">05</div><div class="pain-text">高額な塾に入ったが<strong>サポートが薄く</strong>、結局自力では何もできないまま費用だけかかった。</div></div>
-    </div>
-    <div class="callout"><p><strong>これはあなたの努力不足ではありません。</strong><br>原因は、間違ったやり方と設計のない戦略にあります。正しい順番と仕組みさえあれば、誰でも再現できます。</p></div>
+  <div class="head-actions">
+    <button class="ghost-btn" id="settingsBtn" type="button">⚙ API設定</button>
+    <button class="ghost-btn" id="themeBtn" type="button" aria-label="黒白テーマ切り替え">◐ 黒 / 白</button>
   </div>
-</section>
-<section>
-  <div class="wrap">
-    <span class="eyebrow">The Method</span>
-    <h2 class="h2 mt-20">仕組み化こそが、<br><em>唯一の答え。</em></h2>
-    <p class="body-lg mt-20">月10万円の壁を超えられない人の9割は、努力の方向を間違えています。副業は時間を売るビジネスではなく、仕組みで稼ぐビジネスです。</p>
-    <div class="method-steps">
-      <div class="method-step"><div class="step-num">I</div><div class="step-content"><div class="step-title">稼げる市場の選定</div><div class="step-body">競合が少なく需要が高いニッチを特定。最初から勝てる土俵を選ぶことで、努力の効率を最大化します。</div></div></div>
-      <div class="method-step"><div class="step-num">II</div><div class="step-content"><div class="step-title">自動集客システムの構築</div><div class="step-body">SNS × コンテンツマーケティングで、寝ている間も見込み客が集まる仕組みを構築します。</div></div></div>
-      <div class="method-step"><div class="step-num">III</div><div class="step-content"><div class="step-title">高単価商品への誘導設計</div><div class="step-body">信頼を積み上げながら、5万〜30万円の商品が自然に売れる導線を設計します。</div></div></div>
+</header>
+
+<div class="cols">
+
+  <!-- ============ INPUT ============ -->
+  <section class="panel" aria-label="商品情報の入力">
+    <div class="panel-h">
+      <h2><span class="eyebrow">Step 1</span>商品を教えてください</h2>
     </div>
-  </div>
-</section>
-<section class="bg-ink2">
-  <div class="wrap--wide">
-    <span class="eyebrow" style="max-width:680px;display:block;margin:0 auto;padding-right:24px;">Results</span>
-    <h2 class="h2 mt-20" style="max-width:680px;margin:20px auto 0;">1,240名が証明した、<br><em>リアルな数字。</em></h2>
-    <div class="metrics mt-12" style="max-width:720px;margin-left:auto;margin-right:auto;">
-      <div class="metric"><div class="metric__label">月収 UP — Aさん / 30代会社員</div><div class="metric__val">＋12万円</div><div class="metric__sub">受講2ヶ月目</div></div>
-      <div class="metric"><div class="metric__label">月収 UP — Bさん / 20代OL</div><div class="metric__val">＋8万円</div><div class="metric__sub">受講3ヶ月目</div></div>
-      <div class="metric"><div class="metric__label">月収 UP — Cさん / 40代主婦</div><div class="metric__val">＋21万円</div><div class="metric__sub">受講4ヶ月目</div></div>
-      <div class="metric"><div class="metric__label">月収 UP — Dさん / 30代教師</div><div class="metric__val">＋6万円</div><div class="metric__sub">受講1ヶ月目</div></div>
-    </div>
-    <p class="body-sm mt-20" style="max-width:680px;margin-left:auto;margin-right:auto;">※ 個人の環境・努力により成果は異なります。修了者の83%が3ヶ月以内に初収益を達成。</p>
-  </div>
-</section>
-<section class="bg-cream" id="curriculum">
-  <div class="wrap">
-    <span class="eyebrow">Curriculum</span>
-    <h2 class="h2 mt-20" style="color:var(--ink)">ゼロから月10万円まで、<br><em>完全ロードマップ。</em></h2>
-    <p class="body-lg mt-20">全62講義 · 動画 + テキスト + テンプレート</p>
-    <div class="chapters">
-      <div class="chapter"><div class="chapter__head"><div class="chapter__index">I</div><div class="chapter__title">マインドセット &amp; 副業設計の基礎</div></div><div class="chapter__lessons"><div class="lesson-row">副業で失敗する人の共通パターン</div><div class="lesson-row">稼げる市場の選び方 — 4つの判定基準</div><div class="lesson-row">あなただけの強みを発掘するワーク</div><div class="lesson-row">90日ロードマップの作り方</div></div></div>
-      <div class="chapter"><div class="chapter__head"><div class="chapter__index">II</div><div class="chapter__title">SNS × コンテンツで集客する仕組み</div></div><div class="chapter__lessons"><div class="lesson-row">アルゴリズム解析とバズるコンテンツの法則</div><div class="lesson-row">フォロワー0→1,000人の最速ルート</div><div class="lesson-row">コンテンツカレンダーの設計と自動化</div><div class="lesson-row">DM集客テンプレートと返信率を上げる文章術</div></div></div>
-      <div class="chapter"><div class="chapter__head"><div class="chapter__index">III</div><div class="chapter__title">高単価商品の設計と販売</div></div><div class="chapter__lessons"><div class="lesson-row">5〜30万円の商品を作るフレームワーク</div><div class="lesson-row">初回面談クロージングの台本</div><div class="lesson-row">価格の伝え方・値下げ交渉への対応</div><div class="lesson-row">リピート率90%を実現するアフターフォロー</div></div></div>
-      <div class="chapter"><div class="chapter__head"><div class="chapter__index">IV</div><div class="chapter__title">仕組み化 &amp; 月10万円の自動化</div></div><div class="chapter__lessons"><div class="lesson-row">LP・メルマガ・決済の連携設定</div><div class="lesson-row">コンテンツ販売の自動化フロー</div><div class="lesson-row">外注化で時間を買う方法</div><div class="lesson-row">本業を超えたらスケールアップする戦略</div></div></div>
-      <div class="chapter"><div class="chapter__head"><div class="chapter__index">V</div><div class="chapter__title">特典 — 実践サポート &amp; コミュニティ</div></div><div class="chapter__lessons"><div class="lesson-row">月2回のグループ質問会（LIVE・録画あり）</div><div class="lesson-row">Slackコミュニティ — 6ヶ月間</div><div class="lesson-row">受講生限定テンプレート素材集（30種以上）</div></div></div>
-    </div>
-  </div>
-</section>
-<section>
-  <div class="wrap">
-    <span class="eyebrow">Instructor</span>
-    <h2 class="h2 mt-20">このプログラムを<br><em>設計した人。</em></h2>
-    <div class="instructor">
-      <div class="instructor__portrait">👨</div>
-      <div class="instructor__info">
-        <div class="instructor__role">Side Income Consultant</div>
-        <div class="instructor__name">けんしろう</div>
-        <div class="instructor__figures">
-          <div><div class="figure__val">6年</div><div class="figure__lbl">副業歴</div></div>
-          <div><div class="figure__val">1,240</div><div class="figure__lbl">指導実績</div></div>
-          <div><div class="figure__val">月280万</div><div class="figure__lbl">最高収益</div></div>
+    <div class="panel-b">
+
+      <label class="f">
+        <span class="lt">楽天の商品URL <small>アフィリエイトリンクもOK</small></span>
+        <div class="url-row">
+          <input class="tx" id="url" type="url" inputmode="url" placeholder="https://item.rakuten.co.jp/... / hb.afl.rakuten.co.jp/...">
+          <button class="tool-btn" id="fetchBtn" type="button" title="楽天APIから商品情報を取得">取得</button>
         </div>
-        <div class="instructor__bio">会社員時代に副業を開始。最初の3ヶ月は月収0円だったが、「仕組み化」という概念に出会い、6ヶ月で月収10万円を突破。<br><br>現在はオンラインビジネス・コンテンツ販売・コンサルを中心に月収280万円を達成。1,200名以上の副業スタートを支援し、受講生の多くが3ヶ月以内に初収益を達成している。</div>
+      </label>
+      <div class="fetch-status" id="fetchStatus" role="status"></div>
+      <p class="fetch-note" id="fetchNote">💡 「⚙ API設定」で楽天アプリIDを登録すると、URLから商品名・価格・レビューを自動取得できます。未設定でも下の欄に手入力すればOK。</p>
+
+      <label class="f">
+        <span class="lt">商品名 <small>必須</small></span>
+        <input class="tx" id="pname" type="text" placeholder="例: 山善 電気ケトル 0.8L">
+      </label>
+
+      <div class="grid2">
+        <label class="f">
+          <span class="lt">価格 <small>任意</small></span>
+          <input class="tx" id="pprice" type="text" inputmode="numeric" placeholder="例: 3,480">
+        </label>
+        <label class="f">
+          <span class="lt">ジャンル</span>
+          <select class="tx" id="pgenre">
+            <option value="lifestyle">インテリア・日用品</option>
+            <option value="cosme">コスメ・美容</option>
+            <option value="fashion">ファッション</option>
+            <option value="food">グルメ・食品</option>
+            <option value="gadget">家電・ガジェット</option>
+            <option value="baby">ベビー・キッズ</option>
+            <option value="health">健康・フィットネス</option>
+            <option value="other">その他</option>
+          </select>
+        </label>
       </div>
-    </div>
-  </div>
-</section>
-<section class="bg-ink2">
-  <div class="wrap">
-    <span class="eyebrow">Testimonials</span>
-    <h2 class="h2 mt-20">受講生の声を、<br><em>そのままお届けします。</em></h2>
-    <div class="testimonials-grid">
-      <div class="testi"><div class="testi__stars">★★★★★</div><div class="testi__result">月収 ＋12万円</div><div class="testi__body">「また情報商材か」と思っていましたが、カリキュラムの質と具体性に驚きました。集客の仕組み化のパートは今まで誰にも教わったことがない視点で、3ヶ月目に初の10万円超えを達成した瞬間は本当に感動しました。</div><div class="testi__meta">A.S. — 30代 会社員 · 受講3ヶ月</div></div>
-      <div class="testi"><div class="testi__stars">★★★★★</div><div class="testi__result">月収 ＋21万円</div><div class="testi__body">子育て中でまとまった時間が取れない中でも、スキマ時間で実践できる内容で助かりました。Slackコミュニティで仲間がいたことが、続けられた最大の理由です。</div><div class="testi__meta">M.K. — 20代 主婦 · 受講4ヶ月</div></div>
-      <div class="testi"><div class="testi__stars">★★★★★</div><div class="testi__result">月収 ＋8万円</div><div class="testi__body">40代で副業を始めるのは遅すぎるかと不安でしたが、年齢に関係なく再現できる設計でした。毎月の質問会でけんしろうさんに直接相談できる安心感が違います。</div><div class="testi__meta">T.H. — 40代 会社員 · 受講2ヶ月</div></div>
-      <div class="testi" style="grid-column:1/-1;border-top:1px solid var(--rule);"><div class="testi__stars">★★★★★</div><div class="testi__result">月収 ＋6万円 → 翌月 ＋18万円</div><div class="testi__body">最初の月こそ時間がかかりましたが、仕組みが完成した翌月から一気に加速しました。「仕組み化」の意味が体感として理解できたとき、副業への向き合い方が根本から変わりました。</div><div class="testi__meta">R.Y. — 30代 フリーランス · 受講5ヶ月</div></div>
-    </div>
-  </div>
-</section>
-<section id="enrol">
-  <div class="wrap">
-    <span class="eyebrow">Enrolment</span>
-    <h2 class="h2 mt-20">今だけの<em>特別価格</em>で<br>ご参加いただけます。</h2>
-    <div class="price-card">
-      <div class="price-card__top">
-        <div class="price-original">通常価格 ¥198,000</div>
-        <div class="price-amount"><sup>¥</sup>98,000<sub>（税込）</sub></div>
-        <div class="price-tax">分割払い可 — 月々 ¥8,700〜（12回）</div>
-      </div>
-      <div class="price-card__body">
-        <div class="price-features">
-          <div class="price-feature"><span class="pf-check">✓</span>全62講義（動画 + テキスト）</div>
-          <div class="price-feature"><span class="pf-check">✓</span>月2回 LIVE質問会（6ヶ月間）</div>
-          <div class="price-feature"><span class="pf-check">✓</span>Slackサポートコミュニティ（6ヶ月）</div>
-          <div class="price-feature"><span class="pf-check">✓</span>実践テンプレート素材集（30種以上）</div>
-          <div class="price-feature"><span class="pf-check">✓</span>コンテンツ設計ワークシート</div>
-          <div class="price-feature"><span class="pf-check">✓</span>30日間 完全返金保証</div>
-        </div>
-        <div class="price-guarantee"><strong>30-Day Money-Back Guarantee</strong>購入から30日以内であれば、理由を問わず全額返金いたします。安心してお試しください。</div>
-        <div class="price-cta-block">
-          <a class="btn btn--fill btn--block" href="#">今すぐ参加する — ¥98,000</a>
-          <a class="btn btn--ghost btn--block" href="#">無料説明会に参加する</a>
-          <p class="price-note">残り 7 名 · 価格は予告なく変更になる場合があります</p>
+
+      <label class="f">
+        <span class="lt">推しポイント <small>読点・改行区切りで3つまで</small></span>
+        <textarea class="tx" id="ppoints" rows="2" placeholder="例: 沸くのが早い、注ぎ口が細くてドリップ向き、見た目がかわいい"></textarea>
+      </label>
+
+      <label class="f">
+        <span class="lt">こんな人に届けたい <small>任意</small></span>
+        <input class="tx" id="ptarget" type="text" placeholder="例: 朝バタバタしがちな一人暮らしの人">
+      </label>
+
+      <div>
+        <span class="lt" style="font-size:.76rem;font-weight:700;color:var(--ink-2);letter-spacing:.08em;display:block;margin-bottom:6px">トーン</span>
+        <div class="tones" role="group" aria-label="投稿のトーン">
+          <button class="tone" type="button" data-tone="casual" aria-pressed="true"><span class="tn">🫶 カジュアル</span><span class="td">友達に話すみたいに</span></button>
+          <button class="tone" type="button" data-tone="polite" aria-pressed="false"><span class="tn">🕊 上品ていねい</span><span class="td">暮らし系・しっとり</span></button>
+          <button class="tone" type="button" data-tone="fever" aria-pressed="false"><span class="tn">🔥 ガチレビュー</span><span class="td">熱量高め・結論から</span></button>
+          <button class="tone" type="button" data-tone="minimal" aria-pressed="false"><span class="tn">🌙 ミニマル</span><span class="td">短く、余白で語る</span></button>
         </div>
       </div>
+
+      <button class="gen-btn" id="genBtn" type="button">投稿文をつくる ─ RELEASE</button>
+
+      <details class="adv">
+        <summary>PR表記・そのほかの設定</summary>
+        <div class="panel-b">
+          <label class="f">
+            <span class="lt">PR表記</span>
+            <select class="tx" id="prstyle">
+              <option value="tag">#PR をハッシュタグで入れる</option>
+              <option value="head">冒頭に【PR】を入れる</option>
+              <option value="ad">#ad を入れる</option>
+            </select>
+          </label>
+          <p class="fetch-note">2023年10月施行のステマ規制により、アフィリエイト投稿にはPR表記が必要です。POSTERIEは全プラットフォームの投稿に自動で入れます。</p>
+        </div>
+      </details>
+
     </div>
-  </div>
-</section>
-<section class="bg-cream">
-  <div class="wrap">
-    <span class="eyebrow">FAQ</span>
-    <h2 class="h2 mt-20" style="color:var(--ink)">よくある質問</h2>
-    <div class="faqs">
-      <div class="faq"><div class="faq__q"><span class="faq__q-mark">Q</span>副業経験がゼロでも大丈夫ですか？</div><div class="faq__a">はい、完全初心者を想定して設計しています。受講生の約60%が副業経験ゼロからのスタートです。基礎から順番に解説しているので、迷わず進めます。</div></div>
-      <div class="faq"><div class="faq__q"><span class="faq__q-mark">Q</span>忙しい会社員でも取り組めますか？</div><div class="faq__a">週10時間（平日1〜2時間 + 週末）を目安に設計しています。動画は1本5〜15分で隙間時間に視聴可能。忙しい会社員・主婦の受講生が多数います。</div></div>
-      <div class="faq"><div class="faq__q"><span class="faq__q-mark">Q</span>どんな副業に使えますか？</div><div class="faq__a">コンテンツ販売・コンサル・SNS運用代行・情報発信など、「無形商材 × オンライン」の副業に幅広く応用できます。物販・せどりには不向きです。</div></div>
-      <div class="faq"><div class="faq__q"><span class="faq__q-mark">Q</span>サポートはどのくらい受けられますか？</div><div class="faq__a">月2回のLIVE質問会（録画あり）と、Slackコミュニティでの質問対応（営業日48時間以内）を6ヶ月間ご利用いただけます。</div></div>
-      <div class="faq"><div class="faq__q"><span class="faq__q-mark">Q</span>分割払いはできますか？</div><div class="faq__a">クレジットカードの分割払いをご利用いただけます（月々¥8,700〜 / 12回払い目安）。詳細はお申し込みページをご確認ください。</div></div>
-      <div class="faq"><div class="faq__q"><span class="faq__q-mark">Q</span>返金保証の条件を教えてください。</div><div class="faq__a">購入から30日以内にご連絡いただければ、理由を問わず全額返金いたします。ただし、決済サービスの手数料分は返金対象外となる場合があります。</div></div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <div class="results" id="results">
+
+    <div class="empty" id="emptyState">
+      <div class="big">未生成 ─ UNRELEASED<i>.</i></div>
+      <p>左に楽天の商品URLと商品名を入れて「投稿文をつくる」を押すと、X・Threads・Instagram の3投稿+CTA+NG表現チェックが一気に解き放たれます。</p>
     </div>
+
+    <section class="panel post-card" id="cardX" data-glyph="X" hidden aria-label="X用の投稿">
+      <div class="panel-h">
+        <div class="pf">
+          <span class="pf-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-6.4L6.4 22H3.3l7.3-8.3L1.6 2H8l4.4 5.9L18.9 2Zm-1.1 18.1h1.7L7.1 3.8H5.3l12.5 16.3Z"/></svg></span>
+          <div><span class="pf-name">X (Twitter)</span><span class="pf-sub">280ユニット/全角2カウント・URLは23換算</span></div>
+        </div>
+        <div class="card-tools">
+          <button class="tool-btn" data-regen="x" type="button">🎲 別パターン</button>
+          <button class="tool-btn primary" data-copy="x" type="button">コピー</button>
+        </div>
+      </div>
+      <div class="post-body" id="bodyX"></div>
+      <div class="post-foot">
+        <div class="meter"><i id="meterX"></i></div>
+        <span class="count" id="countX"></span>
+      </div>
+    </section>
+
+    <section class="panel post-card" id="cardTh" data-glyph="@" hidden aria-label="Threads用の投稿">
+      <div class="panel-h">
+        <div class="pf">
+          <span class="pf-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12.6 11.2c2.9.2 4.9 1.5 4.9 3.6 0 2.4-2 4.2-5.3 4.2-3.9 0-6.7-2.9-6.7-7S8.2 5 12.1 5c2.8 0 4.9 1.4 5.9 3.6"/><path d="M9.9 14.7c0-1.3 1.1-2.2 2.8-2.2 1 0 1.9.2 2.6.5 0 2.4-1.1 3.9-2.9 3.9-1.5 0-2.5-.9-2.5-2.2Z"/></svg></span>
+          <div><span class="pf-name">Threads</span><span class="pf-sub">500字・会話系が伸びやすい</span></div>
+        </div>
+        <div class="card-tools">
+          <button class="tool-btn" data-regen="th" type="button">🎲 別パターン</button>
+          <button class="tool-btn primary" data-copy="th" type="button">コピー</button>
+        </div>
+      </div>
+      <div class="post-body" id="bodyTh"></div>
+      <div class="post-foot">
+        <div class="meter"><i id="meterTh"></i></div>
+        <span class="count" id="countTh"></span>
+      </div>
+    </section>
+
+    <section class="panel post-card" id="cardIg" data-glyph="IG" hidden aria-label="Instagram用のキャプション">
+      <div class="panel-h">
+        <div class="pf">
+          <span class="pf-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+          <div><span class="pf-name">Instagram</span><span class="pf-sub">キャプション2,200字・リンクはプロフ/ストーリーズへ</span></div>
+        </div>
+        <div class="card-tools">
+          <button class="tool-btn" data-regen="ig" type="button">🎲 別パターン</button>
+          <button class="tool-btn primary" data-copy="ig" type="button">コピー</button>
+        </div>
+      </div>
+      <div class="post-body" id="bodyIg"></div>
+      <div class="post-foot">
+        <div class="meter"><i id="meterIg"></i></div>
+        <span class="count" id="countIg"></span>
+      </div>
+    </section>
+
+    <section class="panel" id="cardCta" hidden aria-label="CTAフレーズ集">
+      <div class="panel-h">
+        <h2><span class="eyebrow">CTA Bank</span>差し替え用CTAフレーズ</h2>
+      </div>
+      <div class="cta-list" id="ctaList"></div>
+    </section>
+
+    <section class="panel" id="cardNg" hidden aria-label="NG表現チェック">
+      <div class="panel-h">
+        <h2><span class="eyebrow">Compliance</span>NG表現チェック</h2>
+      </div>
+      <div class="ng-sum" id="ngSum"></div>
+      <div class="ng-list" id="ngList"></div>
+      <div class="free-check">
+        <label class="f">
+          <span class="lt">自分で書いた文章もチェックできます</span>
+          <textarea class="tx" id="freeText" rows="3" placeholder="投稿予定の文章を貼り付けてください"></textarea>
+        </label>
+        <div class="row"><button class="tool-btn" id="freeCheckBtn" type="button">チェックする</button></div>
+        <div class="ng-list" id="freeNgList" style="padding:0"></div>
+      </div>
+    </section>
+
   </div>
-</section>
-<section class="closing">
-  <div class="closing__inner">
-    <p class="closing__quote">迷っている時間が、<br><em>一番のリスクです。</em></p>
-    <p class="closing__sub">1年後、月10万円の副収入がある自分と、<br>今と変わらない自分——どちらを選びますか？</p>
-    <div class="mt-40" style="display:flex;flex-direction:column;gap:12px;max-width:360px;margin:40px auto 0;">
-      <a class="btn btn--fill btn--block" href="#enrol">プログラムに参加する</a>
-      <a class="btn btn--ghost btn--block" href="#">まず無料説明会へ</a>
-    </div>
-  </div>
-</section>
+</div>
+
 <footer>
-  <div class="footer__inner">
-    <div class="footer__logo">Kenshiro</div>
-    <div class="footer__links"><a href="#">プライバシーポリシー</a><a href="#">特定商取引法</a><a href="#">お問い合わせ</a></div>
-    <div class="footer__copy">© 2024 Kenshiro Side Income Programme. All rights reserved.</div>
-  </div>
+  <b>ご利用にあたって:</b> NG表現チェックは薬機法・景品表示法・ステマ規制(景表法5条3号)の代表的な注意表現を機械的に検出する簡易チェックです。最終的な適法性の判断はご自身でご確認ください。価格・在庫は変動するため、投稿には「執筆時点」等の断りを入れることをおすすめします。<br>
+  POSTERIE ─ RAKUTEN AFFILIATE POST ATELIER / 黒白ver.
 </footer>
-<div class="sticky"><a class="btn btn--fill btn--block" href="#enrol">参加する — ¥98,000</a></div>
+
+</div>
+
+<dialog id="settingsDlg">
+  <div class="panel-h"><h2><span class="eyebrow">Settings</span>楽天API設定</h2></div>
+  <div class="panel-b">
+    <p class="fetch-note">楽天ウェブサービス(<span style="word-break:break-all">webservice.rakuten.co.jp</span>)で無料発行できる<b>アプリID</b>を登録すると、URLから商品情報を自動取得できます。IDはこの端末(localStorage)にのみ保存されます。</p>
+    <label class="f">
+      <span class="lt">アプリID / applicationId</span>
+      <input class="tx" id="appId" type="text" autocomplete="off" placeholder="10xxxxxxxxxxxxxxxxx">
+    </label>
+    <label class="f">
+      <span class="lt">アフィリエイトID <small>任意</small></span>
+      <input class="tx" id="affId" type="text" autocomplete="off" placeholder="1a2b3c4d.5e6f7g8h...">
+    </label>
+    <div class="row">
+      <button class="tool-btn" id="settingsCancel" type="button">閉じる</button>
+      <button class="tool-btn primary" id="settingsSave" type="button">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ================= theme ================= */
+const root = document.documentElement;
+const savedTheme = localStorage.getItem("posterie_theme");
+if (savedTheme) root.dataset.theme = savedTheme;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = root.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  root.dataset.theme = next;
+  localStorage.setItem("posterie_theme", next);
+});
+
+/* ================= helpers ================= */
+const $ = (id) => document.getElementById(id);
+const toastEl = $("toast");
+let toastTimer;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("on"), 1800);
+}
+function pick(arr, seed){ return arr[seed % arr.length]; }
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy"); ta.remove();
+  }
+  toast("コピーしました ✓");
+}
+
+/* X weighted count: CJK/fullwidth = 2 units, URL = 23, limit 280 */
+function xWeightedLen(text){
+  let total = 0;
+  const parts = text.split(/(https?:\/\/\S+)/);
+  for (const part of parts){
+    if (/^https?:\/\//.test(part)) { total += 23; continue; }
+    for (const ch of part){
+      const cp = ch.codePointAt(0);
+      const wide = (cp >= 0x1100 && cp <= 0x11FF) || (cp >= 0x2E80 && cp <= 0xA4CF) ||
+                   (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) ||
+                   (cp >= 0xFE30 && cp <= 0xFE4F) || (cp >= 0xFF00 && cp <= 0xFF60) ||
+                   (cp >= 0xFFE0 && cp <= 0xFFE6) || cp >= 0x20000;
+      total += wide ? 2 : 1;
+    }
+  }
+  return total;
+}
+function plainLen(text){ return [...text].length; }
+
+/* ================= rakuten url parsing ================= */
+function extractItemCode(raw){
+  let url;
+  try { url = new URL(raw.trim()); } catch { return null; }
+  // affiliate wrapper → unwrap pc / m param
+  if (/hb\.afl\.rakuten\.co\.jp$/.test(url.hostname)){
+    const inner = url.searchParams.get("pc") || url.searchParams.get("m");
+    if (inner) return extractItemCode(decodeURIComponent(inner));
+    return null;
+  }
+  if (/^item\.rakuten\.co\.jp$/.test(url.hostname)){
+    const seg = url.pathname.split("/").filter(Boolean);
+    if (seg.length >= 2) return seg[0] + ":" + seg[1];
+  }
+  return null; // a.r10.to 等の短縮URLは展開不可 → 手入力へ
+}
+
+/* ================= rakuten API (JSONP) ================= */
+function jsonp(url){
+  return new Promise((resolve, reject) => {
+    const cb = "__posterie_cb" + Date.now();
+    const s = document.createElement("script");
+    const timer = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 8000);
+    function cleanup(){ clearTimeout(timer); delete window[cb]; s.remove(); }
+    window[cb] = (data) => { cleanup(); resolve(data); };
+    s.onerror = () => { cleanup(); reject(new Error("network")); };
+    s.src = url + "&callback=" + cb;
+    document.head.appendChild(s);
+  });
+}
+const fetchStatus = $("fetchStatus");
+function setFetchStatus(kind, msg){
+  fetchStatus.className = "fetch-status on " + kind;
+  fetchStatus.textContent = msg;
+}
+let fetchedMeta = null; // {review, reviewCount, shop}
+async function fetchProduct(){
+  const raw = $("url").value.trim();
+  if (!raw) { toast("先にURLを入れてください"); return; }
+  const appId = localStorage.getItem("posterie_appid") || "";
+  if (!appId){ setFetchStatus("warn", "楽天アプリIDが未設定です。「⚙ API設定」から登録するか、商品名を手入力してください。"); return; }
+  const itemCode = extractItemCode(raw);
+  if (!itemCode){ setFetchStatus("warn", "このURLからは商品コードを読み取れませんでした(短縮URLは非対応)。商品ページのURL(item.rakuten.co.jp/…)を貼るか、手入力してください。"); return; }
+  const btn = $("fetchBtn");
+  btn.disabled = true; btn.textContent = "…";
+  setFetchStatus("warn", "楽天APIに問い合わせ中…");
+  try {
+    const api = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&formatVersion=2"
+      + "&applicationId=" + encodeURIComponent(appId)
+      + "&itemCode=" + encodeURIComponent(itemCode);
+    const data = await jsonp(api);
+    const item = data && data.Items && data.Items[0];
+    if (!item) throw new Error("notfound");
+    $("pname").value = shortenName(item.itemName || "");
+    if (item.itemPrice) $("pprice").value = Number(item.itemPrice).toLocaleString("ja-JP");
+    fetchedMeta = {
+      review: item.reviewAverage > 0 ? item.reviewAverage : null,
+      reviewCount: item.reviewCount || 0,
+      shop: item.shopName || ""
+    };
+    if (item.affiliateUrl) $("url").value = item.affiliateUrl;
+    setFetchStatus("ok", "✓ 取得しました: " + (item.itemName || "").slice(0, 40) + "…"
+      + (fetchedMeta.review ? `(レビュー★${fetchedMeta.review}・${fetchedMeta.reviewCount}件)` : ""));
+  } catch (e) {
+    setFetchStatus("warn", "自動取得できませんでした(" + e.message + ")。ネットワーク制限のある環境では動きません。商品名を手入力してください。");
+  } finally {
+    btn.disabled = false; btn.textContent = "取得";
+  }
+}
+function shortenName(name){
+  let n = name.replace(/【[^】]*】/g, " ").replace(/[\[\(（][^)\]）]*[\)\]）]/g, " ")
+              .replace(/\s+/g, " ").trim();
+  if (plainLen(n) > 26) n = [...n].slice(0, 26).join("").replace(/[ 、,・/]+$/, "") ;
+  return n || name.slice(0, 26);
+}
+$("fetchBtn").addEventListener("click", fetchProduct);
+
+/* ================= settings dialog ================= */
+const dlg = $("settingsDlg");
+$("settingsBtn").addEventListener("click", () => {
+  $("appId").value = localStorage.getItem("posterie_appid") || "";
+  $("affId").value = localStorage.getItem("posterie_affid") || "";
+  dlg.showModal();
+});
+$("settingsCancel").addEventListener("click", () => dlg.close());
+$("settingsSave").addEventListener("click", () => {
+  localStorage.setItem("posterie_appid", $("appId").value.trim());
+  localStorage.setItem("posterie_affid", $("affId").value.trim());
+  dlg.close(); toast("保存しました ✓");
+});
+
+/* ================= tone selector ================= */
+let tone = "casual";
+document.querySelectorAll(".tone").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tone").forEach(b => b.setAttribute("aria-pressed", "false"));
+    btn.setAttribute("aria-pressed", "true");
+    tone = btn.dataset.tone;
+    if (lastProduct) generateAll();
+  });
+});
+
+/* ================= copy bank ================= */
+const GENRES = {
+  cosme:    { emoji:["🌸","🫧","💄","🤍"], tags:["#コスメ好きさんと繋がりたい","#スキンケア好き","#美容垢","#楽天コスメ"] },
+  fashion:  { emoji:["🧥","👜","🤍","✨"], tags:["#今日のコーデ","#プチプラファッション","#楽天ファッション","#大人カジュアル"] },
+  food:     { emoji:["🍽","🫶","😋","🛒"], tags:["#お取り寄せグルメ","#おうちごはん","#楽天グルメ","#ご褒美ごはん"] },
+  gadget:   { emoji:["⚡","🖤","🔌","📦"], tags:["#ガジェット好きと繋がりたい","#QOL爆上げ","#買ってよかったもの","#デスク環境"] },
+  lifestyle:{ emoji:["🏠","🕯","🤍","🧺"], tags:["#暮らしを整える","#楽天インテリア","#丁寧な暮らし","#購入品紹介"] },
+  baby:     { emoji:["🧸","🍼","🤍","🌼"], tags:["#子育てグッズ","#ベビー用品","#楽天ベビー","#育児便利グッズ"] },
+  health:   { emoji:["🏃","💪","🌿","✨"], tags:["#セルフケア","#健康習慣","#宅トレ","#ボディケア"] },
+  other:    { emoji:["✨","🛒","🤍","📦"], tags:["#買ってよかった","#楽天購入品","#お気に入り","#愛用品"] }
+};
+const COMMON_TAGS = ["#楽天市場","#楽天room","#お買い物マラソン"];
+
+const HOOKS = {
+  casual: [
+    (p) => `${p.name}、届いてから毎日使ってる…`,
+    (p) => `ずっと迷ってた${p.name}、やっと買いました!`,
+    (p) => `これはもっと早く知りたかった、${p.name}。`,
+    (p) => `最近の当たり買い物、${p.name}です🤍`
+  ],
+  polite: [
+    (p) => `暮らしがすこし整う、${p.name}のご紹介です。`,
+    (p) => `最近のお気に入り、${p.name}。`,
+    (p) => `毎日にそっと寄り添ってくれる、${p.name}を選びました。`,
+    (p) => `「良いものを長く」派の方へ。${p.name}です。`
+  ],
+  fever: [
+    (p) => `【結論:買ってよかった】${p.name}を本音レビュー。`,
+    (p) => `${p.name}、想像の上をいきました。理由は3つ。`,
+    (p) => `迷ってる人に届いてほしい。${p.name}のリアルな感想です。`,
+    (p) => `${p.name}を1週間使い倒した感想↓`
+  ],
+  minimal: [
+    (p) => `${p.name}。`,
+    (p) => `今日の一品:${p.name}`,
+    (p) => `良かったので置いておきます。${p.name}。`,
+    (p) => `${p.name}、静かにおすすめ。`
+  ]
+};
+const CLOSERS = {
+  casual:  ["気になった人はのぞいてみて👇","リンク貼っておくね👇","詳しくはここから見られます👇","口コミもぜひ見てみて👇"],
+  polite:  ["詳細はこちらからご覧いただけます。","気になる方は、下のリンクからどうぞ。","口コミも参考になりますので、ぜひ。","リンクを置いておきますね。"],
+  fever:   ["レビュー・詳細はここからチェック👇","迷ってるなら一度見てみて👇","詳細スペックはリンク先で確認できます👇","気になったら今のうちにチェック👇"],
+  minimal: ["詳細はこちら。","つづきはリンク先で。","気になる方はどうぞ。","→ 詳細"]
+};
+const CTA_BANK = [
+  { t: "気になった方はプロフィールのリンクからどうぞ🔗", for: "Instagram" },
+  { t: "詳細・みんなの口コミはこちらから見られます👇", for: "X / Threads" },
+  { t: "価格は変わることがあるので、最新はリンク先でチェックしてみてください✔", for: "共通" },
+  { t: "同じことで悩んでる人の参考になったらうれしいです🫶", for: "共感型" },
+  { t: "質問があればリプ・コメントで聞いてください、使用感お答えします!", for: "交流型" },
+  { t: "保存しておくと、お買い物マラソンのときに便利です📌", for: "Instagram" }
+];
+
+/* ================= post builders ================= */
+function prMark(){
+  const v = $("prstyle").value;
+  if (v === "head") return { head: "【PR】", tag: "" };
+  if (v === "ad")   return { head: "", tag: "#ad" };
+  return { head: "", tag: "#PR" };
+}
+function pointsLines(p, mark){
+  return p.points.map(pt => `${mark} ${pt}`).join("\n");
+}
+function priceLine(p, tone_){
+  if (!p.price) return "";
+  return tone_ === "polite" ? `お値段は ${p.price}円 でした(執筆時点)。` : `${p.price}円(執筆時点)`;
+}
+
+function buildX(p, seed){
+  const pr = prMark();
+  const hook = pick(HOOKS[tone], seed)(p);
+  const closer = pick(CLOSERS[tone], seed);
+  const g = GENRES[p.genre];
+  const tags = [pr.tag, COMMON_TAGS[0], g.tags[seed % g.tags.length]].filter(Boolean).join(" ");
+  const mark = tone === "minimal" ? "・" : "✔";
+  let body = [
+    pr.head + hook,
+    "",
+    pointsLines(p, mark),
+    p.price ? priceLine(p, tone) : null,
+    "",
+    closer,
+    p.url,
+    tags
+  ].filter(v => v !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+
+  // trim points to fit 280 weighted units
+  let guard = 0;
+  while (xWeightedLen(body) > 280 && guard < 4){
+    guard++;
+    const lines = body.split("\n");
+    const idx = lines.findLastIndex(l => l.startsWith(mark + " "));
+    if (idx === -1) break;
+    lines.splice(idx, 1);
+    body = lines.join("\n").replace(/\n{3,}/g, "\n\n");
+  }
+  return body;
+}
+
+function buildTh(p, seed){
+  const pr = prMark();
+  const hook = pick(HOOKS[tone], (seed + 1))(p);
+  const closer = pick(CLOSERS[tone], (seed + 1));
+  const mark = tone === "minimal" ? "・" : "✔";
+  const talk = {
+    casual:  [`正直、期待してなかったんだけど…使ってみたら手放せなくなったやつです。`,`${p.target ? p.target + "には特に刺さると思う。" : "同じの探してた人、多いはず。"}`],
+    polite:  [`使うたびに「これにしてよかったな」と思える一品です。`,`${p.target ? p.target + "の方に、特におすすめしたいです。" : "毎日使うものこそ、気に入ったものを。"}`],
+    fever:   [`何がすごいって、この3点。`,`${p.target ? "特に" + p.target + "は体感が変わるはず。" : "この価格帯では頭ひとつ抜けてる。"}`],
+    minimal: [`理由はシンプル。`,`${p.target ? p.target + "向け。" : "それだけで十分。"}`]
+  }[tone];
+  return [
+    pr.head + hook,
+    "",
+    talk[0],
+    "",
+    pointsLines(p, mark),
+    p.price ? "\n" + priceLine(p, tone) : null,
+    "",
+    talk[1],
+    "",
+    closer,
+    p.url,
+    pr.tag
+  ].filter(v => v !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+function buildIg(p, seed){
+  const pr = prMark();
+  const g = GENRES[p.genre];
+  const em = g.emoji;
+  const hook = pick(HOOKS[tone], (seed + 2))(p);
+  const revLine = fetchedMeta && fetchedMeta.review ? `レビュー★${fetchedMeta.review}(${fetchedMeta.reviewCount}件)も納得でした。` : null;
+  const tagSet = [...new Set([pr.tag, ...g.tags, ...COMMON_TAGS, "#購入品紹介"])].filter(Boolean);
+  return [
+    pr.head + hook + " " + em[0],
+    "",
+    (tone === "polite"
+      ? "使い始めてから、ちいさなストレスがひとつ減りました。"
+      : tone === "fever"
+      ? "先に言います。これは買いです。"
+      : tone === "minimal"
+      ? "気に入っている点だけ、置いておきます。"
+      : "何がよかったか、ざっくりまとめると…"),
+    "",
+    p.points.map(pt => `${em[1]} ${pt}`).join("\n"),
+    "",
+    [priceLine(p, tone) || null, revLine].filter(Boolean).join("\n") || null,
+    p.target ? `${p.target}に、いちばん届いてほしい ${em[2]}` : null,
+    "",
+    `🔗 商品リンクはプロフィール/ストーリーズから飛べます`,
+    `📌 保存しておくと、セールのとき見返せて便利です`,
+    "",
+    tagSet.join(" ")
+  ].filter(v => v !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+/* ================= NG dictionary ================= */
+const NG_DICT = [
+  { re: /完治|治る|治った|治り(?:ます)?/, w: "治る・完治", cat: "薬機法", lv: "high",
+    why: "医薬品的な効能効果の断定は、健康食品・化粧品・雑貨では薬機法違反のおそれがあります。",
+    fix: "「すっきりした気がする」「私には合っていた」など個人の感想+断定回避に。" },
+  { re: /痩せる|痩せた|脂肪が(?:燃える|落ちる)|ダイエット効果/, w: "痩せる・ダイエット効果", cat: "薬機法", lv: "high",
+    why: "痩身効果の標ぼうは薬機法・健康増進法で規制されるおそれがあります。",
+    fix: "「運動のおともに」「置き換えに使っています」など用途・習慣の紹介に。" },
+  { re: /シミが消える|シワが(?:消える|なくなる)|美白効果|若返(?:る|り)/, w: "シミが消える・若返る 等", cat: "薬機法", lv: "high",
+    why: "化粧品で認められる効能の範囲(56項目)を超える表現は薬機法違反のおそれがあります。",
+    fix: "「メイクのりが良くなった気がする」「乾燥による小ジワを目立たなくする(効能評価試験済の場合)」等に。" },
+  { re: /副作用(?:が|は)?(?:ない|ありません)|安全性は保証/, w: "副作用がない", cat: "薬機法", lv: "high",
+    why: "安全性の保証表現は認められていません。",
+    fix: "「私は問題なく使えています(個人の感想)」に。" },
+  { re: /飲むだけで|塗るだけで|貼るだけで.{0,6}(?:効|痩|治)/, w: "〜だけで効く", cat: "薬機法", lv: "mid",
+    why: "簡便性+効果の組み合わせは効能の暗示とみなされやすい表現です。",
+    fix: "「続けやすいのが気に入っています」など使い勝手の話に切り分ける。" },
+  { re: /日本一|世界一|世界初|日本初|業界初|唯一無二の効果/, w: "日本一・世界初 等", cat: "景表法", lv: "high",
+    why: "No.1・初表示は客観的根拠と出典・時点の明記がないと優良誤認になります。",
+    fix: "根拠がある場合のみ「◯◯調べ(2026年◯月時点)」を併記。なければ削除。" },
+  { re: /No\.?\s?1|ナンバーワン|ランキング1位/i, w: "No.1・ランキング1位", cat: "景表法", lv: "mid",
+    why: "1位表示は調査元・カテゴリ・時点の明記が必要です(楽天ランキングは取得日を書く)。",
+    fix: "「楽天◯◯ランキング1位(2026/7/12時点)」のように出典+日付を併記。" },
+  { re: /最安値|どこよりも安い|業界最安/, w: "最安値", cat: "景表法", lv: "high",
+    why: "価格の最上級表現は有利誤認のおそれ。他店価格は常に変動します。",
+    fix: "「セール中でした(執筆時点)」「私が見た中ではお手頃」に。" },
+  { re: /絶対(?:に)?(?:おすすめ|買うべき|損しない|効く)|100[%％]|間違いな(?:い|く効)/, w: "絶対・100%", cat: "断定・保証", lv: "mid",
+    why: "効果や満足の保証表現はトラブル・優良誤認の元になります。",
+    fix: "「私はかなり気に入っています」「イチオシです」に。" },
+  { re: /必ず(?:痩せ|効|儲|稼)/, w: "必ず〜できる", cat: "断定・保証", lv: "high",
+    why: "成果の保証は景表法・特商法上のリスクが高い表現です。",
+    fix: "体験ベース(「私の場合は〜でした」)に言い換える。" },
+  { re: /誰でも(?:簡単に)?(?:稼げる|儲かる|痩せる)/, w: "誰でも稼げる・痩せる", cat: "断定・保証", lv: "high",
+    why: "再現性の保証は誇大広告と判断されやすい典型表現です。",
+    fix: "「初心者の私でも使いこなせた」など自分の事実に限定する。" },
+  { re: /今だけ|本日限り|残り\s?わずか|在庫\s?わずか/, w: "今だけ・残りわずか", cat: "景表法", lv: "low",
+    why: "事実でない限定・希少表示は有利誤認(あおり)になります。事実なら根拠を持って。",
+    fix: "実際のセール期間を明記「◯日までセール(公式ページ参照)」に。" },
+  { re: /医(?:師|者)(?:も|が)?(?:推奨|絶賛|おすすめ)|病院で処方/, w: "医師が推奨", cat: "薬機法", lv: "high",
+    why: "医療関係者の推薦表現は化粧品・健康食品等の広告で原則禁止です。",
+    fix: "削除するか、公式が公開している客観的情報のみ引用。" },
+  { re: /永久に|半永久/, w: "永久", cat: "断定・保証", lv: "mid",
+    why: "効果の持続を保証する表現は根拠の立証が困難です。",
+    fix: "「長く使えそう」「耐久性に期待」に。" },
+  { re: /激やせ|爆売れ確定|買わなきゃ損/, w: "激やせ・買わなきゃ損", cat: "断定・保証", lv: "mid",
+    why: "煽り系の断定表現は誇大広告と受け取られやすく、アカウントの信頼も下げます。",
+    fix: "具体的な使用感・数字(自分の実測)で語る。" }
+];
+function scanNG(text, sourceLabel){
+  const found = [];
+  for (const d of NG_DICT){
+    const m = text.match(d.re);
+    if (m) found.push({ ...d, hit: m[0], src: sourceLabel });
+  }
+  return found;
+}
+function prPresent(text){
+  return /#PR\b|#ad\b|【PR】|＃PR|プロモーション/i.test(text);
+}
+
+/* ================= render ================= */
+let lastProduct = null;
+const seeds = { x: 0, th: 0, ig: 0 };
+const posts = { x: "", th: "", ig: "" };
+
+function readProduct(){
+  const name = $("pname").value.trim();
+  if (!name) { toast("商品名を入れてください"); $("pname").focus(); return null; }
+  const pointsRaw = $("ppoints").value.trim();
+  let points = pointsRaw ? pointsRaw.split(/[、,\n]/).map(s => s.trim()).filter(Boolean).slice(0, 3) : [];
+  if (!points.length) points = ["使い勝手がいい", "デザインが好み", "価格とのバランスがいい"];
+  return {
+    name,
+    price: $("pprice").value.trim().replace(/円$/, ""),
+    points,
+    target: $("ptarget").value.trim(),
+    genre: $("pgenre").value,
+    url: $("url").value.trim() || "(商品URLをここに)"
+  };
+}
+
+const LIMITS = { x: 280, th: 500, ig: 2200 };
+function renderPost(key){
+  const p = lastProduct;
+  const text = key === "x" ? buildX(p, seeds.x) : key === "th" ? buildTh(p, seeds.th) : buildIg(p, seeds.ig);
+  posts[key] = text;
+  const id = key === "x" ? "X" : key === "th" ? "Th" : "Ig";
+  $("body" + id).textContent = text;
+  const len = key === "x" ? xWeightedLen(text) : plainLen(text);
+  const limit = LIMITS[key];
+  const pct = Math.min(100, len / limit * 100);
+  const meter = $("meter" + id);
+  meter.style.width = pct + "%";
+  meter.className = len > limit ? "over" : (pct > 85 ? "warn" : "");
+  const c = $("count" + id);
+  c.innerHTML = `<b>${len.toLocaleString()}</b> / ${limit.toLocaleString()}` + (key === "x" ? " units" : " 字");
+  c.classList.toggle("over", len > limit);
+}
+
+function renderCta(){
+  const list = $("ctaList");
+  list.innerHTML = "";
+  for (const c of CTA_BANK){
+    const div = document.createElement("div");
+    div.className = "cta-item";
+    const span = document.createElement("span");
+    span.textContent = c.t;
+    const tag = document.createElement("span");
+    tag.className = "cat"; tag.style.cssText = "flex:none;font-size:.64rem;letter-spacing:.06em;padding:2px 7px;background:var(--paper-3);color:var(--ink-3);font-weight:700";
+    tag.textContent = c.for;
+    const btn = document.createElement("button");
+    btn.className = "tool-btn"; btn.type = "button"; btn.textContent = "コピー";
+    btn.addEventListener("click", () => copyText(c.t));
+    div.append(span, tag, btn);
+    list.appendChild(div);
+  }
+}
+
+function renderNgItems(container, issues){
+  container.innerHTML = "";
+  for (const i of issues){
+    const div = document.createElement("div");
+    div.className = "ng-item " + i.lv;
+    const top = document.createElement("div"); top.className = "ng-top";
+    const word = document.createElement("span"); word.className = "word"; word.textContent = `「${i.hit}」`;
+    const cat = document.createElement("span"); cat.className = "cat"; cat.textContent = i.cat;
+    top.append(word, cat);
+    if (i.src){ const wh = document.createElement("span"); wh.className = "where"; wh.textContent = i.src; top.appendChild(wh); }
+    const why = document.createElement("div"); why.className = "why"; why.textContent = i.why;
+    const fix = document.createElement("div"); fix.className = "fix"; fix.innerHTML = "<b>言い換え →</b> ";
+    fix.appendChild(document.createTextNode(i.fix));
+    div.append(top, why, fix);
+    container.appendChild(div);
+  }
+}
+
+function renderNg(){
+  const all = [
+    ...scanNG(posts.x, "X"),
+    ...scanNG(posts.th, "Threads"),
+    ...scanNG(posts.ig, "Instagram")
+  ];
+  const sum = $("ngSum");
+  sum.innerHTML = "";
+  const prOk = ["x","th","ig"].every(k => prPresent(posts[k]));
+  const mk = (cls, txt) => { const s = document.createElement("span"); s.className = "pill " + cls; s.textContent = txt; sum.appendChild(s); };
+  mk(prOk ? "ok" : "bad", prOk ? "✓ PR表記あり(ステマ規制OK)" : "✗ PR表記が見つかりません");
+  const high = all.filter(i => i.lv === "high").length;
+  const rest = all.length - high;
+  if (!all.length) mk("ok", "✓ NG表現は検出されませんでした");
+  if (high) mk("bad", `要修正 ${high}件`);
+  if (rest) mk("warn", `注意 ${rest}件`);
+  const list = $("ngList");
+  renderNgItems(list, all);
+  if (!all.length){
+    const ok = document.createElement("div");
+    ok.className = "ng-ok";
+    ok.textContent = "🌿 生成された3投稿とも、辞書に登録された薬機法・景表法・断定系のNG表現は含まれていません。";
+    list.appendChild(ok);
+  }
+}
+
+function generateAll(){
+  lastProduct = readProduct();
+  if (!lastProduct) return;
+  $("emptyState").hidden = true;
+  ["cardX","cardTh","cardIg","cardCta","cardNg"].forEach(id => $(id).hidden = false);
+  renderPost("x"); renderPost("th"); renderPost("ig");
+  renderCta(); renderNg();
+  if (matchMedia("(max-width:940px)").matches) $("cardX").scrollIntoView({ behavior: "smooth" });
+}
+
+$("genBtn").addEventListener("click", () => {
+  const btn = $("genBtn");
+  btn.disabled = true;
+  seeds.x = seeds.th = seeds.ig = Math.floor(Math.random() * 97);
+  generateAll();
+  btn.disabled = false;
+});
+
+document.querySelectorAll("[data-regen]").forEach(b => b.addEventListener("click", () => {
+  if (!lastProduct) return;
+  const k = b.dataset.regen;
+  seeds[k]++;
+  renderPost(k); renderNg();
+}));
+document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.copy;
+  if (posts[k]) copyText(posts[k]);
+}));
+
+$("freeCheckBtn").addEventListener("click", () => {
+  const t = $("freeText").value.trim();
+  const box = $("freeNgList");
+  if (!t){ box.innerHTML = ""; toast("文章を貼り付けてください"); return; }
+  const issues = scanNG(t, "貼り付けた文章");
+  if (!prPresent(t)){
+    issues.unshift({ hit: "PR表記なし", cat: "ステマ規制", lv: "high", src: "貼り付けた文章",
+      why: "アフィリエイト投稿には「#PR」「#ad」「【PR】」等の広告である旨の明示が必要です(2023年10月〜)。",
+      fix: "冒頭かハッシュタグに #PR を追加。" });
+  }
+  renderNgItems(box, issues);
+  if (!issues.length){
+    box.innerHTML = "";
+    const ok = document.createElement("div");
+    ok.className = "ng-ok"; ok.style.padding = "0";
+    ok.textContent = "🌿 NG表現は検出されませんでした。";
+    box.appendChild(ok);
+  }
+});
+
+/* URL貼り付けで自動的にコード抽出できたら軽く反応 */
+$("url").addEventListener("change", () => {
+  const code = extractItemCode($("url").value);
+  if (code && (localStorage.getItem("posterie_appid") || "")) fetchProduct();
+});
+</script>
 </body>
 </html>
