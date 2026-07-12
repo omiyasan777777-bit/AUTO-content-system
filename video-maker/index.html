@@ -17,7 +17,74 @@
   <!-- ============ 左：設定パネル ============ -->
   <aside class="panel">
 
-    <section class="group">
+    <div class="modeTabs" role="tablist">
+      <label><input type="radio" name="appMode" value="template" checked><span>🎬 テンプレ動画<small>オフライン・無料</small></span></label>
+      <label><input type="radio" name="appMode" value="ai"><span>🤖 AI動画生成<small>Veo・APIキー必要</small></span></label>
+    </div>
+
+    <!-- ===== AIモード（Veo） ===== -->
+    <section class="group aiOnly" hidden>
+      <h2>🤖 AI動画生成（Google Veo）</h2>
+      <label class="row">
+        <span>Gemini APIキー（<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studioで無料発行</a> / この端末にのみ保存）</span>
+        <input type="password" id="aiKey" placeholder="AIza..." autocomplete="off">
+      </label>
+      <label class="row">
+        <span>プロンプト（作りたい映像を自由に描写）</span>
+        <textarea id="aiPrompt" rows="7" placeholder="例: 高級車のテレビCMのような映像。海岸線に沿ったワインディングロードを一台の黒いラグジュアリーカーが滑らかに走る。水平線へ沈みかけた夕日が海をオレンジ色に染め、車体へ美しい光が映り込む。ドローンによる追従撮影から横へ回り込むような自然なカメラワーク。映画品質、リアルな反射、ボリューメトリックライト、スローモーション感のある滑らかな動き、超高画質、4K、文字なし、人物なし。"></textarea>
+      </label>
+      <label class="row">
+        <span>ネガティブプロンプト（映したくないもの・任意）</span>
+        <input type="text" id="aiNegative" placeholder="例: 文字, ロゴ, 人物, 低画質">
+      </label>
+      <div class="row2">
+        <label class="row half">
+          <span>モデル</span>
+          <select id="aiModel">
+            <option value="veo-3.1-fast-generate-preview" selected>Veo 3.1 Fast（速い・安い）</option>
+            <option value="veo-3.1-generate-preview">Veo 3.1（最高品質）</option>
+            <option value="veo-3.0-fast-generate-001">Veo 3 Fast（安定版）</option>
+            <option value="veo-3.0-generate-001">Veo 3（安定版・高品質）</option>
+          </select>
+        </label>
+        <label class="row half">
+          <span>長さ</span>
+          <select id="aiDuration">
+            <option value="4">4秒</option>
+            <option value="6">6秒</option>
+            <option value="8" selected>8秒</option>
+          </select>
+        </label>
+      </div>
+      <div class="row2">
+        <label class="row half">
+          <span>アスペクト比</span>
+          <select id="aiAspect">
+            <option value="16:9" selected>横 16:9</option>
+            <option value="9:16">縦 9:16</option>
+          </select>
+        </label>
+        <label class="row half">
+          <span>解像度</span>
+          <select id="aiResolution">
+            <option value="720p" selected>720p</option>
+            <option value="1080p">1080p</option>
+          </select>
+        </label>
+      </div>
+      <label class="check" id="aiUseImageWrap" hidden>
+        <input type="checkbox" id="aiUseImage"> 貼り付けた画像を起点に動かす（image-to-video）
+      </label>
+      <div class="hint" id="aiImageHint">画像を Ctrl+V / プレビューへドロップすると image-to-video も使えます</div>
+      <button id="aiGenerateBtn" class="btn primary" style="width:100%; margin-top:8px;">🎥 AIで動画を生成する</button>
+      <div class="hint">
+        ⚠️ Veo は<b>有料API</b>です（数十円〜数百円/本の目安。<a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener">料金表</a>）。
+        生成には1〜6分ほどかかります。Veo 3系は<b>音声つき</b>で生成されます。
+        ※ 4秒/6秒とネガティブプロンプトは Veo 3.1系のみ対応（Veo 3.0系は8秒固定）。
+      </div>
+    </section>
+
+    <section class="group offlineOnly">
       <h2>基本設定</h2>
       <label class="row">
         <span>アスペクト比</span>
@@ -33,7 +100,7 @@
       </label>
     </section>
 
-    <section class="group">
+    <section class="group offlineOnly">
       <h2>テキスト</h2>
       <label class="row">
         <span>メインテキスト（改行OK）</span>
@@ -81,7 +148,7 @@
       </div>
     </section>
 
-    <section class="group">
+    <section class="group offlineOnly">
       <h2>背景</h2>
       <div class="bgtabs" role="tablist">
         <label><input type="radio" name="bgType" value="gradient" checked><span>グラデ</span></label>
@@ -116,7 +183,7 @@
       </label>
     </section>
 
-    <section class="group">
+    <section class="group offlineOnly">
       <h2>✨ プロンプト演出</h2>
       <label class="row">
         <span>やりたい演出を日本語で入力（空欄なら通常モード）</span>
@@ -131,7 +198,7 @@
       </div>
     </section>
 
-    <section class="group">
+    <section class="group offlineOnly">
       <h2>仕上げ</h2>
       <label class="check"><input type="checkbox" id="progressBar" checked> 下部に進捗バーを表示</label>
       <label class="check"><input type="checkbox" id="fadeOut" checked> 最後にフェードアウト</label>
@@ -143,19 +210,30 @@
   <section class="stage">
     <div class="canvasWrap" id="canvasWrap">
       <canvas id="canvas"></canvas>
+      <div class="aiResult aiOnly" id="aiResult" hidden>
+        <div class="aiPlaceholder" id="aiPlaceholder">
+          プロンプトを書いて「🎥 AIで動画を生成する」を押すと、<br>ここに生成された動画が表示されます
+        </div>
+        <video id="aiVideo" controls loop playsinline hidden></video>
+      </div>
     </div>
 
-    <div class="transport">
+    <div class="aiStatusRow aiOnly" id="aiStatusRow" hidden>
+      <div class="aiStatus" id="aiStatus">待機中</div>
+      <button id="aiSaveBtn" class="btn primary" hidden>⬇️ この動画を保存</button>
+    </div>
+
+    <div class="transport offlineOnly">
       <button id="playBtn" class="btn" title="再生 / 一時停止">⏸</button>
       <input type="range" id="scrub" min="0" max="1000" value="0">
       <span class="time" id="timeLabel">0.0 / 5.0s</span>
     </div>
 
-    <div class="exportRow">
+    <div class="exportRow offlineOnly">
       <button id="exportBtn" class="btn primary">⬇️ 動画を書き出す</button>
       <div class="exportStatus" id="exportStatus">形式はブラウザに合わせて自動選択（MP4 / WebM）</div>
     </div>
-    <div class="exportProgress" id="exportProgress" hidden>
+    <div class="exportProgress offlineOnly" id="exportProgress" hidden>
       <div class="bar"><div class="fill" id="exportFill"></div></div>
       <span id="exportPct">0%</span>
     </div>

@@ -51,6 +51,7 @@ const S = {
   gradient: GRADIENTS[0],
   solidColor: "#111827",
   bgImage: null,          // HTMLImageElement | null
+  bgImageFile: null,      // File | null（AIモードの image-to-video 用）
   bgMotion: "zoom",
   scrim: 0.2,
   progressBar: true,
@@ -698,6 +699,191 @@ function exportVideo() {
   requestAnimationFrame(watch);
 }
 
+// ---------- AI動画生成（Google Veo / Gemini API） ----------
+
+const AI_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const AI_KEY_STORAGE = "vm_gemini_api_key";
+const AI_POLL_MS = 8000;
+const AI_TIMEOUT_MS = 8 * 60 * 1000;
+
+let appMode = "template";
+let aiBusy = false;
+let aiResultBlob = null;   // fetch で取得できた場合
+let aiResultLink = null;   // CORS で取得できない場合の直接リンク
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function setAppMode(mode) {
+  appMode = mode;
+  document.querySelectorAll(".offlineOnly").forEach((el) => { el.hidden = mode === "ai"; });
+  document.querySelectorAll(".aiOnly").forEach((el) => { el.hidden = mode !== "ai"; });
+  canvas.hidden = mode === "ai";
+}
+
+function aiSetStatus(text, cls) {
+  const el = $("aiStatus");
+  el.textContent = text;
+  el.className = "aiStatus" + (cls ? " " + cls : "");
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+async function aiExplainError(res) {
+  let msg = `HTTP ${res.status}`;
+  try {
+    const j = await res.json();
+    if (j.error?.message) msg += `: ${j.error.message}`;
+  } catch { /* 本文なし */ }
+  if (res.status === 400 || res.status === 403) {
+    msg += " — APIキーが正しいか確認してください（Google AI Studioで発行したキー）。";
+  } else if (res.status === 429) {
+    msg += " — レート上限または無料枠の上限です。Google AI Studio側の課金設定・クォータを確認してください。";
+  }
+  return msg;
+}
+
+async function generateAI() {
+  if (aiBusy) return;
+  const key = $("aiKey").value.trim();
+  const prompt = $("aiPrompt").value.trim();
+  if (!key) { aiSetStatus("APIキーを入力してください（Google AI Studioで無料発行できます）", "error"); return; }
+  if (!prompt) { aiSetStatus("プロンプトを入力してください", "error"); return; }
+
+  const model = $("aiModel").value;
+  const negative = $("aiNegative").value.trim();
+  const params = {
+    aspectRatio: $("aiAspect").value,
+    durationSeconds: Number($("aiDuration").value),
+    resolution: $("aiResolution").value,
+  };
+  if (negative) params.negativePrompt = negative;
+
+  const instance = { prompt };
+  if ($("aiUseImage").checked && S.bgImageFile) {
+    instance.image = {
+      bytesBase64Encoded: await fileToBase64(S.bgImageFile),
+      mimeType: S.bgImageFile.type,
+    };
+  }
+
+  aiBusy = true;
+  aiResultBlob = null;
+  aiResultLink = null;
+  $("aiGenerateBtn").disabled = true;
+  $("aiSaveBtn").hidden = true;
+  $("aiVideo").hidden = true;
+  $("aiPlaceholder").hidden = false;
+  const started = Date.now();
+
+  try {
+    aiSetStatus("リクエスト送信中…", "busy");
+    const res = await fetch(`${AI_BASE}/models/${model}:predictLongRunning`, {
+      method: "POST",
+      headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({ instances: [instance], parameters: params }),
+    });
+    if (!res.ok) throw new Error(await aiExplainError(res));
+    const op = await res.json();
+    if (!op.name) throw new Error("APIから操作IDが返りませんでした");
+
+    // 完了までポーリング
+    let result = null;
+    while (true) {
+      const elapsed = Math.round((Date.now() - started) / 1000);
+      if (elapsed * 1000 > AI_TIMEOUT_MS) throw new Error("タイムアウトしました（8分）。時間をおいて再試行してください");
+      aiSetStatus(`生成中… ${elapsed}秒経過（通常1〜6分かかります。このタブは開いたままに）`, "busy");
+      await sleep(AI_POLL_MS);
+      const pr = await fetch(`${AI_BASE}/${op.name}`, { headers: { "x-goog-api-key": key } });
+      if (!pr.ok) throw new Error(await aiExplainError(pr));
+      const j = await pr.json();
+      if (j.error) throw new Error(j.error.message || "生成に失敗しました");
+      if (j.done) { result = j; break; }
+    }
+
+    const gvr = result.response?.generateVideoResponse;
+    const uri =
+      gvr?.generatedSamples?.[0]?.video?.uri ||
+      gvr?.generatedVideos?.[0]?.video?.uri ||
+      result.response?.generatedVideos?.[0]?.video?.uri;
+    if (!uri) {
+      if (gvr?.raiMediaFilteredCount > 0) {
+        const reason = gvr.raiMediaFilteredReasons?.[0] || "";
+        throw new Error(`安全フィルタにより動画が生成されませんでした。プロンプトの表現を変えてお試しください。${reason}`);
+      }
+      throw new Error("動画URLを取得できませんでした（レスポンス形式が想定外です）");
+    }
+
+    // 動画の取得（fetch できない場合はキー付きURLで直接再生）
+    aiSetStatus("動画をダウンロード中…", "busy");
+    const keyedUrl = uri + (uri.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(key);
+    try {
+      const vres = await fetch(uri, { headers: { "x-goog-api-key": key } });
+      if (!vres.ok) throw new Error(`HTTP ${vres.status}`);
+      aiResultBlob = await vres.blob();
+      $("aiVideo").src = URL.createObjectURL(aiResultBlob);
+    } catch {
+      aiResultLink = keyedUrl;
+      $("aiVideo").src = keyedUrl;
+    }
+
+    $("aiPlaceholder").hidden = true;
+    $("aiVideo").hidden = false;
+    $("aiVideo").play().catch(() => {});
+    $("aiSaveBtn").hidden = false;
+    const total = Math.round((Date.now() - started) / 1000);
+    aiSetStatus(`✅ 生成完了（${total}秒）。プレビューを確認して保存してください`, "ok");
+  } catch (err) {
+    aiSetStatus(`⚠️ ${err.message || err}`, "error");
+  } finally {
+    aiBusy = false;
+    $("aiGenerateBtn").disabled = false;
+  }
+}
+
+function saveAIVideo() {
+  const stamp = new Date().toISOString().slice(11, 19).replaceAll(":", "");
+  if (aiResultBlob) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(aiResultBlob);
+    a.download = `veo_${$("aiAspect").value.replace(":", "x")}_${$("aiDuration").value}s_${stamp}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+  } else if (aiResultLink) {
+    window.open(aiResultLink, "_blank"); // 新しいタブで開いて保存してもらう
+  }
+}
+
+function bindAIControls() {
+  document.querySelectorAll('input[name="appMode"]').forEach((r) => {
+    r.addEventListener("change", (e) => setAppMode(e.target.value));
+  });
+
+  // APIキーはこの端末の localStorage にのみ保存
+  $("aiKey").value = localStorage.getItem(AI_KEY_STORAGE) || "";
+  $("aiKey").addEventListener("input", (e) => {
+    localStorage.setItem(AI_KEY_STORAGE, e.target.value.trim());
+  });
+
+  // Veo 3.0 系は 8秒固定
+  $("aiModel").addEventListener("change", (e) => {
+    const isV30 = e.target.value.includes("3.0");
+    if (isV30) $("aiDuration").value = "8";
+    $("aiDuration").disabled = isV30;
+  });
+
+  $("aiGenerateBtn").addEventListener("click", generateAI);
+  $("aiSaveBtn").addEventListener("click", saveAIVideo);
+}
+
 // ---------- UI 初期化 ----------
 
 function applyAspect() {
@@ -812,10 +998,14 @@ function loadImageFile(file) {
   const img = new Image();
   img.onload = () => {
     S.bgImage = img;
+    S.bgImageFile = file; // AIモードの image-to-video 用に元ファイルも保持
     const radio = document.querySelector('input[name="bgType"][value="image"]');
     radio.checked = true;
     radio.dispatchEvent(new Event("change"));
-    $("imageHint").textContent = `✅ ${file.name || "貼り付け画像"}（${img.width}×${img.height}）`;
+    const label = `✅ ${file.name || "貼り付け画像"}（${img.width}×${img.height}）`;
+    $("imageHint").textContent = label;
+    $("aiImageHint").textContent = label + " — image-to-video に使えます";
+    $("aiUseImageWrap").hidden = false;
   };
   img.src = URL.createObjectURL(file);
 }
@@ -829,6 +1019,7 @@ function init() {
   applyAspect();
   buildSwatches();
   bindControls();
+  bindAIControls();
   requestAnimationFrame(tick);
 }
 
