@@ -26,7 +26,16 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, request, send_from_directory
+try:
+    from flask import Flask, request, send_from_directory
+except ImportError:
+    print("=" * 60)
+    print("  Flask が入っていません。先にこれを実行してください:")
+    print("    Mac:     python3 -m pip install flask")
+    print("    Windows: pip install flask （py環境なら py -m pip install flask）")
+    print("=" * 60)
+    input("Enterで閉じる")
+    raise SystemExit(1)
 
 BASE_DIR = Path(__file__).parent
 PROJECT_DIR = BASE_DIR.parent  # claude の作業ディレクトリ = プロジェクトルート
