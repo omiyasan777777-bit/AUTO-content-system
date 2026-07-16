@@ -37,7 +37,7 @@ except ImportError:
     input("Enterで閉じる")
     raise SystemExit(1)
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent  # claude の作業ディレクトリ = プロジェクトルート
 QUESTS_DIR = BASE_DIR / "quests"
 STATE_DIR = BASE_DIR / "state"
@@ -249,6 +249,17 @@ def _run_day():
 
 @app.get("/")
 def index():
+    if not (BASE_DIR / "static" / "index.html").exists():
+        return (
+            "<h2>画面ファイルが見つかりません</h2>"
+            f"<p>探した場所: <code>{BASE_DIR / 'static' / 'index.html'}</code></p>"
+            "<p>guild フォルダの中身が不完全です。リポジトリのルートで次を実行して、"
+            "最新のブランチを取り込み直してください:</p>"
+            "<pre>git fetch origin\n"
+            "git checkout claude/ai-guild-company-n0r4q5\n"
+            "git pull origin claude/ai-guild-company-n0r4q5</pre>",
+            500,
+        )
     return send_from_directory(BASE_DIR / "static", "index.html")
 
 
@@ -363,5 +374,10 @@ if __name__ == "__main__":
     print(f"  http://{HOST}:{PORT} をブラウザで開いてください")
     print(f"  作業ディレクトリ: {PROJECT_DIR}")
     print(f"  claude CLI: {CLAUDE_BIN}")
+    for need in ("static/index.html", "GUILD.md", "members"):
+        if not (BASE_DIR / need).exists():
+            print(f"  ⚠ guild/{need} がありません。ブランチを取り込み直してください:")
+            print("     git fetch origin && git checkout claude/ai-guild-company-n0r4q5"
+                  " && git pull origin claude/ai-guild-company-n0r4q5")
     print("=" * 60)
     app.run(host=HOST, port=PORT, threaded=True)
