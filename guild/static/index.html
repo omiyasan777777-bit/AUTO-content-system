@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIギルド 月光工房 — ギルドホール</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>⚔️</text></svg>">
+<style>
+  :root {
+    --bg: #14101e; --panel: #1e1830; --line: #3a3155;
+    --text: #e8e2f5; --dim: #9a90b8; --gold: #f0c04a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    min-height: 100vh; padding: 12px;
+  }
+  h1 { font-size: 18px; letter-spacing: 2px; margin-bottom: 4px; }
+  h1 .sub { font-size: 12px; color: var(--dim); font-weight: normal; margin-left: 10px; }
+  .kpi-bar {
+    display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0;
+  }
+  .kpi {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 12px; min-width: 108px;
+  }
+  .kpi .label { font-size: 10px; color: var(--dim); }
+  .kpi .value { font-size: 18px; font-weight: bold; color: var(--gold); }
+  .kpi .value small { font-size: 10px; color: var(--dim); font-weight: normal; }
+  .layout { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .hall-wrap { flex: 1 1 640px; min-width: 320px; }
+  canvas {
+    width: 100%; border: 2px solid var(--line); border-radius: 8px;
+    image-rendering: pixelated; background: #0d0a16; display: block;
+  }
+  .controls {
+    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center;
+  }
+  button {
+    background: #4a3a7a; color: #fff; border: 1px solid #6a58a8; border-radius: 6px;
+    padding: 8px 14px; cursor: pointer; font-size: 13px;
+  }
+  button:hover { background: #5a48948a; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: #8a5f16; border-color: var(--gold); }
+  select, input[type=text] {
+    background: var(--panel); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 8px; font-size: 13px;
+  }
+  input[type=text] { flex: 1; min-width: 200px; }
+  .side { flex: 0 0 300px; display: flex; flex-direction: column; gap: 8px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .card .head { display: flex; align-items: center; gap: 8px; }
+  .card .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .card .name { font-weight: bold; font-size: 14px; }
+  .card .job { font-size: 11px; color: var(--dim); }
+  .card .badge {
+    margin-left: auto; font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    background: #333; color: #aaa;
+  }
+  .badge.working { background: #7a5a10; color: #ffd66e; }
+  .badge.done { background: #1c5c38; color: #7ef0b0; }
+  .badge.error { background: #6a2020; color: #ff9a9a; }
+  .card .doing { font-size: 12px; color: var(--dim); margin-top: 4px; }
+  .card .deliv { font-size: 12px; color: #9fe8c0; margin-top: 2px; }
+  .quests { margin-top: 12px; }
+  .quests h2 { font-size: 14px; margin-bottom: 6px; color: var(--gold); }
+  .quest-item {
+    display: flex; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--line);
+    font-size: 12px; cursor: pointer; align-items: center;
+  }
+  .quest-item:hover { background: #2a2244; }
+  .quest-item .tag {
+    font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #3a3155;
+    flex-shrink: 0;
+  }
+  .quest-item .score { color: var(--gold); flex-shrink: 0; }
+  #modal {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 10;
+    padding: 5vh 8vw;
+  }
+  #modal .box {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    max-height: 90vh; display: flex; flex-direction: column;
+  }
+  #modal pre {
+    padding: 16px; overflow: auto; white-space: pre-wrap; font-size: 12px;
+    font-family: inherit; line-height: 1.7;
+  }
+  #modal .bar { padding: 8px 12px; border-bottom: 1px solid var(--line); display: flex; }
+  #modal .bar button { margin-left: auto; }
+  .notice { font-size: 12px; color: #ff9a9a; margin-top: 6px; }
+</style>
+</head>
+<body>
+<h1>⚔️ AIギルド 月光工房<span class="sub">実社員ゼロ・AIメンバー5人の一人ギルド — GUILD HALL</span></h1>
+
+<div class="kpi-bar" id="kpiBar"></div>
+
+<div class="layout">
+  <div class="hall-wrap">
+    <canvas id="hall" width="640" height="400"></canvas>
+    <div class="controls">
+      <button class="primary" id="runDay">▶ ギルドの一日を回す</button>
+      <select id="memberSel"></select>
+      <input type="text" id="instruction" placeholder="依頼内容（例: ◯◯についてリサーチして）">
+      <button id="sendQuest">📜 クエストを依頼</button>
+    </div>
+    <div class="notice" id="notice"></div>
+  </div>
+
+  <div class="side">
+    <div id="cards"></div>
+    <div class="quests card">
+      <h2>📌 クエストボード（納品済み）</h2>
+      <div id="questList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal"><div class="box">
+  <div class="bar"><span id="modalTitle"></span><button onclick="modal.style.display='none'">閉じる</button></div>
+  <pre id="modalBody"></pre>
+</div></div>
+
+<script>
+"use strict";
+const cv = document.getElementById("hall"), ctx = cv.getContext("2d");
+const modal = document.getElementById("modal");
+
+// ── ギルドホールの間取り ──────────────────────────────
+// 場所ごとの立ち位置（メンバーごとに少しずらす）
+const SPOTS = {
+  library:  {x: 78,  y: 118},   // 書庫（調べ物）
+  workshop: {x: 560, y: 118},   // 工房（コマンド実行）
+  tavern:   {x: 105, y: 330},   // 酒場テーブル（相談）
+  board:    {x: 320, y: 78},    // クエストボード
+};
+const DESKS = [ // 5人ぶんの机 [机x, 机y]（座席は机の下側）
+  [176, 168], [296, 168], [416, 168], [236, 262], [356, 262],
+];
+
+let members = [];        // /api/state のメンバー配列
+let chars = {};          // id -> {x, y, tx, ty, walk, bubble:{text,kind,until}}
+let master = {x: 480, y: 300, tx: 480, ty: 300, wanderAt: 0, bubble: null, approach: null};
+let lastEventId = 0;
+let bubbleQueue = [];
+
+function deskSpot(i) { const [dx, dy] = DESKS[i % DESKS.length]; return {x: dx + 20, y: dy + 34}; }
+function spotFor(m, i) {
+  if (m.location === "desk") return deskSpot(i);
+  const s = SPOTS[m.location] || deskSpot(i);
+  return {x: s.x + (i % 3) * 16 - 16, y: s.y + Math.floor(i / 3) * 14};
+}
+
+// ── 描画: ホール ─────────────────────────────────────
+function drawHall() {
+  // 床（板張り）
+  for (let y = 56; y < 400; y += 20)
+    for (let x = 0; x < 640; x += 40) {
+      ctx.fillStyle = ((x / 40 + y / 20) % 2) ? "#4a3626" : "#54402e";
+      ctx.fillRect(x, y, 40, 20);
+      ctx.fillStyle = "#3a2a1c"; ctx.fillRect(x, y + 19, 40, 1);
+    }
+  // 壁
+  ctx.fillStyle = "#2c2340"; ctx.fillRect(0, 0, 640, 56);
+  ctx.fillStyle = "#241c34"; ctx.fillRect(0, 52, 640, 4);
+  for (let x = 8; x < 640; x += 64) { // 壁の燭台
+    ctx.fillStyle = "#6a5838"; ctx.fillRect(x, 20, 4, 12);
+    ctx.fillStyle = (Math.floor(Date.now() / 300 + x) % 2) ? "#ffb340" : "#ff8830";
+    ctx.fillRect(x, 14, 4, 6);
+  }
+  // クエストボード（上部中央）
+  ctx.fillStyle = "#6a4a24"; ctx.fillRect(272, 8, 96, 44);
+  ctx.fillStyle = "#8a6438"; ctx.fillRect(276, 12, 88, 36);
+  [[282,16],[306,22],[330,15],[344,26],[290,32]].forEach(([px,py]) => {
+    ctx.fillStyle = "#f0e8d0"; ctx.fillRect(px, py, 14, 12);
+    ctx.fillStyle = "#c04040"; ctx.fillRect(px + 6, py - 1, 2, 2);
+  });
+  // 書庫（左）
+  for (let i = 0; i < 2; i++) {
+    const bx = 16 + i * 56;
+    ctx.fillStyle = "#5a3c20"; ctx.fillRect(bx, 60, 48, 44);
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) {
+      ctx.fillStyle = ["#b04848","#4868b0","#48a068","#b09048"][(r+c+i)%4];
+      ctx.fillRect(bx + 4 + c * 8, 64 + r * 14, 6, 10);
+    }
+  }
+  // 工房（右）: 炉とからくり
+  ctx.fillStyle = "#555"; ctx.fillRect(528, 60, 96, 44);
+  ctx.fillStyle = "#333"; ctx.fillRect(536, 68, 32, 28);
+  ctx.fillStyle = (Math.floor(Date.now()/250)%2) ? "#ff7830" : "#ffb340";
+  ctx.fillRect(542, 76, 20, 14);
+  ctx.fillStyle = "#8a8a9a"; ctx.fillRect(584, 66, 30, 30);
+  ctx.fillStyle = "#4fe0c0"; ctx.fillRect(588, 70, 22, 10); // 水晶モニタ
+  // 酒場テーブル（左下）
+  ctx.fillStyle = "#6a4a24"; ctx.fillRect(64, 306, 84, 30);
+  ctx.fillStyle = "#8a6438"; ctx.fillRect(68, 302, 76, 8);
+  ctx.fillStyle = "#e0d0a0"; ctx.fillRect(84, 308, 8, 8); ctx.fillRect(116, 310, 8, 8); // ジョッキ
+  // 観葉植物
+  [[610, 360], [10, 250]].forEach(([px, py]) => {
+    ctx.fillStyle = "#7a4a2a"; ctx.fillRect(px, py + 14, 16, 10);
+    ctx.fillStyle = "#3e9a50"; ctx.fillRect(px + 2, py, 12, 16);
+    ctx.fillStyle = "#54c46a"; ctx.fillRect(px + 4, py - 4, 8, 8);
+  });
+  // 机5つ（水晶モニタつき）
+  DESKS.forEach(([dx, dy], i) => {
+    ctx.fillStyle = "#6a4a24"; ctx.fillRect(dx, dy, 46, 24);
+    ctx.fillStyle = "#8a6438"; ctx.fillRect(dx, dy - 4, 46, 6);
+    const m = members[i];
+    const on = m && m.status === "working";
+    ctx.fillStyle = "#222"; ctx.fillRect(dx + 12, dy - 18, 22, 15);
+    ctx.fillStyle = on ? "#5ff0d0" : "#3a4a55";
+    ctx.fillRect(dx + 14, dy - 16, 18, 11);
+    if (on && Math.floor(Date.now() / 400) % 2) {
+      ctx.fillStyle = "#0a6a58";
+      ctx.fillRect(dx + 15, dy - 14, 10, 2); ctx.fillRect(dx + 15, dy - 10, 14, 2);
+    }
+  });
+}
+
+// ── 描画: キャラクター ────────────────────────────────
+function drawChar(c, color, name, opts = {}) {
+  const bob = c.walk ? Math.sin(Date.now() / 90) * 1.5 : 0;
+  const x = Math.round(c.x), y = Math.round(c.y + bob);
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x - 6, y + 16, 12, 3); // 影
+  ctx.fillStyle = "#3a3a4a"; // 脚
+  ctx.fillRect(x - 5, y + 8, 4, 8); ctx.fillRect(x + 1, y + 8, 4, 8);
+  ctx.fillStyle = color; ctx.fillRect(x - 6, y - 2, 12, 11); // 胴（職服）
+  ctx.fillStyle = "#f5d5b0"; ctx.fillRect(x - 5, y - 10, 10, 9); // 顔
+  ctx.fillStyle = opts.hair || "#4a3828"; ctx.fillRect(x - 6, y - 13, 12, 5); // 髪
+  ctx.fillStyle = "#222"; // 目
+  ctx.fillRect(x - 3, y - 7, 2, 2); ctx.fillRect(x + 1, y - 7, 2, 2);
+  if (opts.crown) { // ギルドマスターの金冠
+    ctx.fillStyle = "#f0c04a";
+    ctx.fillRect(x - 5, y - 17, 10, 3);
+    ctx.fillRect(x - 5, y - 20, 2, 3); ctx.fillRect(x - 1, y - 20, 2, 3); ctx.fillRect(x + 3, y - 20, 2, 3);
+  }
+  ctx.fillStyle = "#cfc8e8"; ctx.font = "9px sans-serif"; ctx.textAlign = "center";
+  ctx.fillText(name, x, y + 27);
+}
+
+// ── 描画: ドラクエ風吹き出し ──────────────────────────
+function drawBubble(cx, cy, text, kind) {
+  ctx.font = "11px sans-serif";
+  const lines = [];
+  for (let i = 0; i < text.length; i += 14) lines.push(text.slice(i, i + 14));
+  const w = Math.min(170, Math.max(...lines.map(l => ctx.measureText(l).width)) + 16);
+  const h = lines.length * 14 + 10;
+  let bx = Math.min(Math.max(cx - w / 2, 4), 636 - w);
+  let by = cy - 24 - h;
+  if (by < 4) by = cy + 30;
+  ctx.fillStyle = kind === "master" ? "#b8447a" : "#101018";
+  ctx.fillRect(bx, by, w, h);
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+  ctx.strokeRect(bx + 1, by + 1, w - 2, h - 2);
+  ctx.fillStyle = "#fff"; ctx.textAlign = "left";
+  lines.forEach((l, i) => ctx.fillText(l, bx + 8, by + 15 + i * 14));
+  // しっぽ
+  ctx.fillStyle = kind === "master" ? "#b8447a" : "#101018";
+  const ty = by < cy ? by + h : by;
+  ctx.beginPath();
+  ctx.moveTo(cx - 4, ty); ctx.lineTo(cx + 4, ty);
+  ctx.lineTo(cx, by < cy ? ty + 6 : ty - 6);
+  ctx.fill();
+}
+
+// ── アニメーションループ ──────────────────────────────
+function step(c, speed = 1.4) {
+  const dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy);
+  if (d < 2) { c.walk = false; return; }
+  c.walk = true;
+  c.x += dx / d * speed; c.y += dy / d * speed;
+}
+
+function tick() {
+  ctx.clearRect(0, 0, 640, 400);
+  drawHall();
+  const now = Date.now();
+
+  members.forEach((m, i) => {
+    const c = chars[m.id];
+    if (!c) return;
+    const s = spotFor(m, i);
+    c.tx = s.x; c.ty = s.y;
+    step(c);
+  });
+
+  // マスター: 返事があれば相手に歩み寄る。なければ巡回
+  if (master.approach) {
+    const t = chars[master.approach];
+    if (t) { master.tx = t.x + 26; master.ty = t.y; }
+  } else if (now > master.wanderAt) {
+    master.tx = 160 + Math.random() * 360; master.ty = 120 + Math.random() * 230;
+    master.wanderAt = now + 4000 + Math.random() * 5000;
+  }
+  step(master, 1.1);
+
+  // 吹き出しキューの消化（1つずつ表示）
+  if (bubbleQueue.length && !bubbleQueue[0].shownAt) {
+    const b = bubbleQueue[0];
+    b.shownAt = now;
+    if (b.kind === "master") master.approach = b.member;
+  }
+  if (bubbleQueue.length && now - bubbleQueue[0].shownAt > 3800) {
+    const done = bubbleQueue.shift();
+    if (done.kind === "master") master.approach = null;
+  }
+
+  members.forEach((m, i) => {
+    const c = chars[m.id];
+    if (c) drawChar(c, m.color, m.name, {hair: ["#4a3828","#c46a2a","#7a5aa8","#2a6a4a","#a89040"][i % 5]});
+  });
+  drawChar(master, "#e8e8f0", "マスター", {crown: true, hair: "#3a3040"});
+
+  const b = bubbleQueue[0];
+  if (b && b.shownAt) {
+    const src = b.kind === "master" ? master : chars[b.member];
+    if (src) drawBubble(src.x, src.y, b.text, b.kind);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── サーバー同期 ─────────────────────────────────────
+async function poll() {
+  try {
+    const r = await fetch(`/api/state?after=${lastEventId}`);
+    const data = await r.json();
+    members = data.members;
+    members.forEach((m, i) => {
+      if (!chars[m.id]) { const s = deskSpot(i); chars[m.id] = {x: s.x, y: s.y, tx: s.x, ty: s.y}; }
+    });
+    data.events.forEach(e => {
+      lastEventId = Math.max(lastEventId, e.id);
+      bubbleQueue.push(e);
+    });
+    renderCards();
+    document.getElementById("runDay").disabled = data.day_running;
+    document.getElementById("notice").textContent =
+      data.claude_ready ? "" : "⚠ claude CLI が見つかりません。npm install -g @anthropic-ai/claude-code";
+  } catch (e) { /* サーバー再起動中など。次のポーリングで復帰 */ }
+}
+
+function renderCards() {
+  const badge = {idle: "待機", working: "作業中", done: "完了", error: "エラー"};
+  document.getElementById("cards").innerHTML = members.map(m => `
+    <div class="card">
+      <div class="head">
+        <span class="dot" style="background:${m.color}"></span>
+        <span>${m.emoji}</span>
+        <span class="name">${m.name}</span>
+        <span class="job">${m.job}</span>
+        <span class="badge ${m.status}">${badge[m.status] || m.status}</span>
+      </div>
+      <div class="doing">${m.doing || ""}</div>
+      ${m.deliverable ? `<div class="deliv">📦 ${m.deliverable}</div>` : ""}
+    </div>`).join("");
+  const sel = document.getElementById("memberSel");
+  if (sel.options.length !== members.length) {
+    sel.innerHTML = members.map(m => `<option value="${m.id}">${m.emoji} ${m.name}（${m.job}）</option>`).join("");
+  }
+}
+
+async function loadKpi() {
+  try {
+    const r = await fetch("/api/kpi"); const k = await r.json();
+    const c = k.counts, g = id => c[id] || {};
+    const kpis = [
+      ["🔭 リサーチ", (g("sora").research || 0) + "<small> 回</small>"],
+      ["🎤 発信", (g("erika").post || 0) + "<small> 本</small>"],
+      ["📖 校閲", (g("nana").review || 0) + `<small> 回${k.avg_score != null ? " / 平均" + k.avg_score + "点" : ""}</small>`],
+      ["✍️ 記事", (g("yui").article || 0) + "<small> 本</small>"],
+      ["💰 売上", "¥" + (k.ledger.revenue || 0).toLocaleString()],
+      ["👥 フォロワー", `${k.ledger.followers_threads || 0}<small> Th</small> / ${k.ledger.followers_x || 0}<small> X</small>`],
+      ["📌 総納品", k.total_quests + "<small> 件</small>"],
+    ];
+    document.getElementById("kpiBar").innerHTML = kpis.map(([l, v]) =>
+      `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div></div>`).join("");
+  } catch (e) {}
+}
+
+async function loadQuests() {
+  try {
+    const r = await fetch("/api/quests"); const d = await r.json();
+    document.getElementById("questList").innerHTML = d.quests.length
+      ? d.quests.map(q => `
+        <div class="quest-item" onclick="openQuest('${q.file}')">
+          <span class="tag">${q.type}</span>
+          <span style="flex:1">${q.title}</span>
+          ${q.score ? `<span class="score">${q.score}点</span>` : ""}
+        </div>`).join("")
+      : `<div style="font-size:12px;color:var(--dim)">まだ納品はありません。最初のクエストを依頼しましょう。</div>`;
+  } catch (e) {}
+}
+
+async function openQuest(name) {
+  const r = await fetch(`/api/quest-file?name=${encodeURIComponent(name)}`);
+  const d = await r.json();
+  document.getElementById("modalTitle").textContent = name;
+  document.getElementById("modalBody").textContent = d.content || d.error;
+  modal.style.display = "block";
+}
+
+document.getElementById("runDay").onclick = async () => {
+  const r = await fetch("/api/run-day", {method: "POST"});
+  const d = await r.json();
+  if (d.error) document.getElementById("notice").textContent = "⚠ " + d.error;
+};
+document.getElementById("sendQuest").onclick = async () => {
+  const instruction = document.getElementById("instruction").value.trim();
+  if (!instruction) return;
+  const r = await fetch("/api/quest", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({member: document.getElementById("memberSel").value, instruction}),
+  });
+  const d = await r.json();
+  if (d.error) document.getElementById("notice").textContent = "⚠ " + d.error;
+  else { document.getElementById("instruction").value = ""; document.getElementById("notice").textContent = ""; }
+};
+modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
+
+poll(); loadKpi(); loadQuests();
+setInterval(poll, 1200);
+setInterval(loadKpi, 8000);
+setInterval(loadQuests, 8000);
+tick();
+</script>
+</body>
+</html>

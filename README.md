@@ -89,8 +89,24 @@ AUTO-content-system/
 │   ├── 03_product_design.md          ← Phase 3: 商品設計
 │   ├── 04_paid_content.md            ← Phase 4: 有料部分作成
 │   └── 05_sales_letter.md            ← Phase 5: セールスレター
+├── guild/                            ← AIギルド「月光工房」（下記）
 └── output/                           ← 生成物の保存先
 ```
+
+---
+
+## AIギルド「月光工房」（実社員ゼロの一人ギルド）
+
+5人のAIメンバー（リサーチ/SNS発信/校閲/記事制作/セールス）が分業で働く
+「一人ギルド」サブシステム。働いている様子が目で見える
+**動くギルドホール画面**（ピクセルアート + KPIボード + ドラクエ風吹き出し）つき。
+
+```
+python guild/server.py    （Windowsは start_guild.bat）
+→ http://127.0.0.1:8788
+```
+
+詳細は `guild/README.md` を参照。
 
 ---
 

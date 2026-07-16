@@ -17,6 +17,14 @@ AUTO-content-system/
 ├── webapp/                ← ローカルWebアプリ（claude CLI をヘッドレス起動）
 │   ├── server.py          ← Flaskサーバー（127.0.0.1:8787）
 │   └── static/index.html  ← チャットUI
+├── start_guild.bat        ← AIギルド起動（ダブルクリック）
+├── guild/                 ← AIギルド「月光工房」（5人のAIメンバー一人ギルド）
+│   ├── GUILD.md           ← ギルド憲章（テーマ・禁止事項・納品の作法）
+│   ├── server.py          ← ギルドホールサーバー（127.0.0.1:8788）
+│   ├── static/index.html  ← 動くギルドホール（ピクセルアート + KPIボード）
+│   ├── members/           ← 5人の役割定義書（ソラ/エリカ/ナナ/ユイ/アオイ）
+│   ├── quests/            ← 納品物（frontmatter からKPI自動集計）
+│   └── state/ledger.json  ← 売上・フォロワー実数値（人間が更新）
 ├── knowledge/             ← あなただけの秘伝ノウハウ（裏メニューで管理・執筆時に注入）
 ├── Market-Lens/           ← note市場リサーチアプリ（`npm start` → 127.0.0.1:4173）
 │   ├── server.mjs         ← 検索/24h購入判定/穴場ジャンル/人気ワードAPI
@@ -60,6 +68,17 @@ AUTO-content-system/
   - 05_sales_letter.md（無料部分）+ 04_paid_content.md（有料部分）を結合して投稿
   - タイトルは 03_product_design.md から自動取得（明示推奨）。`--auto-save` で確認なし下書き保存
 
+
+## AIギルド「月光工房」（実社員ゼロの一人ギルド）
+
+サクラStudio型の「AIエージェントの一人会社」をギルド風に翻案したサブシステム。詳細は `guild/README.md`。
+
+- 起動: `python guild/server.py`（Windowsは `start_guild.bat`）→ http://127.0.0.1:8788
+- メンバー: 🔭ソラ（斥候=リサーチ）/ 🎤エリカ（吟遊詩人=SNS発信）/ 📖ナナ（賢者=校閲・採点）/ ✍️ユイ（書記=記事制作）/ 💰アオイ（商人=セールス）
+- 全メンバーは `guild/GUILD.md`（ギルド憲章）を最優先で守る（収益断定・煽り・捏造の禁止など）
+- 成果物は `guild/quests/` に frontmatter（member/type/title/date/score）つきで納品する。KPIボードはここから自動集計
+- ユーザーが「ギルド」「ギルドに依頼」と言ったら、該当メンバーの役割書（`guild/members/*.md`）+ 憲章に従って作業し、`guild/quests/` に納品する
+- 公開・課金の最終操作は必ず人間（ギルドマスター）が行う。AIは下書きまで
 
 ## 統合知識ベース
 
