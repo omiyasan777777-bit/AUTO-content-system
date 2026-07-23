@@ -286,12 +286,30 @@ def input_body(driver, body: str) -> bool:
 
         # クリップボード経由でペースト（Mac は Command+V、それ以外は Ctrl+V）
         paste_key = Keys.COMMAND if sys.platform == "darwin" else Keys.CONTROL
-        pyperclip.copy(body)
-        ActionChains(driver).click(editor).pause(0.5).perform()
-        ActionChains(driver).key_down(paste_key).send_keys("v").key_up(paste_key).perform()
-        time.sleep(2)
 
-        print(f"[OK] 本文入力: {len(body):,}文字")
+        # noteの/newは直前の未保存下書きをローカルに復元することがあるため、
+        # ペースト前に必ずエディタを全選択→削除して空の状態にする
+        ActionChains(driver).click(editor).pause(0.3).perform()
+        ActionChains(driver).key_down(paste_key).send_keys("a").key_up(paste_key).perform()
+        ActionChains(driver).send_keys(Keys.BACKSPACE).perform()
+        time.sleep(0.5)
+
+        pyperclip.copy(body)
+        ActionChains(driver).click(editor).pause(0.3).perform()
+        ActionChains(driver).key_down(paste_key).send_keys("v").key_up(paste_key).perform()
+        # 長文ペーストはエディタ側の処理に時間がかかるため、文字数に応じて待機
+        time.sleep(min(2 + len(body) / 3000, 12))
+
+        # ペースト結果を検証（極端に短ければ貼り付け漏れ・古い下書き残存の疑い）
+        pasted_len = len(editor.text or "")
+        expected_len = len(body)
+        if pasted_len < expected_len * 0.5:
+            print(f"[WARN] 貼り付け後の文字数が想定より少ないです（本文: {pasted_len:,}文字 / 期待値: 約{expected_len:,}文字）")
+            print("[WARN] 古い下書きが残っている、またはペーストが途中で切れている可能性があります。")
+            print("[WARN] 自動保存はスキップします。ブラウザ上で本文を目視確認してから手動で保存してください。")
+            return False
+
+        print(f"[OK] 本文入力: 期待値約{expected_len:,}文字 / エディタ実測{pasted_len:,}文字")
         return True
     except ImportError:
         print("[ERROR] pyperclip が必要です: pip install pyperclip")
@@ -377,6 +395,12 @@ def post(output_dir: Path, title: str = None, profile_dir: str = None, auto_save
 
         # 本文入力
         if not input_body(driver, body):
+            print("\n[STOP] 本文の貼り付け内容を確認できなかったため、自動保存を中止しました。")
+            print("       ブラウザで内容を確認し、問題なければ手動で下書き保存してください。")
+            try:
+                input("Enterを押すとブラウザを閉じます...")
+            except EOFError:
+                pass
             return
 
         time.sleep(2)
