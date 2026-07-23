@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅行ジャンル記事作成ツール</title>
+<style>
+  :root {
+    --bg: #f7f5f2;
+    --card: #ffffff;
+    --ink: #26221c;
+    --ink-sub: #6b6259;
+    --accent: #c1642f;
+    --accent-ink: #ffffff;
+    --line: #e6e0d8;
+    --chip: #f0ece4;
+    --good: #4a7c59;
+    --shadow: 0 1px 3px rgba(38,34,28,0.08), 0 8px 24px rgba(38,34,28,0.06);
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191713;
+      --card: #232019;
+      --ink: #f1ece3;
+      --ink-sub: #b6ab9c;
+      --accent: #e08a52;
+      --accent-ink: #1a1611;
+      --line: #38332a;
+      --chip: #2c2820;
+      --good: #7fbf8f;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #191713; --card: #232019; --ink: #f1ece3; --ink-sub: #b6ab9c;
+    --accent: #e08a52; --accent-ink: #1a1611; --line: #38332a; --chip: #2c2820;
+    --good: #7fbf8f; --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.25);
+  }
+  :root[data-theme="light"] {
+    --bg: #f7f5f2; --card: #ffffff; --ink: #26221c; --ink-sub: #6b6259;
+    --accent: #c1642f; --accent-ink: #ffffff; --line: #e6e0d8; --chip: #f0ece4;
+    --good: #4a7c59; --shadow: 0 1px 3px rgba(38,34,28,0.08), 0 8px 24px rgba(38,34,28,0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+  header.page-head { margin-bottom: 28px; }
+  header.page-head h1 { font-size: 1.5rem; margin: 0 0 6px; }
+  header.page-head p { margin: 0; color: var(--ink-sub); font-size: 0.92rem; }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--ink-sub);
+    font-size: 0.92rem;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(2px);} to {opacity:1; transform:none;} }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+    margin-bottom: 18px;
+  }
+  .card h2 { font-size: 1.05rem; margin: 0 0 4px; }
+  .card .desc { color: var(--ink-sub); font-size: 0.87rem; margin: 0 0 18px; }
+
+  label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--ink-sub); margin: 14px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 90px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  .checkline { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  .checkline input { width: auto; }
+  .checkline label { margin: 0; font-weight: 500; color: var(--ink); }
+
+  button.primary {
+    margin-top: 20px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.05); }
+  button.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  button.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .results { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .result-item {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: var(--chip);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .result-item .main { font-weight: 700; font-size: 0.98rem; }
+  .result-item .sub { color: var(--ink-sub); font-size: 0.85rem; margin-top: 4px; }
+  .result-item .tag { display:inline-block; font-size: 0.7rem; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 1px 8px; margin-bottom:6px; }
+
+  .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+  .type-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    background: var(--card);
+  }
+  .type-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+  .type-card h3 { margin: 0 0 6px; font-size: 0.95rem; }
+  .type-card p { margin: 0; font-size: 0.82rem; color: var(--ink-sub); }
+  .badge {
+    display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+    margin-top: 8px; font-weight: 700;
+  }
+  .badge.entry { background: #dff0e2; color: #2f6b3c; }
+  .badge.mid { background: #fde9d2; color: #a35c14; }
+  .badge.goal { background: #fbe0e0; color: #a13333; }
+  @media (prefers-color-scheme: dark) {
+    .badge.entry { background: #23392a; color: #8fd4a0; }
+    .badge.mid { background: #3a2c1a; color: #f0b370; }
+    .badge.goal { background: #3a2323; color: #f0a0a0; }
+  }
+
+  .diag-q { margin-bottom: 16px; }
+  .diag-q .options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .opt-btn {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .opt-btn.selected { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .diag-result {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 12px;
+    background: var(--chip);
+    border: 1px solid var(--line);
+    display: none;
+  }
+  .diag-result.show { display: block; }
+  .diag-result .headline { font-size: 1.1rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+
+  pre.output {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 480px;
+    overflow-y: auto;
+    margin-top: 16px;
+  }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+  .step-item {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: var(--card);
+  }
+  .step-item.done { border-color: var(--good); background: var(--chip); }
+  .step-head { display: flex; align-items: center; gap: 10px; }
+  .step-head input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--good); }
+  .step-head .title { font-weight: 700; font-size: 0.95rem; }
+  .step-item .step-desc { font-size: 0.82rem; color: var(--ink-sub); margin: 6px 0 10px 30px; }
+  .step-item textarea { margin-left: 30px; width: calc(100% - 30px); font-size: 0.85rem; min-height: 56px; }
+
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-bar { height: 8px; background: var(--chip); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; background: var(--good); width: 0%; transition: width .25s; }
+
+  footer.note {
+    text-align: center;
+    color: var(--ink-sub);
+    font-size: 0.78rem;
+    margin-top: 40px;
+  }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px;
+    font-size: 0.85rem; opacity: 0; pointer-events: none; transition: opacity .2s;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <h1>旅行ジャンル記事作成ツール</h1>
+    <p>「旅行に行かなくても、写真がなくても稼げる旅行ジャンルnote攻略法」の型をそのまま使える統合ツール。タイトル生成・型診断・構成テンプレート・進捗チェックリストの4機能。</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="title">① タイトル生成</button>
+    <button class="tab-btn" data-tab="diag">② 型を診断</button>
+    <button class="tab-btn" data-tab="template">③ 構成テンプレート</button>
+    <button class="tab-btn" data-tab="steps">④ 7ステップ進捗</button>
+  </nav>
+
+  <!-- TAB 1: タイトル生成 -->
+  <section class="panel active" id="panel-title">
+    <div class="card">
+      <h2>タイトル自動生成</h2>
+      <p class="desc">記事で紹介した3つのタイトルパターン（数字×驚きワード型／対象者×プラン型／実績金額型）で候補を一括生成します。</p>
+
+      <label for="t-theme">テーマ・キーワード（必須）</label>
+      <input type="text" id="t-theme" placeholder="例: 航空券、海外旅行保険、京都旅行">
+
+      <div class="row">
+        <div>
+          <label for="t-number">数字</label>
+          <input type="number" id="t-number" value="12" min="1">
+        </div>
+        <div>
+          <label for="t-target">対象者（任意）</label>
+          <input type="text" id="t-target" placeholder="例: 初心者、カップル、副業ワーカー">
+        </div>
+      </div>
+
+      <label for="t-word">驚きワード</label>
+      <select id="t-word">
+        <option value="劇的に安くする">劇的に安くする</option>
+        <option value="裏ワザ">裏ワザ</option>
+        <option value="攻略法">攻略法</option>
+        <option value="完全テンプレート">完全テンプレート</option>
+        <option value="失敗しない">失敗しない</option>
+        <option value="知らないと損する">知らないと損する</option>
+      </select>
+
+      <div class="checkline">
+        <input type="checkbox" id="t-year" checked>
+        <label for="t-year">年度を入れる（【2026年最新版】など）</label>
+      </div>
+
+      <button class="primary" onclick="generateTitles()">タイトル候補を生成</button>
+
+      <div class="results" id="title-results"></div>
+    </div>
+  </section>
+
+  <!-- TAB 2: 型診断 -->
+  <section class="panel" id="panel-diag">
+    <div class="card">
+      <h2>5つの型 診断</h2>
+      <p class="desc">3つの質問に答えると、5つの型（裏ワザ・攻略法型／比較・まとめ型／テンプレート型／体験談キュレーション型／メタノウハウ型）の中から今の自分に合う型を提案します。</p>
+
+      <div class="diag-q">
+        <strong>Q1. 旅行ジャンルでの実践経験は？</strong>
+        <div class="options" data-q="exp">
+          <button class="opt-btn" data-v="0">まだ0本</button>
+          <button class="opt-btn" data-v="1">1〜3本ある</button>
+          <button class="opt-btn" data-v="2">4本以上ある</button>
+        </div>
+      </div>
+
+      <div class="diag-q">
+        <strong>Q2. どちらを優先したい？</strong>
+        <div class="options" data-q="pref">
+          <button class="opt-btn" data-v="speed">とにかく早く1本仕上げたい</button>
+          <button class="opt-btn" data-v="asset">資産として使い回せるものを作りたい</button>
+          <button class="opt-btn" data-v="price">単価を上げて専門性で勝負したい</button>
+        </div>
+      </div>
+
+      <div class="diag-q">
+        <strong>Q3. 情報収集にかけられる時間は？</strong>
+        <div class="options" data-q="time">
+          <button class="opt-btn" data-v="short">短時間で済ませたい</button>
+          <button class="opt-btn" data-v="mid">じっくり比較したい</button>
+        </div>
+      </div>
+
+      <button class="primary" onclick="runDiagnosis()">診断する</button>
+
+      <div class="diag-result" id="diag-result"></div>
+    </div>
+  </section>
+
+  <!-- TAB 3: 構成テンプレート -->
+  <section class="panel" id="panel-template">
+    <div class="card">
+      <h2>記事構成テンプレート生成</h2>
+      <p class="desc">型を選んでテーマを入力すると、課題→解決策→やり方→STEP1〜3→POINT／ワークの骨組みをMarkdownで出力します。</p>
+
+      <label>型を選ぶ</label>
+      <div class="type-grid" id="type-grid"></div>
+
+      <label for="tpl-theme" style="margin-top:20px;">具体的なテーマ</label>
+      <input type="text" id="tpl-theme" placeholder="例: 海外旅行保険の比較、航空券を安く買う方法">
+
+      <button class="primary" onclick="generateTemplate()">構成テンプレートを生成</button>
+
+      <pre class="output" id="tpl-output" style="display:none;"></pre>
+      <div class="btn-row" id="tpl-actions" style="display:none;">
+        <button class="ghost" onclick="copyText('tpl-output')">コピー</button>
+        <button class="ghost" onclick="downloadText('tpl-output', 'article_template.md')">.mdでダウンロード</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: 7ステップ進捗 -->
+  <section class="panel" id="panel-steps">
+    <div class="card">
+      <h2>7ステップ 進捗チェックリスト</h2>
+      <p class="desc">記事の第5章「リサーチだけで記事を組み立てる7つのステップ」をそのままチェックリスト化。入力はブラウザに自動保存されます。</p>
+
+      <div class="progress-wrap">
+        <span id="progress-label" style="font-size:0.85rem; color:var(--ink-sub);">0 / 7 完了</span>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+
+      <div id="steps-list"></div>
+
+      <button class="ghost" onclick="resetSteps()">この記事の進捗をリセット</button>
+    </div>
+  </section>
+
+  <footer class="note">旅行に行かなくても、写真がなくても稼げる旅行ジャンルnote攻略法 — 付属ツール</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- タブ切り替え ---------- */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1600);
+}
+
+function copyText(elId) {
+  const text = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(text).then(() => showToast("コピーしました"));
+}
+
+function downloadText(elId, filename) {
+  const text = document.getElementById(elId).textContent;
+  const blob = new Blob([text], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- ① タイトル生成 ---------- */
+function generateTitles() {
+  const theme = document.getElementById("t-theme").value.trim();
+  const num = document.getElementById("t-number").value || "12";
+  const word = document.getElementById("t-word").value;
+  const target = document.getElementById("t-target").value.trim();
+  const useYear = document.getElementById("t-year").checked;
+  const yearTag = useYear ? "【2026年最新版】" : "";
+
+  if (!theme) { showToast("テーマを入力してください"); return; }
+
+  const candidates = [];
+
+  // パターンA: [数字]+[驚きワード]+[裏ワザ/攻略法]
+  candidates.push({
+    tag: "パターンA: 数字×驚きワード型",
+    main: `${yearTag}${theme}を${word}裏ワザ${num}選`,
+    sub: "〜今すぐ使える実践テクニックを完全公開〜"
+  });
+  candidates.push({
+    tag: "パターンA: 数字×驚きワード型",
+    main: `${target ? "【" + target + "向け】" : ""}${theme}を${word}攻略法${num}選`,
+    sub: `〜${word}方法をリサーチだけで解説〜`
+  });
+
+  // パターンB: [対象者]+[日数/場所]+[モデルコース/プラン]
+  if (target) {
+    candidates.push({
+      tag: "パターンB: 対象者×プラン型",
+      main: `【完全テンプレート】${target}のための${theme}の選び方`,
+      sub: "〜迷ったらこれ、そのまま使える比較シート付き〜"
+    });
+  }
+
+  // パターンC: 実績金額型 + 行かなくても書ける訴求
+  candidates.push({
+    tag: "パターンC: 参入障壁の低さ訴求型",
+    main: `旅行に行かなくても書けた${theme}の記事`,
+    sub: "〜現地取材0円、リサーチだけで有料記事を量産する型〜"
+  });
+  candidates.push({
+    tag: "パターンC: 参入障壁の低さ訴求型",
+    main: `写真ゼロでも売れた${theme}ノウハウ`,
+    sub: "〜行った回数より、リサーチ力が武器になる〜"
+  });
+
+  // 5鉄則ベースのサブタイトル案を1つ追加
+  candidates.push({
+    tag: "鉄則④手間最小 + 鉄則⑤リスクゼロ",
+    main: `${yearTag}${theme}、${num}個の裏ワザだけ知っていればいい`,
+    sub: "〜専門知識ゼロ、コピペで使える比較データだけで完結〜"
+  });
+
+  const box = document.getElementById("title-results");
+  box.innerHTML = "";
+  candidates.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "result-item";
+    div.innerHTML = `
+      <div>
+        <span class="tag">${c.tag}</span><br>
+        <div class="main">${escapeHtml(c.main)}</div>
+        <div class="sub">${escapeHtml(c.sub)}</div>
+      </div>
+      <button class="ghost" data-copy>コピー</button>
+    `;
+    div.querySelector("[data-copy]").addEventListener("click", () => {
+      navigator.clipboard.writeText(c.main + "\n" + c.sub).then(() => showToast("コピーしました"));
+    });
+    box.appendChild(div);
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m]));
+}
+
+/* ---------- ② 型診断 ---------- */
+const diagState = { exp: null, pref: null, time: null };
+document.querySelectorAll(".diag-q .options").forEach(group => {
+  const q = group.dataset.q;
+  group.querySelectorAll(".opt-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      group.querySelectorAll(".opt-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      diagState[q] = btn.dataset.v;
+    });
+  });
+});
+
+const TYPES = {
+  1: { name: "型1: 裏ワザ・攻略法型", stage: "入門", badge: "entry",
+       desc: "航空券・ホテル・マイルなど「安く・お得に」のノウハウ。公式情報と比較サイトの突き合わせだけで書ける、最も着手しやすい型。" },
+  2: { name: "型2: 比較・まとめ型", stage: "入門", badge: "entry",
+       desc: "海外旅行保険・SIM・予約サイトなど複数の選択肢を同じ条件で並べる型。比較軸を作れば量産・横展開しやすい。" },
+  3: { name: "型3: テンプレート・チェックリスト型", stage: "中間", badge: "mid",
+       desc: "持ち物リストや旅程シートなど、複数の実例から共通項を抽出して資産化する型。単価をやや上げやすい。" },
+  4: { name: "型4: 体験談キュレーション型", stage: "中間", badge: "mid",
+       desc: "SNS・レビューの声を集めて再編集する型。競合が少ないニッチな切り口を作れる。" },
+  5: { name: "型5: メタノウハウ型", stage: "最終目標", badge: "goal",
+       desc: "「旅行記事の書き方そのもの」を教える型。5つの型の中で最も単価を上げやすく、競合も最も少ない。ただし実践経験が前提。" },
+};
+
+function runDiagnosis() {
+  const { exp, pref, time } = diagState;
+  if (exp === null || pref === null || time === null) {
+    showToast("3つの質問すべてに答えてください");
+    return;
+  }
+
+  let recId = 1;
+  let reason = "";
+
+  if (exp === "2" && pref === "price") {
+    recId = 5;
+    reason = "すでに複数本の実践経験があり、専門性で単価を上げたい状態です。型1〜4で得た手順を体系化し、記事の書き方そのものを教えるメタノウハウ型に進むタイミングです。";
+  } else if (pref === "asset") {
+    recId = 3;
+    reason = "資産として使い回したいという狙いに最も合うのはテンプレート・チェックリスト型です。一度作れば繰り返し参照・購入される形になります。";
+  } else if (pref === "price" && exp !== "2") {
+    recId = 4;
+    reason = "単価を意識しつつも実践経験がまだ浅いため、競合が少ないニッチな体験談キュレーション型で差別化しながら経験を積むのがおすすめです。";
+  } else if (time === "short") {
+    recId = 1;
+    reason = "情報収集の時間を短く済ませたいなら、公式情報の突き合わせだけで完結する裏ワザ・攻略法型が最短ルートです。";
+  } else {
+    recId = 2;
+    reason = "比較にじっくり時間をかけられるなら、比較軸を丁寧に作れる比較・まとめ型が向いています。作った比較軸は他ジャンルにも横展開できます。";
+  }
+
+  const t = TYPES[recId];
+  const box = document.getElementById("diag-result");
+  box.classList.add("show");
+  box.innerHTML = `
+    <div class="headline">おすすめは ${t.name}</div>
+    <span class="badge ${t.badge}">${t.stage}フェーズ</span>
+    <p style="margin-top:10px;">${t.desc}</p>
+    <p style="color:var(--ink-sub); font-size:0.85rem;">${reason}</p>
+  `;
+}
+
+/* ---------- ③ 構成テンプレート ---------- */
+const TEMPLATE_DATA = {
+  1: {
+    name: "型1: 裏ワザ・攻略法型",
+    steps: [
+      "テーマを1つに絞る（例: ○○を安く買う方法）",
+      "関連する公式サイト・比較サイトを5つ以上洗い出す",
+      "条件（時期・路線・会員ランクなど）ごとに情報を整理する"
+    ]
+  },
+  2: {
+    name: "型2: 比較・まとめ型",
+    steps: [
+      "比較する対象を3〜5つ選ぶ",
+      "比較軸（料金・条件・サポート内容など）を決める",
+      "公式サイトの情報を軸ごとに埋めていく"
+    ]
+  },
+  3: {
+    name: "型3: テンプレート・チェックリスト型",
+    steps: [
+      "同じテーマの既存リストを5つ以上集める",
+      "共通して出てくる項目を洗い出す",
+      "抜けている項目を補い、穴埋め式に整える"
+    ]
+  },
+  4: {
+    name: "型4: 体験談キュレーション型",
+    steps: [
+      "テーマに関する体験談をSNS・レビューサイトから集める",
+      "良い声・悪い声の両方をバランスよく拾う",
+      "テーマ別に整理し、出典を明記して要約する"
+    ]
+  },
+  5: {
+    name: "型5: メタノウハウ型",
+    steps: [
+      "型1〜4のいずれかを実際に1本書いてみる",
+      "その過程で得たリサーチ手順・つまずきポイントを記録する",
+      "手順を再現可能な形に体系化する"
+    ]
+  },
+};
+
+let selectedType = 1;
+function renderTypeGrid() {
+  const grid = document.getElementById("type-grid");
+  grid.innerHTML = "";
+  Object.keys(TEMPLATE_DATA).forEach(id => {
+    const t = TEMPLATE_DATA[id];
+    const div = document.createElement("div");
+    div.className = "type-card" + (Number(id) === selectedType ? " selected" : "");
+    div.innerHTML = `<h3>${t.name}</h3><p>${TYPES[id].desc}</p>`;
+    div.addEventListener("click", () => { selectedType = Number(id); renderTypeGrid(); });
+    grid.appendChild(div);
+  });
+}
+renderTypeGrid();
+
+function generateTemplate() {
+  const theme = document.getElementById("tpl-theme").value.trim();
+  if (!theme) { showToast("テーマを入力してください"); return; }
+
+  const t = TEMPLATE_DATA[selectedType];
+  const s = t.steps;
+
+  const md = `## ${theme}
+
+### この段階での課題
+
+{読者がここで直面する壁を1〜2文で}
+
+### 解決策
+
+${t.name}では、**{何をするか1文で}** を解説します。
+
+{なぜこれをやるのか理由を1〜2文}
+
+これができると…
+
+- {メリット1}
+- {メリット2}
+- {メリット3}
+
+### 具体的なやり方
+
+やることとしては、
+**{作業の要約を1文で}** です。
+
+**具体的な作業ステップ:**
+
+1. ${s[0]}
+2. ${s[1]}
+3. ${s[2]}
+
+一つずつ解説していきます！
+
+---
+
+**STEP 1: ${s[0]}**
+
+{具体的なノウハウを解説。数字・分量を明確に}
+
+---
+
+**STEP 2: ${s[1]}**
+
+{具体的なノウハウを解説}
+
+---
+
+**STEP 3: ${s[2]}**
+
+{具体的なノウハウを解説}
+
+---
+
+### ✅ POINT
+
+{補足情報・よくある質問・注意点}
+
+### 📝 ワーク
+
+{読者が手を動かす演習を1つ}
+`;
+
+  const out = document.getElementById("tpl-output");
+  out.textContent = md;
+  out.style.display = "block";
+  document.getElementById("tpl-actions").style.display = "flex";
+}
+
+/* ---------- ④ 7ステップ進捗（localStorage保存） ---------- */
+const STEPS = [
+  { id: "s1", title: "STEP1: テーマ選定", desc: "「これから旅行する人が今知りたいこと」を軸に、型1〜5のいずれかに当てはまるテーマを1つ選ぶ。" },
+  { id: "s2", title: "STEP2: 一次情報の収集先を決める", desc: "公式サイト・比較サイト・SNS/レビューサイトという3種類の情報源を最低1つずつ用意する。" },
+  { id: "s3", title: "STEP3: 情報の裏取り", desc: "同じ数値や条件について、必ず2つ以上のソースでクロスチェックする。" },
+  { id: "s4", title: "STEP4: 構成テンプレートに落とし込む", desc: "型に合った構成テンプレートに、集めた情報を当てはめる（③タブで生成可）。" },
+  { id: "s5", title: "STEP5: 写真の代替表現を作る", desc: "比較情報は箇条書きや「項目: 説明」形式で表現する（noteは表非対応）。" },
+  { id: "s6", title: "STEP6: タイトルを数字テンプレートで作る", desc: "[年度/数字]+[驚きワード]+[テーマ]+[裏ワザ/攻略法] の形にあてはめる（①タブで生成可）。" },
+  { id: "s7", title: "STEP7: 無料部分で有料へ引き込む", desc: "基本テクニックを1〜2個だけ無料公開し、「本当に効くのはここから」で有料部分へ誘導する。" },
+];
+
+const STORAGE_KEY = "travel_article_tool_steps_v1";
+
+function loadStepState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function saveStepState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function renderSteps() {
+  const state = loadStepState();
+  const list = document.getElementById("steps-list");
+  list.innerHTML = "";
+
+  STEPS.forEach(step => {
+    const entry = state[step.id] || { done: false, memo: "" };
+    const item = document.createElement("div");
+    item.className = "step-item" + (entry.done ? " done" : "");
+    item.innerHTML = `
+      <div class="step-head">
+        <input type="checkbox" ${entry.done ? "checked" : ""} data-id="${step.id}" class="step-check">
+        <span class="title">${step.title}</span>
+      </div>
+      <div class="step-desc">${step.desc}</div>
+      <textarea placeholder="メモ（集めた情報源、決めた条件など）" data-id="${step.id}" class="step-memo">${entry.memo || ""}</textarea>
+    `;
+    list.appendChild(item);
+  });
+
+  list.querySelectorAll(".step-check").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const s = loadStepState();
+      s[cb.dataset.id] = s[cb.dataset.id] || { done: false, memo: "" };
+      s[cb.dataset.id].done = cb.checked;
+      saveStepState(s);
+      renderSteps();
+      updateProgress();
+    });
+  });
+  list.querySelectorAll(".step-memo").forEach(ta => {
+    ta.addEventListener("input", () => {
+      const s = loadStepState();
+      s[ta.dataset.id] = s[ta.dataset.id] || { done: false, memo: "" };
+      s[ta.dataset.id].memo = ta.value;
+      saveStepState(s);
+    });
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const state = loadStepState();
+  const done = STEPS.filter(s => state[s.id] && state[s.id].done).length;
+  document.getElementById("progress-label").textContent = `${done} / ${STEPS.length} 完了`;
+  document.getElementById("progress-fill").style.width = (done / STEPS.length * 100) + "%";
+}
+
+function resetSteps() {
+  if (confirm("この記事の進捗をリセットしますか？")) {
+    localStorage.removeItem(STORAGE_KEY);
+    renderSteps();
+    showToast("リセットしました");
+  }
+}
+
+renderSteps();
+</script>
+</body>
+</html>
