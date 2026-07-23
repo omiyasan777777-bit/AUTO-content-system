@@ -1,0 +1,6 @@
+# Python
+__pycache__/
+*.pyc
+
+# note.com Selenium プロファイル（ローカル環境固有）
+cloned_chrome_data/
