@@ -1,0 +1,768 @@
+<title>見える化伝達メソッド ― 特典帳</title>
+<style>
+  :root {
+    --paper: #efe9dd;
+    --paper-card: #fbf8f2;
+    --ink: #292520;
+    --ink-soft: #6b6459;
+    --ink-faint: #97907f;
+    --accent: #4a5d53;
+    --accent-deep: #35443c;
+    --accent-soft: #dce3d8;
+    --line: #d8cfbe;
+    --shadow: 0 1px 2px rgba(41, 37, 32, 0.06), 0 8px 24px rgba(41, 37, 32, 0.07);
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #1c1916;
+    --paper-card: #242019;
+    --ink: #ede7dd;
+    --ink-soft: #b0a897;
+    --ink-faint: #7d766a;
+    --accent: #9ac0aa;
+    --accent-deep: #c4dfcd;
+    --accent-soft: #2e3b33;
+    --line: #3a342c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1c1916;
+      --paper-card: #242019;
+      --ink: #ede7dd;
+      --ink-soft: #b0a897;
+      --ink-faint: #7d766a;
+      --accent: #9ac0aa;
+      --accent-deep: #c4dfcd;
+      --accent-soft: #2e3b33;
+      --line: #3a342c;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
+      "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
+    line-height: 1.9;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .serif {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Hiragino Mincho ProN",
+      "Yu Mincho", "Noto Serif JP", serif;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+    position: relative;
+  }
+
+  /* notebook spine */
+  .page::before {
+    content: "";
+    position: absolute;
+    top: 40px;
+    bottom: 40px;
+    left: 6px;
+    width: 1px;
+    background: var(--line);
+  }
+  .spine-holes {
+    position: absolute;
+    top: 96px;
+    left: 0;
+    width: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+  .spine-holes span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--line);
+  }
+
+  @media (max-width: 640px) {
+    .page::before, .spine-holes { display: none; }
+    .page { padding: 48px 20px 72px; }
+  }
+
+  header.cover {
+    padding: 0 0 40px 32px;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 640px) { header.cover { padding-left: 0; } }
+
+  .eyebrow {
+    display: inline-block;
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: 3px;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 4.4vw, 34px);
+    line-height: 1.5;
+    margin: 0 0 16px;
+    font-weight: 600;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+
+  .lede {
+    color: var(--ink-soft);
+    font-size: 15.5px;
+    max-width: 56ch;
+    margin: 0 0 20px;
+  }
+
+  .cover-note {
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    border-left: 2px solid var(--line);
+    padding-left: 12px;
+  }
+
+  .copy-all {
+    margin-top: 24px;
+  }
+
+  button.copy-btn {
+    font: inherit;
+    font-size: 13px;
+    color: var(--accent-deep);
+    background: var(--accent-soft);
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 7px 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  button.copy-btn:hover { background: var(--accent); color: var(--paper-card); }
+  button.copy-btn:active { transform: translateY(1px); }
+  button.copy-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  button.copy-btn .icon { font-size: 14px; line-height: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    button.copy-btn { transition: none; }
+  }
+
+  section.tokuten {
+    padding: 0 0 44px 32px;
+    margin-bottom: 44px;
+    border-bottom: 1px solid var(--line);
+  }
+  section.tokuten:last-of-type { border-bottom: none; }
+  @media (max-width: 640px) { section.tokuten { padding-left: 0; } }
+
+  .tokuten-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .tag {
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+
+  .desc {
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    margin: 0 0 22px;
+    max-width: 58ch;
+  }
+
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 560px) { .cat-grid { grid-template-columns: 1fr; } }
+
+  .cat-card {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .cat-card h3 {
+    font-size: 14px;
+    margin: 0 0 10px;
+    color: var(--accent-deep);
+    font-weight: 600;
+  }
+  .cat-card ul { margin: 0; padding: 0; list-style: none; }
+  .cat-card li {
+    font-size: 13.8px;
+    color: var(--ink);
+    padding: 5px 0 5px 20px;
+    position: relative;
+    line-height: 1.6;
+  }
+  .cat-card li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 12px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.55;
+  }
+
+  .howto {
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .howto p.label {
+    margin: 0 0 8px;
+    font-weight: 600;
+    color: var(--accent-deep);
+    font-size: 13px;
+  }
+  .howto ol, .howto ul { margin: 0; padding-left: 20px; }
+  .howto li { margin: 4px 0; }
+
+  .script-card {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .script-card .pattern-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-deep);
+    margin: 0 0 4px;
+  }
+  .script-card .scenario {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+  }
+  .script-card blockquote {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--ink);
+  }
+  .script-card blockquote + blockquote { margin-top: 8px; }
+  .script-card .aside {
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .check-list { list-style: none; margin: 0 0 22px; padding: 0; }
+  .check-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 14.5px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .check-list li:last-child { border-bottom: none; }
+  .box {
+    flex: none;
+    width: 15px;
+    height: 15px;
+    margin-top: 3px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 3px;
+  }
+
+  .phrase-group { margin-bottom: 20px; }
+  .phrase-group h3 {
+    font-size: 14px;
+    color: var(--accent-deep);
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+  .phrase-group blockquote {
+    margin: 0 0 6px;
+    font-size: 15px;
+    line-height: 1.85;
+    padding-left: 14px;
+    border-left: 2px solid var(--line);
+  }
+
+  footer {
+    padding: 32px 0 0 32px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  @media (max-width: 640px) { footer { padding-left: 0; } }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--accent-deep);
+    color: var(--paper-card);
+    font-size: 13.5px;
+    padding: 10px 18px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toast { transition: none; }
+  }
+
+  pre.copy-source { display: none; }
+</style>
+
+<div class="page">
+  <div class="spine-holes"><span></span><span></span><span></span><span></span><span></span></div>
+
+  <header class="cover">
+    <span class="eyebrow">見える化伝達メソッド ― 特典帳</span>
+    <h1 class="serif">パートナーに、伝わる形で渡すための4点セット</h1>
+    <p class="lede">
+      記録シート・渡し方トークスクリプト・継続チェックリスト・立て直しフレーズ集。
+      そのまま使えるように、コピーするだけで使える形にまとめました。
+    </p>
+    <p class="cover-note">各項目の右上の「コピーする」から、その特典だけをそのままコピーできます。</p>
+    <div class="copy-all">
+      <button class="copy-btn" data-copy-target="all">
+        <span class="icon">⎘</span>特典を全部まとめてコピー
+      </button>
+    </div>
+  </header>
+
+  <section class="tokuten" id="t1">
+    <div class="tokuten-head">
+      <div>
+        <span class="tag">特典1</span>
+        <h2 class="serif">名もなき家事育児タスク記録シート</h2>
+      </div>
+      <button class="copy-btn" data-copy-target="t1">
+        <span class="icon">⎘</span>コピーする
+      </button>
+    </div>
+    <p class="desc">
+      以下のカテゴリごとに、当てはまるものにチェックを入れながら記録してください。
+      ここにない項目でも「名前のない作業」に気づいたら、自由に追加してOKです。
+    </p>
+
+    <div class="cat-grid">
+      <div class="cat-card">
+        <h3>見る・気づく系</h3>
+        <ul>
+          <li>調味料や日用品の在庫が減っていることに気づく</li>
+          <li>子どもの服や靴がサイズアウトしていることに気づく</li>
+          <li>部屋の汚れ、ゴミの量に気づく</li>
+          <li>冷蔵庫の食材の賞味期限を把握する</li>
+          <li>子どものおもちゃや文房具が壊れていることに気づく</li>
+        </ul>
+      </div>
+      <div class="cat-card">
+        <h3>考える・計画する系</h3>
+        <ul>
+          <li>1週間分の献立を考える</li>
+          <li>週末の予定を家族分すり合わせる</li>
+          <li>子どもの行事(遠足・参観日等)の予定を把握する</li>
+          <li>季節に合わせて衣替えのタイミングを考える</li>
+          <li>帰省や旅行の計画を立てる</li>
+        </ul>
+      </div>
+      <div class="cat-card">
+        <h3>準備する系</h3>
+        <ul>
+          <li>翌日の子どもの持ち物を用意する</li>
+          <li>天気に合わせて子どもの服装を決める</li>
+          <li>お弁当や水筒の準備をする</li>
+          <li>行事に必要な物品(道具・書類等)を揃える</li>
+          <li>来客や外出の準備をする</li>
+        </ul>
+      </div>
+      <div class="cat-card">
+        <h3>確認する系</h3>
+        <ul>
+          <li>子どもの体調や機嫌の変化を確認する</li>
+          <li>連絡帳や園からのお知らせを確認する</li>
+          <li>子どもの宿題や提出物を確認する</li>
+          <li>家族の予定(仕事・習い事等)を確認する</li>
+          <li>薬や病院の受診タイミングを確認する</li>
+        </ul>
+      </div>
+      <div class="cat-card">
+        <h3>調整する系</h3>
+        <ul>
+          <li>自分と子どもの予定がぶつかった時に優先順位を決める</li>
+          <li>子ども同士のケンカを仲裁する</li>
+          <li>急な発熱・呼び出しに対応する担当を決める</li>
+          <li>家族間のスケジュール調整をする</li>
+          <li>親族との関係(連絡・訪問等)を調整する</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="howto">
+      <p class="label">使い方</p>
+      <ol>
+        <li>スマホのメモか紙に、この5カテゴリを見出しとして用意する</li>
+        <li>気づいた瞬間に単語だけで1行追加する(文章にしない)</li>
+        <li>1〜4週間続けたら、カテゴリごとに件数を数えて集計する</li>
+        <li>「自分/パートナー/共同」で仕分けて比率を出す</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="tokuten" id="t2">
+    <div class="tokuten-head">
+      <div>
+        <span class="tag">特典2</span>
+        <h2 class="serif">喧嘩にならない渡し方トークスクリプト5パターン</h2>
+      </div>
+      <button class="copy-btn" data-copy-target="t2">
+        <span class="icon">⎘</span>コピーする
+      </button>
+    </div>
+    <p class="desc">状況に合わせて選び、そのまま使ってください。自分の言葉に多少アレンジしても構いません。</p>
+
+    <div class="script-card">
+      <p class="pattern-label">パターン1</p>
+      <p class="scenario">落ち着いて話せる時</p>
+      <blockquote>「ちょっと聞いてほしいんだけど、責めたいわけじゃなくて。最近、1ヶ月間、自分がやってる家事育児のことを記録してみたの。見てもらってもいい?」</blockquote>
+      <blockquote>(見せた後)「〇〇にどう見えるか、聞いてみたいなと思って」</blockquote>
+    </div>
+
+    <div class="script-card">
+      <p class="pattern-label">パターン2</p>
+      <p class="scenario">軽いトーンで伝えたい時</p>
+      <blockquote>「実験みたいな感じで、1ヶ月間、家事育児のタスクを数えてみたんだよね。ちょっと面白い結果になったから見てみて」</blockquote>
+    </div>
+
+    <div class="script-card">
+      <p class="pattern-label">パターン3</p>
+      <p class="scenario">これまで何度か伝えて失敗している場合</p>
+      <blockquote>「前にも似たようなこと言った気がするんだけど、今回はちゃんと数字で見てほしくて。感情論じゃなくて、実際に記録してみた結果なんだ」</blockquote>
+    </div>
+
+    <div class="script-card">
+      <p class="pattern-label">パターン4</p>
+      <p class="scenario">パートナーが忙しく、じっくり話す時間が取れない時</p>
+      <blockquote>「今すぐじゃなくていいんだけど、今度時間がある時に見てほしいものがあって。責める内容じゃないから安心してね。家事育児のことを1ヶ月記録したメモなんだ」</blockquote>
+      <p class="aside">→ その場で見せず、後日改めて時間を取る前提で予告するパターン</p>
+    </div>
+
+    <div class="script-card">
+      <p class="pattern-label">パターン5</p>
+      <p class="scenario">対面より、LINEやメッセージで伝えたい時</p>
+      <blockquote>「話すと感情的になりそうだから、メッセージで送るね。責めたいわけじゃなくて、最近1ヶ月自分がやってる家事育児のことを記録してみたの。時間がある時に見てもらえたら嬉しい」</blockquote>
+      <p class="aside">→ 記録の画像やメモを添付して送る。返信は急かさない</p>
+    </div>
+
+    <div class="howto">
+      <p class="label">使う時のポイント</p>
+      <ul>
+        <li>「責めたいわけじゃない」という一言は、どのパターンでも省略しない</li>
+        <li>見せた直後にその場で分担の約束を取り付けようとしない</li>
+        <li>「〜してくれない」ではなく「私も気づいてなかった」を主語にする</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="tokuten" id="t3">
+    <div class="tokuten-head">
+      <div>
+        <span class="tag">特典3</span>
+        <h2 class="serif">3日坊主を防ぐ記録継続チェックリスト</h2>
+      </div>
+      <button class="copy-btn" data-copy-target="t3">
+        <span class="icon">⎘</span>コピーする
+      </button>
+    </div>
+
+    <ul class="check-list">
+      <li><span class="box"></span>記録する場所を1つだけに決めた(スマホのメモ/紙のメモ等)</li>
+      <li><span class="box"></span>「1行、単語だけでいい」というルールを自分に許可した</li>
+      <li><span class="box"></span>毎日決まったタイミング(寝る前など)を記録の振り返り時間に設定した</li>
+      <li><span class="box"></span>3日目・7日目に、それまでの件数を数えて「もう○件たまった」と確認した</li>
+      <li><span class="box"></span>「完璧に書く」ではなく「思いついたら書く」を意識している</li>
+      <li><span class="box"></span>記録を「相手を責めるため」ではなく「事実を知るため」と捉え直せている</li>
+      <li><span class="box"></span>1週間続いたら、自分にちょっとしたご褒美を用意した</li>
+      <li><span class="box"></span>気が抜けそうな時は、この特典を見返して初心を思い出している</li>
+    </ul>
+
+    <div class="howto">
+      <p class="label">続かなくなった時の対処</p>
+      <ul>
+        <li>1日抜けても気にせず翌日から再開する(連続記録にこだわらない)</li>
+        <li>週の途中で振り返り、抜けた日の分をまとめて思い出して追加する</li>
+        <li>件数が少なくても「ゼロよりマシ」と考え、記録自体をやめない</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="tokuten" id="t4">
+    <div class="tokuten-head">
+      <div>
+        <span class="tag">特典4</span>
+        <h2 class="serif">分担が崩れたときの立て直しフレーズ集</h2>
+      </div>
+      <button class="copy-btn" data-copy-target="t4">
+        <span class="icon">⎘</span>コピーする
+      </button>
+    </div>
+
+    <div class="phrase-group">
+      <h3>軽く気づいたタイミングで使うフレーズ</h3>
+      <blockquote>「最近ちょっと不安定になってきた気がするから、また整えよう」</blockquote>
+      <blockquote>「そういえば最近〇〇(タスク名)、私がやることが増えてきたかも。ちょっと確認してもいい?」</blockquote>
+    </div>
+
+    <div class="phrase-group">
+      <h3>繁忙期・体調不良など、原因がはっきりしている時</h3>
+      <blockquote>「今〇〇(仕事の繁忙期等)で大変なのわかってるから、落ち着いたらでいいんだけど、また分担整理しよう」</blockquote>
+    </div>
+
+    <div class="phrase-group">
+      <h3>相手が崩れを自覚していなさそうな時</h3>
+      <blockquote>「責めてるわけじゃないんだけど、最近また私がやること増えてきた気がして。一緒に確認してもらえる?」</blockquote>
+    </div>
+
+    <div class="phrase-group">
+      <h3>月1回の振り返りを切り出す時</h3>
+      <blockquote>「今月の振り返り、5分だけいい?できたこと・崩れたこと・来月の微調整、話したいんだけど」</blockquote>
+    </div>
+
+    <div class="phrase-group">
+      <h3>振り返りの締めくくりに使う感謝フレーズ</h3>
+      <blockquote>「〇〇してくれて助かった、ありがとう」</blockquote>
+      <blockquote>「一緒に整えてくれてありがとう。また来月確認しようね」</blockquote>
+    </div>
+
+    <div class="howto">
+      <p class="label">使う時のポイント</p>
+      <ul>
+        <li>崩れを指摘する時は、必ず「責めていない」ことが伝わるトーンで</li>
+        <li>原因(繁忙期・体調等)に触れると、相手も受け入れやすくなる</li>
+        <li>振り返りの最後は必ず感謝で締める</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>見える化伝達メソッド ご購入特典 ／ 個人利用の範囲でご自由にお使いください。</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<pre class="copy-source" id="src-t1">【特典1】名もなき家事育児タスク記録シート
+
+以下のカテゴリごとに、当てはまるものにチェックを入れながら記録してください。ここにない項目でも「名前のない作業」に気づいたら、自由に追加してOKです。
+
+■見る・気づく系
+・調味料や日用品の在庫が減っていることに気づく
+・子どもの服や靴がサイズアウトしていることに気づく
+・部屋の汚れ、ゴミの量に気づく
+・冷蔵庫の食材の賞味期限を把握する
+・子どものおもちゃや文房具が壊れていることに気づく
+
+■考える・計画する系
+・1週間分の献立を考える
+・週末の予定を家族分すり合わせる
+・子どもの行事(遠足・参観日等)の予定を把握する
+・季節に合わせて衣替えのタイミングを考える
+・帰省や旅行の計画を立てる
+
+■準備する系
+・翌日の子どもの持ち物を用意する
+・天気に合わせて子どもの服装を決める
+・お弁当や水筒の準備をする
+・行事に必要な物品(道具・書類等)を揃える
+・来客や外出の準備をする
+
+■確認する系
+・子どもの体調や機嫌の変化を確認する
+・連絡帳や園からのお知らせを確認する
+・子どもの宿題や提出物を確認する
+・家族の予定(仕事・習い事等)を確認する
+・薬や病院の受診タイミングを確認する
+
+■調整する系
+・自分と子どもの予定がぶつかった時に優先順位を決める
+・子ども同士のケンカを仲裁する
+・急な発熱・呼び出しに対応する担当を決める
+・家族間のスケジュール調整をする
+・親族との関係(連絡・訪問等)を調整する
+
+【使い方】
+1. スマホのメモか紙に、この5カテゴリを見出しとして用意する
+2. 気づいた瞬間に単語だけで1行追加する(文章にしない)
+3. 1〜4週間続けたら、カテゴリごとに件数を数えて集計する
+4. 「自分/パートナー/共同」で仕分けて比率を出す</pre>
+
+<pre class="copy-source" id="src-t2">【特典2】喧嘩にならない渡し方トークスクリプト5パターン
+
+状況に合わせて選び、そのまま使ってください。自分の言葉に多少アレンジしても構いません。
+
+■パターン1: 基本パターン(落ち着いて話せる時)
+「ちょっと聞いてほしいんだけど、責めたいわけじゃなくて。最近、1ヶ月間、自分がやってる家事育児のことを記録してみたの。見てもらってもいい?」
+(見せた後)「〇〇にどう見えるか、聞いてみたいなと思って」
+
+■パターン2: 軽いトーンで伝えたい時
+「実験みたいな感じで、1ヶ月間、家事育児のタスクを数えてみたんだよね。ちょっと面白い結果になったから見てみて」
+
+■パターン3: これまで何度か伝えて失敗している場合
+「前にも似たようなこと言った気がするんだけど、今回はちゃんと数字で見てほしくて。感情論じゃなくて、実際に記録してみた結果なんだ」
+
+■パターン4: パートナーが忙しく、じっくり話す時間が取れない時
+「今すぐじゃなくていいんだけど、今度時間がある時に見てほしいものがあって。責める内容じゃないから安心してね。家事育児のことを1ヶ月記録したメモなんだ」
+→ その場で見せず、後日改めて時間を取る前提で予告するパターン
+
+■パターン5: 対面より、LINEやメッセージで伝えたい時
+「話すと感情的になりそうだから、メッセージで送るね。責めたいわけじゃなくて、最近1ヶ月自分がやってる家事育児のことを記録してみたの。時間がある時に見てもらえたら嬉しい」
+→ 記録の画像やメモを添付して送る。返信は急かさない
+
+【使う時のポイント】
+・「責めたいわけじゃない」という一言は、どのパターンでも省略しない
+・見せた直後にその場で分担の約束を取り付けようとしない
+・「〜してくれない」ではなく「私も気づいてなかった」を主語にする</pre>
+
+<pre class="copy-source" id="src-t3">【特典3】3日坊主を防ぐ記録継続チェックリスト
+
+□ 記録する場所を1つだけに決めた(スマホのメモ/紙のメモ等)
+□ 「1行、単語だけでいい」というルールを自分に許可した
+□ 毎日決まったタイミング(寝る前など)を記録の振り返り時間に設定した
+□ 3日目・7日目に、それまでの件数を数えて「もう○件たまった」と確認した
+□ 「完璧に書く」ではなく「思いついたら書く」を意識している
+□ 記録を「相手を責めるため」ではなく「事実を知るため」と捉え直せている
+□ 1週間続いたら、自分にちょっとしたご褒美を用意した
+□ 気が抜けそうな時は、この特典3を見返して初心を思い出している
+
+【続かなくなった時の対処】
+・1日抜けても気にせず翌日から再開する(連続記録にこだわらない)
+・週の途中で振り返り、抜けた日の分をまとめて思い出して追加する
+・件数が少なくても「ゼロよりマシ」と考え、記録自体をやめない</pre>
+
+<pre class="copy-source" id="src-t4">【特典4】分担が崩れたときの立て直しフレーズ集
+
+■軽く気づいたタイミングで使うフレーズ
+「最近ちょっと不安定になってきた気がするから、また整えよう」
+「そういえば最近〇〇(タスク名)、私がやることが増えてきたかも。ちょっと確認してもいい?」
+
+■繁忙期・体調不良など、原因がはっきりしている時
+「今〇〇(仕事の繁忙期等)で大変なのわかってるから、落ち着いたらでいいんだけど、また分担整理しよう」
+
+■相手が崩れを自覚していなさそうな時
+「責めてるわけじゃないんだけど、最近また私がやること増えてきた気がして。一緒に確認してもらえる?」
+
+■月1回の振り返りを切り出す時
+「今月の振り返り、5分だけいい?できたこと・崩れたこと・来月の微調整、話したいんだけど」
+
+■振り返りの締めくくりに使う感謝フレーズ
+「〇〇してくれて助かった、ありがとう」
+「一緒に整えてくれてありがとう。また来月確認しようね」
+
+【使う時のポイント】
+・崩れを指摘する時は、必ず「責めていない」ことが伝わるトーンで
+・原因(繁忙期・体調等)に触れると、相手も受け入れやすくなる
+・振り返りの最後は必ず感謝で締める</pre>
+
+<script>
+  (function () {
+    var toastEl = document.getElementById("toast");
+    var toastTimer = null;
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        toastEl.classList.remove("show");
+      }, 1800);
+    }
+
+    function getText(id) {
+      var el = document.getElementById(id);
+      return el ? el.textContent : "";
+    }
+
+    function allText() {
+      return ["t1", "t2", "t3", "t4"]
+        .map(function (k) { return getText("src-" + k); })
+        .join("\n\n\n");
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      }
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      return Promise.resolve();
+    }
+
+    document.querySelectorAll(".copy-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var target = btn.getAttribute("data-copy-target");
+        var text = target === "all" ? allText() : getText("src-" + target);
+        copyText(text)
+          .then(function () { showToast("コピーしました"); })
+          .catch(function () { showToast("コピーできませんでした。手動で選択してください"); });
+      });
+    });
+  })();
+</script>
