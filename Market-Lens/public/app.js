@@ -16,7 +16,7 @@ const state = {
   articles: storedSearchResults,
   saved: new Set(read("marketlens.saved", [])),
   query:storedSearchResults.length ? read("marketlens.lastQuery", "") : "", category:"すべて", period:"all", sort:"popular", soldOnly:false, minPrice:0, maxPrice:1000000, layout:"grid", view:"research",
-  limit: Number(read("marketlens.limit", 30)) || 30, hasMore:false,
+  limit: Number(read("marketlens.limit", 30)) || 30, hasMore:false, lastMeta:null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -81,6 +81,19 @@ function updateLoadMore() {
   if (visible) $("#loadMore").textContent = `さらに読み込む（現在${state.articles.length}件 → +30件）`;
 }
 
+function renderSearchMeta(items) {
+  const meta = state.lastMeta;
+  if (!meta) return;
+  if (meta.soldOnly) {
+    $("#searchMeta").innerHTML = `<span class="live-dot"></span> 有料候補${meta.candidatesFound}件中${meta.candidatesChecked}件を確認 · 「買われています｜過去24時間以内」${meta.matchedCount}件中、条件に合う${items.length}件を表示${meta.checkFailures?` · 確認失敗${meta.checkFailures}件`:""} · <a href="${escapeHtml(meta.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
+  } else {
+    const sortName = {popular:"人気",hot:"急上昇",new:"新着"}[meta.sort];
+    const scope = meta.expanded ? `関連タグ（${meta.searched.map(escapeHtml).join("・")}）` : `#${escapeHtml(state.query)}`;
+    const freshness = meta.cached ? "（5分キャッシュ）" : meta.refreshed ? "（最新に更新済み）" : "";
+    $("#searchMeta").innerHTML = `<span class="live-dot"></span> note ${scope} の${sortName}から${meta.matchedCount}件取得${freshness} · 条件に合う${items.length}件を表示 · 全${escapeHtml(meta.total || "件数不明")} · <a href="${escapeHtml(meta.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
+  }
+}
+
 function render() {
   const items = filtered();
   $("#articleGrid").innerHTML = items.map(card).join("");
@@ -100,6 +113,7 @@ function render() {
   $("#articleGrid").hidden = state.layout !== "grid" || !items.length;
   $("#tableWrap").hidden = state.layout !== "table" || !items.length;
   updateLoadMore();
+  renderSearchMeta(items);
   const savedItems = [...new Map([...state.articles,...state.imported].map((a)=>[a.id,a])).values()].filter((a)=>state.saved.has(a.id));
   $("#savedGrid").innerHTML = savedItems.map(card).join("");
   $("#savedEmpty").hidden = savedItems.length > 0;
@@ -177,18 +191,20 @@ async function runSearch(options = {}) {
       const article = data.articles[0];
       state.imported = state.imported.filter((a) => a.url !== article.url);
       state.imported.unshift(article);
+      state.lastMeta = null;
+    } else {
+      state.lastMeta = {
+        soldOnly: data.soldOnly, candidatesFound: data.candidatesFound, candidatesChecked: data.candidatesChecked,
+        checkFailures: data.checkFailures, sourceUrl: data.sourceUrl, sort: data.sort, expanded: data.expanded,
+        searched: data.searched, total: data.total, cached: data.cached, refreshed: options.refresh === true,
+        matchedCount: data.articles.length,
+      };
     }
     persist(); renderCategories(); render();
     if (data.singleArticle) {
       $("#searchMeta").innerHTML = `<span class="live-dot"></span> URLから記事を1件取得しました · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">元記事を開く ↗</a>`;
       toast("記事を取得しました");
     } else {
-      const sortName = {popular:"人気",hot:"急上昇",new:"新着"}[data.sort];
-      const scope = data.expanded ? `関連タグ（${data.searched.map(escapeHtml).join("・")}）` : `#${escapeHtml(data.keyword)}`;
-      const freshness = data.cached ? "（5分キャッシュ）" : options.refresh ? "（最新に更新済み）" : "";
-      $("#searchMeta").innerHTML = data.soldOnly
-        ? `<span class="live-dot"></span> 有料候補${data.candidatesFound}件中${data.candidatesChecked}件を確認 · 「買われています｜過去24時間以内」${data.articles.length}件${data.checkFailures?` · 確認失敗${data.checkFailures}件`:""} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`
-        : `<span class="live-dot"></span> note ${scope} の${sortName}から${data.articles.length}件取得${freshness} · 全${escapeHtml(data.total || "件数不明")} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
       toast(`${data.articles.length}件見つかりました`);
     }
   } catch (error) {
