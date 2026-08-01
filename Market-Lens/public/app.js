@@ -86,8 +86,16 @@ function render() {
   $("#articleGrid").innerHTML = items.map(card).join("");
   $("#articleTable").innerHTML = items.map((a) => `<tr><td><div class="table-title"><img src="${escapeHtml(a.image||placeholder(a))}" alt=""><div><b>${escapeHtml(a.title)}</b><small>${escapeHtml(a.author)}</small></div></div></td><td>${escapeHtml(a.category)}</td><td>${yen(a.price)}</td><td>${Number(a.likes||0).toLocaleString()}</td><td><b>${score(a)}</b> / 99</td><td><button class="table-save" data-save="${escapeHtml(a.id)}">${state.saved.has(a.id)?"◆":"◇"}</button></td></tr>`).join("");
   $("#resultSummary").textContent = state.query ? (state.soldOnly ? `「${state.query}」で24時間以内の購入表示を確認できた${items.length}件` : `「#${state.query}」から${items.length}件を表示 · noteの公開検索結果です`) : "キーワードからnoteの実記事を検索できます";
+  const filtersNarrowedToZero = state.query && !state.soldOnly && state.articles.length > 0 && items.length === 0
+    && (state.minPrice > 0 || state.maxPrice < 1000000 || state.category !== "すべて" || state.period !== "all");
   $("#emptyState h3").textContent = state.query ? (state.soldOnly ? "24時間以内の購入表示がある記事は見つかりませんでした" : "条件に合う記事がありません") : "noteを検索してみましょう";
-  $("#emptyState p").textContent = state.query ? (state.soldOnly ? "別のジャンルを試すか、並び順を変更して再検索してください。" : "期間や価格フィルターを変えてみてください。") : "上の検索欄にジャンルやキーワードを入力してください。";
+  $("#emptyState p").textContent = state.query
+    ? (state.soldOnly
+        ? "別のジャンルを試すか、並び順を変更して再検索してください。"
+        : (filtersNarrowedToZero
+            ? "取得済みの記事の中にこの条件に合うものがありませんでした。取得件数を増やすか「さらに読み込む」で対象を広げると見つかる場合があります。"
+            : "期間や価格フィルターを変えてみてください。"))
+    : "上の検索欄にジャンルやキーワードを入力してください。";
   $("#emptyState").hidden = items.length !== 0;
   $("#articleGrid").hidden = state.layout !== "grid" || !items.length;
   $("#tableWrap").hidden = state.layout !== "table" || !items.length;
