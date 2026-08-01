@@ -132,6 +132,44 @@ function parseHashtagResults(html, keyword) {
   return { articles, total };
 }
 
+function parseSearchQuery(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return { type: "empty" };
+  const urlLike = /^https?:\/\//i.test(value)
+    ? value
+    : (/^([a-z0-9-]+\.)?note\.com\//i.test(value) ? `https://${value}` : null);
+  if (!urlLike) return { type: "keyword", keyword: value.replace(/^[#＃]/, "").trim() };
+  let url;
+  try { url = new URL(urlLike); } catch { return { type: "invalid" }; }
+  if (!/(^|\.)note\.com$/.test(url.hostname)) return { type: "invalid" };
+  const hashtagMatch = url.pathname.match(/^\/hashtag\/([^/]+)/);
+  if (hashtagMatch) return { type: "keyword", keyword: decodeURIComponent(hashtagMatch[1]) };
+  if (url.pathname === "/search") {
+    const q = url.searchParams.get("q");
+    if (q) return { type: "keyword", keyword: q };
+  }
+  if (/\/n\/n[a-zA-Z0-9]+/.test(url.pathname)) return { type: "article", url: url.href };
+  return { type: "invalid" };
+}
+
+async function searchByArticleUrl(urlHref, res) {
+  try {
+    const response = await fetch(urlHref, {
+      headers: { "User-Agent": userAgent, "Accept-Language": "ja-JP,ja;q=0.9" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const article = parseArticle(await response.text(), urlHref);
+    return json(res, 200, {
+      articles: [article], candidatesFound: 0, candidatesChecked: 0, checkFailures: 0, soldOnly: false,
+      total: "1", keyword: article.title, sort: "popular", limit: 1, hasMore: false, refreshed: false,
+      sourceUrl: urlHref, searched: [], expanded: false, singleArticle: true, fetchedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    return json(res, 502, { error: "記事を取得できませんでした。公開記事か、通信環境をご確認ください。", detail: error.message });
+  }
+}
+
 const searchCache = new Map();
 let lastSearchAt = 0;
 
@@ -179,6 +217,13 @@ function parseNoteDate(value) {
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
+function pickImageUrl(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object") return value.url || value.src || value.large || value.original || "";
+  return "";
+}
+
 function mapApiNote(note, keyword) {
   if (!note || typeof note !== "object") return null;
   const key = note.key || note.note_key || "";
@@ -186,7 +231,7 @@ function mapApiNote(note, keyword) {
   const url = note.noteUrl || note.note_url || (key && urlname ? `https://note.com/${urlname}/n/${key}` : "");
   if (!url) return null;
   const likes = Number(note.likeCount ?? note.like_count ?? 0) || 0;
-  const price = Number(note.price ?? 0) || 0;
+  const price = Number(note.price ?? note.priceWithTax ?? note.price_with_tax ?? note.sellingPrice ?? note.selling_price ?? 0) || 0;
   const published = parseNoteDate(note.publishAt ?? note.publish_at ?? note.firstPublishedAt ?? note.first_published_at ?? note.createdAt ?? note.created_at);
   const tags = (Array.isArray(note.hashtags) ? note.hashtags : [])
     .map((h) => String(h?.hashtag?.name || h?.name || "").replace(/^[#＃]/, "").trim())
@@ -196,7 +241,8 @@ function mapApiNote(note, keyword) {
     title: stripTags(String(note.name || note.title || "タイトル未取得")),
     author: stripTags(String(note.user?.nickname || note.user?.name || "不明")),
     url,
-    image: note.eyecatch || note.sp_eyecatch || note.eyecatchUrl || "",
+    image: pickImageUrl(note.eyecatch) || pickImageUrl(note.sp_eyecatch) || pickImageUrl(note.eyecatchUrl)
+      || pickImageUrl(note.eyecatch_url) || pickImageUrl(note.eyecatchImage) || pickImageUrl(note.eyecatch_image) || "",
     description: stripTags(String(note.body || "")).slice(0, 160) || `noteの「#${keyword}」タグから取得した記事です。`,
     publishedAt: published,
     modifiedAt: published,
@@ -346,7 +392,7 @@ async function verifyBoughtWithin24h(article) {
   try {
     const response = await fetch(article.url, {
       headers: { "User-Agent": userAgent, "Accept-Language": "ja-JP,ja;q=0.9" },
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) return { status: "error" };
     const html = await response.text();
@@ -356,19 +402,20 @@ async function verifyBoughtWithin24h(article) {
 }
 
 async function filterBoughtWithin24h(articles, limit = 30) {
-  const checkCap = Math.min(120, Math.max(60, limit * 2));
+  const checkCap = Math.min(200, Math.max(100, limit * 4));
+  const batchSize = 10;
   const paid = articles.filter((article) => article.price > 0).slice(0, checkCap);
   const matches = [];
   let verifiedCount = 0;
   let failedCount = 0;
-  for (let index = 0; index < paid.length; index += 4) {
-    const batch = await Promise.all(paid.slice(index, index + 4).map(verifyBoughtWithin24h));
+  for (let index = 0; index < paid.length; index += batchSize) {
+    const batch = await Promise.all(paid.slice(index, index + batchSize).map(verifyBoughtWithin24h));
     for (const result of batch) {
       if (result.status === "matched") { matches.push(result.article); verifiedCount += 1; }
       else if (result.status === "checked") verifiedCount += 1;
       else failedCount += 1;
     }
-    if (index + 4 < paid.length) await new Promise((resolve) => setTimeout(resolve, 250));
+    if (index + batchSize < paid.length) await new Promise((resolve) => setTimeout(resolve, 100));
   }
   return { matches, verifiedCount, failedCount, candidatesFound: paid.length };
 }
@@ -396,11 +443,16 @@ async function readJsonBody(req) {
 async function searchNote(req, res) {
   const input = await readJsonBody(req);
   if (!input) return json(res, 400, { error: "検索条件を確認してください。" });
-  const keyword = String(input.keyword || "").normalize("NFKC").replace(/^[#＃]/, "").trim().slice(0, 60);
   const sort = ["popular", "hot", "new"].includes(input.sort) ? input.sort : "popular";
   const soldOnly = input.soldOnly === true;
   const limit = clampLimit(input.limit);
   const refresh = input.refresh === true;
+  const rawInput = String(input.keyword || "").normalize("NFKC").trim().slice(0, 300);
+  const parsed = parseSearchQuery(rawInput);
+  if (parsed.type === "empty") return json(res, 400, { error: "検索キーワードを入力してください。" });
+  if (parsed.type === "invalid") return json(res, 400, { error: "このURLには対応していません。noteのハッシュタグURL・検索URL・記事URLを入力してください。" });
+  if (parsed.type === "article") return searchByArticleUrl(parsed.url, res);
+  const keyword = parsed.keyword.slice(0, 60);
   if (!keyword) return json(res, 400, { error: "検索キーワードを入力してください。" });
   const cacheKey = `${keyword}:${sort}:${soldOnly ? "sold24h" : "all"}:${limit}`;
   const cached = searchCache.get(cacheKey);
@@ -416,24 +468,33 @@ async function searchNote(req, res) {
     let sourceUrl = "";
     let hasMore = false;
     if (soldOnly) {
-      const gatherCap = Math.min(240, Math.max(120, limit * 4));
+      const gatherCap = Math.min(400, Math.max(200, limit * 6));
+      const maxPagesPerSource = 3;
       const seen = new Set();
       const sourceRequests = candidates.flatMap((candidate) => [...new Set([filter, "popular", "hot", "new"])].map((sourceFilter) => ({ candidate, sourceFilter })));
       const sourceResults = await mapWithConcurrency(sourceRequests, 3, async ({ candidate, sourceFilter }) => {
-        try { return await fetchHashtagPaged(candidate, sourceFilter, 1, { fresh: refresh }); }
-        catch { return null; }
+        const pages = [];
+        for (let page = 1; page <= maxPagesPerSource; page += 1) {
+          let result;
+          try { result = await fetchHashtagPaged(candidate, sourceFilter, page, { fresh: refresh }); }
+          catch { break; }
+          pages.push({ ...result, sourceFilter });
+          if (result.isLastPage || !result.articles.length) break;
+        }
+        return pages;
       });
       for (let sourceIndex = 0; sourceIndex < sourceRequests.length; sourceIndex += 1) {
-        const { candidate, sourceFilter } = sourceRequests[sourceIndex];
-        const result = sourceResults[sourceIndex];
+        const { candidate } = sourceRequests[sourceIndex];
         if (!searched.includes(candidate)) searched.push(candidate);
-        if (!result) continue;
-        if (!sourceUrl) sourceUrl = result.url;
-        if (!total && result.total) total = result.total;
-        for (const article of result.articles) {
-          if (seen.has(article.url)) continue;
-          seen.add(article.url);
-          merged.push({ ...article, category: keyword, tags: [...new Set([keyword, candidate, ...(article.tags || [])])], discoverySort: sourceFilter, rank: merged.length + 1 });
+        for (const result of sourceResults[sourceIndex] || []) {
+          if (!sourceUrl) sourceUrl = result.url;
+          if (!total && result.total) total = result.total;
+          for (const article of result.articles) {
+            if (seen.has(article.url)) continue;
+            seen.add(article.url);
+            merged.push({ ...article, category: keyword, tags: [...new Set([keyword, candidate, ...(article.tags || [])])], discoverySort: result.sourceFilter, rank: merged.length + 1 });
+            if (merged.length >= gatherCap) break;
+          }
           if (merged.length >= gatherCap) break;
         }
         if (merged.length >= gatherCap) break;
@@ -725,4 +786,12 @@ export {
   gapLabel,
   gapComment,
   sanitizeGenres,
+  parseSearchQuery,
+  json,
+  appVersion,
+  importNote,
+  searchNote,
+  trendWordsHandler,
+  gapFinderHandler,
+  pickImageUrl,
 };

@@ -16,7 +16,7 @@ const state = {
   articles: storedSearchResults,
   saved: new Set(read("marketlens.saved", [])),
   query:storedSearchResults.length ? read("marketlens.lastQuery", "") : "", category:"すべて", period:"all", sort:"popular", soldOnly:false, minPrice:0, maxPrice:1000000, layout:"grid", view:"research",
-  limit: Number(read("marketlens.limit", 30)) || 30, hasMore:false,
+  limit: Number(read("marketlens.limit", 30)) || 30, hasMore:false, lastMeta:null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -33,12 +33,13 @@ function score(article) {
 }
 
 function read(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
+function safeSetItem(key, value) { try { localStorage.setItem(key, value); } catch { /* storage unavailable (e.g. Safari private browsing) */ } }
 function persist() {
-  localStorage.setItem("marketlens.saved", JSON.stringify([...state.saved]));
-  localStorage.setItem("marketlens.imported", JSON.stringify(state.imported));
-  localStorage.setItem("marketlens.searchResults", JSON.stringify(state.articles.filter((x) => x.source === "note-search")));
-  localStorage.setItem("marketlens.lastQuery", JSON.stringify(state.query));
-  localStorage.setItem("marketlens.limit", JSON.stringify(state.limit));
+  safeSetItem("marketlens.saved", JSON.stringify([...state.saved]));
+  safeSetItem("marketlens.imported", JSON.stringify(state.imported));
+  safeSetItem("marketlens.searchResults", JSON.stringify(state.articles.filter((x) => x.source === "note-search")));
+  safeSetItem("marketlens.lastQuery", JSON.stringify(state.query));
+  safeSetItem("marketlens.limit", JSON.stringify(state.limit));
 }
 
 function filtered() {
@@ -81,17 +82,39 @@ function updateLoadMore() {
   if (visible) $("#loadMore").textContent = `さらに読み込む（現在${state.articles.length}件 → +30件）`;
 }
 
+function renderSearchMeta(items) {
+  const meta = state.lastMeta;
+  if (!meta) return;
+  if (meta.soldOnly) {
+    $("#searchMeta").innerHTML = `<span class="live-dot"></span> 有料候補${meta.candidatesFound}件中${meta.candidatesChecked}件を確認 · 「買われています｜過去24時間以内」${meta.matchedCount}件中、条件に合う${items.length}件を表示${meta.checkFailures?` · 確認失敗${meta.checkFailures}件`:""} · <a href="${escapeHtml(meta.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
+  } else {
+    const sortName = {popular:"人気",hot:"急上昇",new:"新着"}[meta.sort];
+    const scope = meta.expanded ? `関連タグ（${meta.searched.map(escapeHtml).join("・")}）` : `#${escapeHtml(state.query)}`;
+    const freshness = meta.cached ? "（5分キャッシュ）" : meta.refreshed ? "（最新に更新済み）" : "";
+    $("#searchMeta").innerHTML = `<span class="live-dot"></span> note ${scope} の${sortName}から${meta.matchedCount}件取得${freshness} · 条件に合う${items.length}件を表示 · 全${escapeHtml(meta.total || "件数不明")} · <a href="${escapeHtml(meta.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
+  }
+}
+
 function render() {
   const items = filtered();
   $("#articleGrid").innerHTML = items.map(card).join("");
   $("#articleTable").innerHTML = items.map((a) => `<tr><td><div class="table-title"><img src="${escapeHtml(a.image||placeholder(a))}" alt=""><div><b>${escapeHtml(a.title)}</b><small>${escapeHtml(a.author)}</small></div></div></td><td>${escapeHtml(a.category)}</td><td>${yen(a.price)}</td><td>${Number(a.likes||0).toLocaleString()}</td><td><b>${score(a)}</b> / 99</td><td><button class="table-save" data-save="${escapeHtml(a.id)}">${state.saved.has(a.id)?"◆":"◇"}</button></td></tr>`).join("");
   $("#resultSummary").textContent = state.query ? (state.soldOnly ? `「${state.query}」で24時間以内の購入表示を確認できた${items.length}件` : `「#${state.query}」から${items.length}件を表示 · noteの公開検索結果です`) : "キーワードからnoteの実記事を検索できます";
+  const filtersNarrowedToZero = state.query && !state.soldOnly && state.articles.length > 0 && items.length === 0
+    && (state.minPrice > 0 || state.maxPrice < 1000000 || state.category !== "すべて" || state.period !== "all");
   $("#emptyState h3").textContent = state.query ? (state.soldOnly ? "24時間以内の購入表示がある記事は見つかりませんでした" : "条件に合う記事がありません") : "noteを検索してみましょう";
-  $("#emptyState p").textContent = state.query ? (state.soldOnly ? "別のジャンルを試すか、並び順を変更して再検索してください。" : "期間や価格フィルターを変えてみてください。") : "上の検索欄にジャンルやキーワードを入力してください。";
+  $("#emptyState p").textContent = state.query
+    ? (state.soldOnly
+        ? "別のジャンルを試すか、並び順を変更して再検索してください。"
+        : (filtersNarrowedToZero
+            ? "取得済みの記事の中にこの条件に合うものがありませんでした。取得件数を増やすか「さらに読み込む」で対象を広げると見つかる場合があります。"
+            : "期間や価格フィルターを変えてみてください。"))
+    : "上の検索欄にジャンルやキーワードを入力してください。";
   $("#emptyState").hidden = items.length !== 0;
   $("#articleGrid").hidden = state.layout !== "grid" || !items.length;
   $("#tableWrap").hidden = state.layout !== "table" || !items.length;
   updateLoadMore();
+  renderSearchMeta(items);
   const savedItems = [...new Map([...state.articles,...state.imported].map((a)=>[a.id,a])).values()].filter((a)=>state.saved.has(a.id));
   $("#savedGrid").innerHTML = savedItems.map(card).join("");
   $("#savedEmpty").hidden = savedItems.length > 0;
@@ -152,26 +175,39 @@ function syncLimitSelect(){
 }
 
 async function runSearch(options = {}) {
-  const keyword = $("#searchInput").value.replace(/^#/, "").trim();
-  if (!keyword) { $("#searchInput").focus(); return; }
-  localStorage.setItem("marketlens.lastAttempt", JSON.stringify(keyword));
+  const raw = $("#searchInput").value.trim();
+  if (!raw) { $("#searchInput").focus(); return; }
+  const isUrl = /^https?:\/\//i.test(raw) || /^([a-z0-9-]+\.)?note\.com\//i.test(raw);
+  safeSetItem("marketlens.lastAttempt", JSON.stringify(raw));
   const button = $("#searchSubmit");
   button.disabled = true; button.textContent = "検索中…";
-  $("#searchMeta").innerHTML = `<span class="live-dot"></span> noteで「#${escapeHtml(keyword)}」を探しています…${options.refresh?"（キャッシュを使わず更新中）":""}`;
+  $("#searchMeta").innerHTML = `<span class="live-dot"></span> ${isUrl ? "URLを確認しています…" : `noteで「#${escapeHtml(raw.replace(/^[#＃]/,""))}」を探しています…`}${options.refresh?"（キャッシュを使わず更新中）":""}`;
   try {
-    const response = await fetch("/api/search", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({keyword, sort:state.sort, soldOnly:state.soldOnly, limit:state.limit, refresh:options.refresh===true}) });
+    const response = await fetch("/api/search", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({keyword:raw, sort:state.sort, soldOnly:state.soldOnly, limit:state.limit, refresh:options.refresh===true}) });
     const data = await response.json();
     if (!response.ok) { const failure = new Error(data.error || "検索できませんでした。"); failure.noteSearchUrl = data.noteSearchUrl; throw failure; }
     state.query = data.keyword; state.articles = data.articles; state.category = "すべて";
     state.hasMore = !data.soldOnly && Boolean(data.hasMore);
+    if (data.singleArticle) {
+      const article = data.articles[0];
+      state.imported = state.imported.filter((a) => a.url !== article.url);
+      state.imported.unshift(article);
+      state.lastMeta = null;
+    } else {
+      state.lastMeta = {
+        soldOnly: data.soldOnly, candidatesFound: data.candidatesFound, candidatesChecked: data.candidatesChecked,
+        checkFailures: data.checkFailures, sourceUrl: data.sourceUrl, sort: data.sort, expanded: data.expanded,
+        searched: data.searched, total: data.total, cached: data.cached, refreshed: options.refresh === true,
+        matchedCount: data.articles.length,
+      };
+    }
     persist(); renderCategories(); render();
-    const sortName = {popular:"人気",hot:"急上昇",new:"新着"}[data.sort];
-    const scope = data.expanded ? `関連タグ（${data.searched.map(escapeHtml).join("・")}）` : `#${escapeHtml(data.keyword)}`;
-    const freshness = data.cached ? "（5分キャッシュ）" : options.refresh ? "（最新に更新済み）" : "";
-    $("#searchMeta").innerHTML = data.soldOnly
-      ? `<span class="live-dot"></span> 有料候補${data.candidatesFound}件中${data.candidatesChecked}件を確認 · 「買われています｜過去24時間以内」${data.articles.length}件${data.checkFailures?` · 確認失敗${data.checkFailures}件`:""} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`
-      : `<span class="live-dot"></span> note ${scope} の${sortName}から${data.articles.length}件取得${freshness} · 全${escapeHtml(data.total || "件数不明")} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
-    toast(`${data.articles.length}件見つかりました`);
+    if (data.singleArticle) {
+      $("#searchMeta").innerHTML = `<span class="live-dot"></span> URLから記事を1件取得しました · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">元記事を開く ↗</a>`;
+      toast("記事を取得しました");
+    } else {
+      toast(`${data.articles.length}件見つかりました`);
+    }
   } catch (error) {
     const fallback = error.noteSearchUrl ? ` <a href="${escapeHtml(error.noteSearchUrl)}" target="_blank" rel="noopener">note全文検索で探す ↗</a>` : "";
     $("#searchMeta").innerHTML = `<span class="live-dot" style="background:#d75f45"></span> ${escapeHtml(error.message)}${fallback}`;
