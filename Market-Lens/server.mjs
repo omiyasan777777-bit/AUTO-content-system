@@ -231,7 +231,7 @@ function mapApiNote(note, keyword) {
   const url = note.noteUrl || note.note_url || (key && urlname ? `https://note.com/${urlname}/n/${key}` : "");
   if (!url) return null;
   const likes = Number(note.likeCount ?? note.like_count ?? 0) || 0;
-  const price = Number(note.price ?? 0) || 0;
+  const price = Number(note.price ?? note.priceWithTax ?? note.price_with_tax ?? note.sellingPrice ?? note.selling_price ?? 0) || 0;
   const published = parseNoteDate(note.publishAt ?? note.publish_at ?? note.firstPublishedAt ?? note.first_published_at ?? note.createdAt ?? note.created_at);
   const tags = (Array.isArray(note.hashtags) ? note.hashtags : [])
     .map((h) => String(h?.hashtag?.name || h?.name || "").replace(/^[#＃]/, "").trim())

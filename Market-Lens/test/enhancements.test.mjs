@@ -72,6 +72,16 @@ test("pickImageUrl: 文字列・オブジェクト・空値を処理できる", 
   assert.equal(pickImageUrl({}), "");
 });
 
+test("priceがなくてもpriceWithTax系のフィールドから価格を取得できる", () => {
+  const article = mapApiNote({
+    key: "nabc997",
+    name: "価格フィールドのテスト",
+    priceWithTax: 2980,
+    user: { urlname: "creator5", nickname: "テスター3" },
+  }, "テスト");
+  assert.equal(article.price, 2980);
+});
+
 test("note APIのレスポンス（snake_case）も変換できる", () => {
   const article = mapApiNote({
     key: "nxyz789",
