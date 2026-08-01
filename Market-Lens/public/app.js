@@ -33,12 +33,13 @@ function score(article) {
 }
 
 function read(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
+function safeSetItem(key, value) { try { localStorage.setItem(key, value); } catch { /* storage unavailable (e.g. Safari private browsing) */ } }
 function persist() {
-  localStorage.setItem("marketlens.saved", JSON.stringify([...state.saved]));
-  localStorage.setItem("marketlens.imported", JSON.stringify(state.imported));
-  localStorage.setItem("marketlens.searchResults", JSON.stringify(state.articles.filter((x) => x.source === "note-search")));
-  localStorage.setItem("marketlens.lastQuery", JSON.stringify(state.query));
-  localStorage.setItem("marketlens.limit", JSON.stringify(state.limit));
+  safeSetItem("marketlens.saved", JSON.stringify([...state.saved]));
+  safeSetItem("marketlens.imported", JSON.stringify(state.imported));
+  safeSetItem("marketlens.searchResults", JSON.stringify(state.articles.filter((x) => x.source === "note-search")));
+  safeSetItem("marketlens.lastQuery", JSON.stringify(state.query));
+  safeSetItem("marketlens.limit", JSON.stringify(state.limit));
 }
 
 function filtered() {
@@ -177,7 +178,7 @@ async function runSearch(options = {}) {
   const raw = $("#searchInput").value.trim();
   if (!raw) { $("#searchInput").focus(); return; }
   const isUrl = /^https?:\/\//i.test(raw) || /^([a-z0-9-]+\.)?note\.com\//i.test(raw);
-  localStorage.setItem("marketlens.lastAttempt", JSON.stringify(raw));
+  safeSetItem("marketlens.lastAttempt", JSON.stringify(raw));
   const button = $("#searchSubmit");
   button.disabled = true; button.textContent = "検索中…";
   $("#searchMeta").innerHTML = `<span class="live-dot"></span> ${isUrl ? "URLを確認しています…" : `noteで「#${escapeHtml(raw.replace(/^[#＃]/,""))}」を探しています…`}${options.refresh?"（キャッシュを使わず更新中）":""}`;
