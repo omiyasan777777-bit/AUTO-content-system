@@ -14,6 +14,17 @@ npm start
 
 ブラウザで `http://127.0.0.1:4173` を開きます。追加のパッケージ導入は不要です。
 
+## 公開URLでの利用（Vercelデプロイ）
+
+誰でもアクセスできる公開URLで使いたい場合は、Vercelにデプロイできます。`api/` ディレクトリにServerless Functions、`vercel.json` に静的ファイルの出力先設定（`outputDirectory: public`）を用意済みです。
+
+1. Vercelダッシュボードで「Add New → Project」からこのリポジトリをインポート
+2. Root Directory に `Market-Lens` を指定
+3. Build Command / Output Directory は空欄のままでOK（`vercel.json` が自動適用されます）
+4. デプロイ後、発行されたURL（例: `https://xxxx.vercel.app`）でアクセス可能
+
+検索キャッシュや連続検索の間隔制御はサーバーのメモリ上に保持しているため、サーバーレス環境では関数の起動ごとにリセットされます（動作に支障はありません）。
+
 ## できること
 
 - キーワードをnoteの公開タグページで実検索（人気・急上昇・新着）

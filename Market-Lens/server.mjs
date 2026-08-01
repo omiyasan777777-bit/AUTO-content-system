@@ -769,4 +769,10 @@ export {
   gapComment,
   sanitizeGenres,
   parseSearchQuery,
+  json,
+  appVersion,
+  importNote,
+  searchNote,
+  trendWordsHandler,
+  gapFinderHandler,
 };
