@@ -9,6 +9,7 @@ import {
   opportunityScore,
   gapLabel,
   sanitizeGenres,
+  parseSearchQuery,
 } from "../server.mjs";
 
 test("取得件数を10〜200の範囲に丸める", () => {
@@ -111,4 +112,30 @@ test("ジャンル入力をサニタイズしフォールバックする", () =>
   assert.deepEqual(sanitizeGenres([], ["副業", "AI"]), ["副業", "AI"]);
   assert.deepEqual(sanitizeGenres(undefined, ["fallback"]), ["fallback"]);
   assert.equal(sanitizeGenres([1, 2, 3, 4, 5].map(String), ["x"], 3).length, 3);
+});
+
+test("検索欄への入力を種別判定する: 通常キーワード", () => {
+  assert.deepEqual(parseSearchQuery("AI副業"), { type: "keyword", keyword: "AI副業" });
+  assert.deepEqual(parseSearchQuery("#恋愛"), { type: "keyword", keyword: "恋愛" });
+  assert.deepEqual(parseSearchQuery("  "), { type: "empty" });
+  assert.deepEqual(parseSearchQuery(""), { type: "empty" });
+});
+
+test("検索欄への入力を種別判定する: noteのハッシュタグ・検索URL", () => {
+  assert.deepEqual(parseSearchQuery("https://note.com/hashtag/AI副業"), { type: "keyword", keyword: "AI副業" });
+  assert.deepEqual(parseSearchQuery("https://note.com/hashtag/AI?f=popular"), { type: "keyword", keyword: "AI" });
+  assert.deepEqual(parseSearchQuery("note.com/hashtag/恋愛"), { type: "keyword", keyword: "恋愛" });
+  assert.deepEqual(parseSearchQuery("https://note.com/search?q=%E5%89%AF%E6%A5%AD&context=note&mode=search"), { type: "keyword", keyword: "副業" });
+});
+
+test("検索欄への入力を種別判定する: note記事URLはarticle扱い", () => {
+  const result = parseSearchQuery("https://note.com/creator1/n/nabc123");
+  assert.equal(result.type, "article");
+  assert.equal(result.url, "https://note.com/creator1/n/nabc123");
+});
+
+test("検索欄への入力を種別判定する: note.com以外や未対応URLはinvalid", () => {
+  assert.deepEqual(parseSearchQuery("https://example.com/hashtag/AI"), { type: "invalid" });
+  assert.deepEqual(parseSearchQuery("https://note.com/"), { type: "invalid" });
+  assert.deepEqual(parseSearchQuery("https://note.com/creator1"), { type: "invalid" });
 });

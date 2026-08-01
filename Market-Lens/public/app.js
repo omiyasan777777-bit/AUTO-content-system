@@ -152,26 +152,37 @@ function syncLimitSelect(){
 }
 
 async function runSearch(options = {}) {
-  const keyword = $("#searchInput").value.replace(/^#/, "").trim();
-  if (!keyword) { $("#searchInput").focus(); return; }
-  localStorage.setItem("marketlens.lastAttempt", JSON.stringify(keyword));
+  const raw = $("#searchInput").value.trim();
+  if (!raw) { $("#searchInput").focus(); return; }
+  const isUrl = /^https?:\/\//i.test(raw) || /^([a-z0-9-]+\.)?note\.com\//i.test(raw);
+  localStorage.setItem("marketlens.lastAttempt", JSON.stringify(raw));
   const button = $("#searchSubmit");
   button.disabled = true; button.textContent = "検索中…";
-  $("#searchMeta").innerHTML = `<span class="live-dot"></span> noteで「#${escapeHtml(keyword)}」を探しています…${options.refresh?"（キャッシュを使わず更新中）":""}`;
+  $("#searchMeta").innerHTML = `<span class="live-dot"></span> ${isUrl ? "URLを確認しています…" : `noteで「#${escapeHtml(raw.replace(/^[#＃]/,""))}」を探しています…`}${options.refresh?"（キャッシュを使わず更新中）":""}`;
   try {
-    const response = await fetch("/api/search", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({keyword, sort:state.sort, soldOnly:state.soldOnly, limit:state.limit, refresh:options.refresh===true}) });
+    const response = await fetch("/api/search", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({keyword:raw, sort:state.sort, soldOnly:state.soldOnly, limit:state.limit, refresh:options.refresh===true}) });
     const data = await response.json();
     if (!response.ok) { const failure = new Error(data.error || "検索できませんでした。"); failure.noteSearchUrl = data.noteSearchUrl; throw failure; }
     state.query = data.keyword; state.articles = data.articles; state.category = "すべて";
     state.hasMore = !data.soldOnly && Boolean(data.hasMore);
+    if (data.singleArticle) {
+      const article = data.articles[0];
+      state.imported = state.imported.filter((a) => a.url !== article.url);
+      state.imported.unshift(article);
+    }
     persist(); renderCategories(); render();
-    const sortName = {popular:"人気",hot:"急上昇",new:"新着"}[data.sort];
-    const scope = data.expanded ? `関連タグ（${data.searched.map(escapeHtml).join("・")}）` : `#${escapeHtml(data.keyword)}`;
-    const freshness = data.cached ? "（5分キャッシュ）" : options.refresh ? "（最新に更新済み）" : "";
-    $("#searchMeta").innerHTML = data.soldOnly
-      ? `<span class="live-dot"></span> 有料候補${data.candidatesFound}件中${data.candidatesChecked}件を確認 · 「買われています｜過去24時間以内」${data.articles.length}件${data.checkFailures?` · 確認失敗${data.checkFailures}件`:""} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`
-      : `<span class="live-dot"></span> note ${scope} の${sortName}から${data.articles.length}件取得${freshness} · 全${escapeHtml(data.total || "件数不明")} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
-    toast(`${data.articles.length}件見つかりました`);
+    if (data.singleArticle) {
+      $("#searchMeta").innerHTML = `<span class="live-dot"></span> URLから記事を1件取得しました · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">元記事を開く ↗</a>`;
+      toast("記事を取得しました");
+    } else {
+      const sortName = {popular:"人気",hot:"急上昇",new:"新着"}[data.sort];
+      const scope = data.expanded ? `関連タグ（${data.searched.map(escapeHtml).join("・")}）` : `#${escapeHtml(data.keyword)}`;
+      const freshness = data.cached ? "（5分キャッシュ）" : options.refresh ? "（最新に更新済み）" : "";
+      $("#searchMeta").innerHTML = data.soldOnly
+        ? `<span class="live-dot"></span> 有料候補${data.candidatesFound}件中${data.candidatesChecked}件を確認 · 「買われています｜過去24時間以内」${data.articles.length}件${data.checkFailures?` · 確認失敗${data.checkFailures}件`:""} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`
+        : `<span class="live-dot"></span> note ${scope} の${sortName}から${data.articles.length}件取得${freshness} · 全${escapeHtml(data.total || "件数不明")} · <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener">検索元を開く ↗</a>`;
+      toast(`${data.articles.length}件見つかりました`);
+    }
   } catch (error) {
     const fallback = error.noteSearchUrl ? ` <a href="${escapeHtml(error.noteSearchUrl)}" target="_blank" rel="noopener">note全文検索で探す ↗</a>` : "";
     $("#searchMeta").innerHTML = `<span class="live-dot" style="background:#d75f45"></span> ${escapeHtml(error.message)}${fallback}`;

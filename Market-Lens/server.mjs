@@ -132,6 +132,44 @@ function parseHashtagResults(html, keyword) {
   return { articles, total };
 }
 
+function parseSearchQuery(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return { type: "empty" };
+  const urlLike = /^https?:\/\//i.test(value)
+    ? value
+    : (/^([a-z0-9-]+\.)?note\.com\//i.test(value) ? `https://${value}` : null);
+  if (!urlLike) return { type: "keyword", keyword: value.replace(/^[#＃]/, "").trim() };
+  let url;
+  try { url = new URL(urlLike); } catch { return { type: "invalid" }; }
+  if (!/(^|\.)note\.com$/.test(url.hostname)) return { type: "invalid" };
+  const hashtagMatch = url.pathname.match(/^\/hashtag\/([^/]+)/);
+  if (hashtagMatch) return { type: "keyword", keyword: decodeURIComponent(hashtagMatch[1]) };
+  if (url.pathname === "/search") {
+    const q = url.searchParams.get("q");
+    if (q) return { type: "keyword", keyword: q };
+  }
+  if (/\/n\/n[a-zA-Z0-9]+/.test(url.pathname)) return { type: "article", url: url.href };
+  return { type: "invalid" };
+}
+
+async function searchByArticleUrl(urlHref, res) {
+  try {
+    const response = await fetch(urlHref, {
+      headers: { "User-Agent": userAgent, "Accept-Language": "ja-JP,ja;q=0.9" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const article = parseArticle(await response.text(), urlHref);
+    return json(res, 200, {
+      articles: [article], candidatesFound: 0, candidatesChecked: 0, checkFailures: 0, soldOnly: false,
+      total: "1", keyword: article.title, sort: "popular", limit: 1, hasMore: false, refreshed: false,
+      sourceUrl: urlHref, searched: [], expanded: false, singleArticle: true, fetchedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    return json(res, 502, { error: "記事を取得できませんでした。公開記事か、通信環境をご確認ください。", detail: error.message });
+  }
+}
+
 const searchCache = new Map();
 let lastSearchAt = 0;
 
@@ -396,11 +434,16 @@ async function readJsonBody(req) {
 async function searchNote(req, res) {
   const input = await readJsonBody(req);
   if (!input) return json(res, 400, { error: "検索条件を確認してください。" });
-  const keyword = String(input.keyword || "").normalize("NFKC").replace(/^[#＃]/, "").trim().slice(0, 60);
   const sort = ["popular", "hot", "new"].includes(input.sort) ? input.sort : "popular";
   const soldOnly = input.soldOnly === true;
   const limit = clampLimit(input.limit);
   const refresh = input.refresh === true;
+  const rawInput = String(input.keyword || "").normalize("NFKC").trim().slice(0, 300);
+  const parsed = parseSearchQuery(rawInput);
+  if (parsed.type === "empty") return json(res, 400, { error: "検索キーワードを入力してください。" });
+  if (parsed.type === "invalid") return json(res, 400, { error: "このURLには対応していません。noteのハッシュタグURL・検索URL・記事URLを入力してください。" });
+  if (parsed.type === "article") return searchByArticleUrl(parsed.url, res);
+  const keyword = parsed.keyword.slice(0, 60);
   if (!keyword) return json(res, 400, { error: "検索キーワードを入力してください。" });
   const cacheKey = `${keyword}:${sort}:${soldOnly ? "sold24h" : "all"}:${limit}`;
   const cached = searchCache.get(cacheKey);
@@ -725,4 +768,5 @@ export {
   gapLabel,
   gapComment,
   sanitizeGenres,
+  parseSearchQuery,
 };
