@@ -10,6 +10,7 @@ import {
   gapLabel,
   sanitizeGenres,
   parseSearchQuery,
+  pickImageUrl,
 } from "../server.mjs";
 
 test("取得件数を10〜200の範囲に丸める", () => {
@@ -40,6 +41,35 @@ test("note APIのレスポンス（camelCase）を記事に変換する", () => 
   assert.equal(article.price, 980);
   assert.deepEqual(article.tags, ["AI", "副業"]);
   assert.equal(article.source, "note-search");
+});
+
+test("アイキャッチ画像がオブジェクト形式（{url: ...}）でも取得できる", () => {
+  const article = mapApiNote({
+    key: "nabc999",
+    name: "画像オブジェクトのテスト",
+    eyecatch: { url: "https://assets.st-note.com/nested.png", width: 900 },
+    user: { urlname: "creator3", nickname: "テスター" },
+  }, "テスト");
+  assert.equal(article.image, "https://assets.st-note.com/nested.png");
+});
+
+test("アイキャッチ画像がsnake_caseのフィールド名でも取得できる", () => {
+  const article = mapApiNote({
+    key: "nabc998",
+    name: "スネークケースのテスト",
+    eyecatch_url: "https://assets.st-note.com/snake.png",
+    user: { urlname: "creator4", nickname: "テスター2" },
+  }, "テスト");
+  assert.equal(article.image, "https://assets.st-note.com/snake.png");
+});
+
+test("pickImageUrl: 文字列・オブジェクト・空値を処理できる", () => {
+  assert.equal(pickImageUrl("https://x.example/a.png"), "https://x.example/a.png");
+  assert.equal(pickImageUrl({ url: "https://x.example/b.png" }), "https://x.example/b.png");
+  assert.equal(pickImageUrl({ src: "https://x.example/c.png" }), "https://x.example/c.png");
+  assert.equal(pickImageUrl(null), "");
+  assert.equal(pickImageUrl(undefined), "");
+  assert.equal(pickImageUrl({}), "");
 });
 
 test("note APIのレスポンス（snake_case）も変換できる", () => {

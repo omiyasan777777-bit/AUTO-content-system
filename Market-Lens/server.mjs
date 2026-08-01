@@ -217,6 +217,13 @@ function parseNoteDate(value) {
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
+function pickImageUrl(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object") return value.url || value.src || value.large || value.original || "";
+  return "";
+}
+
 function mapApiNote(note, keyword) {
   if (!note || typeof note !== "object") return null;
   const key = note.key || note.note_key || "";
@@ -234,7 +241,8 @@ function mapApiNote(note, keyword) {
     title: stripTags(String(note.name || note.title || "タイトル未取得")),
     author: stripTags(String(note.user?.nickname || note.user?.name || "不明")),
     url,
-    image: note.eyecatch || note.sp_eyecatch || note.eyecatchUrl || "",
+    image: pickImageUrl(note.eyecatch) || pickImageUrl(note.sp_eyecatch) || pickImageUrl(note.eyecatchUrl)
+      || pickImageUrl(note.eyecatch_url) || pickImageUrl(note.eyecatchImage) || pickImageUrl(note.eyecatch_image) || "",
     description: stripTags(String(note.body || "")).slice(0, 160) || `noteの「#${keyword}」タグから取得した記事です。`,
     publishedAt: published,
     modifiedAt: published,
@@ -775,4 +783,5 @@ export {
   searchNote,
   trendWordsHandler,
   gapFinderHandler,
+  pickImageUrl,
 };
