@@ -199,17 +199,15 @@ def convert_tables_to_lists(text: str) -> str:
 
 
 def build_article(output_dir: Path) -> str:
-    """セールスレター + 有料部分を結合"""
+    """セールスレター + 有料部分を結合（有料部分が無い単発記事にも対応）"""
     letter_path = output_dir / "05_sales_letter.md"
     content_path = output_dir / "04_paid_content.md"
 
     if not letter_path.exists():
-        raise FileNotFoundError(f"セールスレターが見つかりません: {letter_path}")
-    if not content_path.exists():
-        raise FileNotFoundError(f"有料部分が見つかりません: {content_path}")
+        raise FileNotFoundError(f"本文が見つかりません: {letter_path}")
 
     letter = letter_path.read_text(encoding="utf-8")
-    content = content_path.read_text(encoding="utf-8")
+    content = content_path.read_text(encoding="utf-8") if content_path.exists() else ""
 
     # メタ情報セクションを除去
     for marker in ["## メタ情報", "## このラインより下が有料エリアです"]:
@@ -226,7 +224,7 @@ def build_article(output_dir: Path) -> str:
             lines = lines[1:]
         letter = "\n".join(lines)
 
-    combined = f"{letter}\n\n---\n\n{content}"
+    combined = f"{letter}\n\n---\n\n{content}" if content.strip() else letter
     # noteは表非対応のため、残っている表は箇条書きに変換
     combined = convert_tables_to_lists(combined)
     # noteの見出しは大見出し/小見出しの2階層のみ。確実にマッピングする
