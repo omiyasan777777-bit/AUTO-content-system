@@ -28,7 +28,8 @@ AUTO-content-system/
 │   ├── 02_concept_design.md       ← Phase 2: コンセプト設計
 │   ├── 03_product_design.md       ← Phase 3: 商品設計
 │   ├── 04_paid_content.md         ← Phase 4: 有料部分作成
-│   └── 05_sales_letter.md         ← Phase 5: セールスレター
+│   ├── 05_sales_letter.md         ← Phase 5: セールスレター
+│   └── 06_affiliate_research_article.md ← アドオン: アフィリエイト訴求型リサーチ記事
 └── output/                ← 生成物の保存先
 ```
 
@@ -60,6 +61,16 @@ AUTO-content-system/
   - 05_sales_letter.md（無料部分）+ 04_paid_content.md（有料部分）を結合して投稿
   - タイトルは 03_product_design.md から自動取得（明示推奨）。`--auto-save` で確認なし下書き保存
 
+
+## アフィリエイト訴求型リサーチ記事（6フェーズ外のアドオン）
+
+「〇〇を徹底リサーチして記事にして」「アフィリエイトリンクを貼って」のように、**6フェーズのヒアリングを経由せず単発で施設・商品のリサーチ記事を作ってほしい**という依頼が来たら、`prompts/06_affiliate_research_article.md` のテンプレートに従って直接執筆する。
+
+- 保存ファイル名は `05_sales_letter.md` に固定（`post_to_note.py` の投稿フローに乗せるため）。`04_paid_content.md` は作らない
+- 構成: 導入 → タイプ別の選び方 → ジャンル別紹介（各施設に口コミ引用＋アフィリエイトリンク＋周辺の無料スポット） → 注意点 → FAQ → まとめ
+- 文字数は8,000〜10,000字（空白・改行除く、`count_chars.py`で実測）
+- アフィリエイトリンクは対象ごとに毎回設置する。直近でユーザーから指定されたリンクを次回以降の既定値として使い回してよい（既定値: `https://a.r10.to/h9EPT8` ／楽天トラベル）
+- 記事完成後、内容とは別に「魅力的なタイトル案」を提示する（本文Markdownにはタイトルを含めない）
 
 ## 統合知識ベース
 
