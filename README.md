@@ -121,3 +121,10 @@ AUTO-content-system/
 1. このフォルダをデスクトップ等に配置
 2. Claude Code でこのフォルダを開く
 3. `メニュー` と入力してスタート
+
+---
+
+## 関連パッケージ: note-writing-knowledge/
+
+`note-writing-knowledge/` は、顧客の原文・教育5層・新PASONA・リストマーケティングを一つの制作工程として運用するための、独立したライティングナレッジパッケージ（Claude Code × ChatGPT マーケティング文章OS）。
+詳細は `note-writing-knowledge/README.md` を参照。

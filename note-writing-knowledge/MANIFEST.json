@@ -1,0 +1,177 @@
+{
+  "name": "Claude Code × ChatGPT マーケティング文章OS",
+  "version": "1.0.0",
+  "article_characters": 32978,
+  "files": [
+    {
+      "path": ".claude/skills/article-architecture/SKILL.md",
+      "bytes": 1989,
+      "sha256": "8afc7a818523b1a474b3c0a0706230ee5c7ccd4dbeedb77a78ec637f0b8b5801"
+    },
+    {
+      "path": ".claude/skills/brand-voice/SKILL.md",
+      "bytes": 1587,
+      "sha256": "623dc30a323b4ddf7118c9137bbbc1ffc1cda380677251e2d1b2ed303d256b9e"
+    },
+    {
+      "path": ".claude/skills/customer-truth/SKILL.md",
+      "bytes": 2555,
+      "sha256": "c4e560c1be60e63e3eb36fb161f872b91c808f95a1f63c1974561337821e0892"
+    },
+    {
+      "path": ".claude/skills/education-5layers/SKILL.md",
+      "bytes": 2441,
+      "sha256": "11fcd1cf8a10ab5ea79d986b529133ad13c0b1bbb4e5895e821ccea0bf565271"
+    },
+    {
+      "path": ".claude/skills/fact-ethics-check/SKILL.md",
+      "bytes": 1958,
+      "sha256": "8e80d1eb82cfa8aab745a00a4d673ff43bfcc73cdf2d99b0e224ec3d89a80877"
+    },
+    {
+      "path": ".claude/skills/list-sequence/SKILL.md",
+      "bytes": 2153,
+      "sha256": "c5ae155706767dd43eece7398d4e2d0745e2c7f1a1c3c19be2c75c4c6e84a03e"
+    },
+    {
+      "path": ".claude/skills/new-pasona-copy/SKILL.md",
+      "bytes": 1937,
+      "sha256": "41c026d05f3c7dad1c732a257d42f32676447eb0e4dd578a478b3900529842b1"
+    },
+    {
+      "path": ".claude/skills/repurpose/SKILL.md",
+      "bytes": 2089,
+      "sha256": "91e5436df20e4be588a5a82f2b6c544c1241a85a01527057542e0606e99b299f"
+    },
+    {
+      "path": "ARTICLE.md",
+      "bytes": 81938,
+      "sha256": "47f4cee3699df6da82d186f9a39df192f065f68f9f353fe47e8e8e8e07c9308d"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 202,
+      "sha256": "c8e4372a376210b024656cbd2a68b7818fd56bebf55ce39ec39ce2f9d66ea4a7"
+    },
+    {
+      "path": "CHECKLIST.md",
+      "bytes": 1879,
+      "sha256": "2c5b20f6913b101fae6754efd5fceac46c8bcd5de6969d2d965a082774ae980d"
+    },
+    {
+      "path": "CLAUDE.md",
+      "bytes": 2949,
+      "sha256": "83c1e963795b69763146bb03934249fe33f2d9a4df84fcd0a1524dd9971d3e89"
+    },
+    {
+      "path": "LICENSE.md",
+      "bytes": 578,
+      "sha256": "631ff26dcfe6197631e4cce31bde7d2a89784d05a3fe745cddea307d1e9030d7"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2843,
+      "sha256": "aa19bdb23a5d6fa4aad43851b0154d78c852a2767e5b835cdf6117564067fe49"
+    },
+    {
+      "path": "SECURITY.md",
+      "bytes": 897,
+      "sha256": "c05bb0d6da3c6b7c056e3b508c8f3da96387e17fedea065a1de3e4df26811865"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 1560,
+      "sha256": "415be701fdb7d9820dfc6d4d1c5ba95f0f0cdd3479127834d9eeb9aa574075e3"
+    },
+    {
+      "path": "examples/article-opening-example.md",
+      "bytes": 851,
+      "sha256": "d262df231e15742b1ad30728323704bee52f7b783894dbb1a44341a58d92eaa7"
+    },
+    {
+      "path": "examples/bad-vs-good.md",
+      "bytes": 1064,
+      "sha256": "92052552d85c2d8ebb46f98c807edd2b1b17303d6b565ba8c0fddb5d5cdc8375"
+    },
+    {
+      "path": "examples/brief-example.md",
+      "bytes": 1220,
+      "sha256": "6272749bdfc4fcf1a052878945071e67be77ebadf93736305b588425c41956eb"
+    },
+    {
+      "path": "examples/customer-voice-example.md",
+      "bytes": 993,
+      "sha256": "287271479dc6f598b94c882517e7d0db865a6298c437d0c69ee084410ebf89f6"
+    },
+    {
+      "path": "examples/five-layers-output-example.md",
+      "bytes": 1147,
+      "sha256": "7b2598d7af0617799a080f0f22a00b796cbd60cc2ee9c805803bba81e01b60d0"
+    },
+    {
+      "path": "examples/quick-start.md",
+      "bytes": 899,
+      "sha256": "62d68cb8bc64ae369a5f6217958ffc1642bf0d88665acedf96a3e5a3046ebc50"
+    },
+    {
+      "path": "inputs/brief.md",
+      "bytes": 204,
+      "sha256": "962ef1877aef4691f5f7b66d4710fef26a6f8d81dd4e3b92c516d978da15f280"
+    },
+    {
+      "path": "inputs/customer-voice.md",
+      "bytes": 151,
+      "sha256": "3b85dddee1e1dbbb17d6e6f044afe092bbd82f4927b236e5d41cd957d6b10d60"
+    },
+    {
+      "path": "inputs/personal-stories.md",
+      "bytes": 226,
+      "sha256": "73e5855465d4c2a6eeed3fa7836b8eed20e1a16e21579d884aec369b40e8e492"
+    },
+    {
+      "path": "knowledge/brand-voice.md",
+      "bytes": 1667,
+      "sha256": "9499ce67485bd9ff67fe491a2abadb2585701dfad7c25722b0cb20d70060cec4"
+    },
+    {
+      "path": "knowledge/channel-rules.md",
+      "bytes": 1353,
+      "sha256": "e3507284795e51b247fec467997310c03c14dc744de9ec961a11dd8771c2a40c"
+    },
+    {
+      "path": "knowledge/customer-truth.md",
+      "bytes": 1950,
+      "sha256": "74fefef43d70f7409416bba4d3961aea453727ee44acbfae18a2b78986f165a7"
+    },
+    {
+      "path": "knowledge/education-5layers.md",
+      "bytes": 2137,
+      "sha256": "6febdbe9b46c9db2b2ab25de0bb18cda6dd26a25c0135b1deb009d2e7961e790"
+    },
+    {
+      "path": "knowledge/evidence-policy.md",
+      "bytes": 1297,
+      "sha256": "669b16c29a2889abe8eb372f318b540f249d388ac4f6451186a4e02a226bf2bc"
+    },
+    {
+      "path": "knowledge/list-marketing.md",
+      "bytes": 1959,
+      "sha256": "c546a18cf1bb9153fa26fdaf4c7fb3efe458545de0759e0acfe5eb354526c9fc"
+    },
+    {
+      "path": "knowledge/new-pasona.md",
+      "bytes": 2325,
+      "sha256": "1ec2a40706f6041afa53b67530c94997ad287fcd1e0ae2bc2bddbd845200eed2"
+    },
+    {
+      "path": "knowledge/offer-map.md",
+      "bytes": 597,
+      "sha256": "a2fe3afc3ab1572a8cc418970d7e256eeb892012f5dc6c8cc9c67323396bcdfa"
+    },
+    {
+      "path": "prompts/chatgpt-prompts.md",
+      "bytes": 6435,
+      "sha256": "74294877c56f5777ebd6c87d6ab41c1dfa6bcf0ebde17f5f24dfd971cd974b69"
+    }
+  ]
+}
