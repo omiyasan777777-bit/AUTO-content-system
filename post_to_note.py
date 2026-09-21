@@ -36,6 +36,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 BASE_DIR = Path(__file__).parent
 NOTE_NEW_URL = "https://note.com/new"
 
+# 無料部分と有料部分の境目に入れる一文（区切り線は使わない）。文言はここで変更可。
+PAYWALL_MARKER = "ここから先は有料です"
+
 
 def create_driver(profile_dir: str = None):
     """Selenium Chrome ドライバーを作成"""
@@ -226,12 +229,34 @@ def build_article(output_dir: Path) -> str:
             lines = lines[1:]
         letter = "\n".join(lines)
 
-    combined = f"{letter}\n\n---\n\n{content}"
+    # 無料↔有料の結合：区切り線は使わず、境目に「ここから有料」の一文だけ入れる
+    # （PAYWALL_MARKER はテキストなので remove_dividers では消えない）
+    combined = f"{letter}\n\n{PAYWALL_MARKER}\n\n{content}"
     # noteは表非対応のため、残っている表は箇条書きに変換
     combined = convert_tables_to_lists(combined)
     # noteの見出しは大見出し/小見出しの2階層のみ。確実にマッピングする
     combined = normalize_headings(combined)
+    # noteエディタが区切り線に変換してしまう水平線（---, ***, ___ 等）を除去
+    combined = remove_dividers(combined)
     return combined
+
+
+def remove_dividers(text: str) -> str:
+    """note 上で区切り線（横線）になるマークダウンの水平線を除去する。
+    対象: --- / *** / ___（3つ以上、間に空白可）。表の区切り行（| --- |）は対象外。"""
+    out = []
+    for ln in text.split("\n"):
+        # |---|---| のような表の区切りは convert_tables_to_lists 済みだが念のため除外
+        if "|" in ln:
+            out.append(ln)
+            continue
+        if re.match(r"^\s*([-*_])(?:\s*\1){2,}\s*$", ln):
+            continue  # 水平線 → noteで区切り線になるのでスキップ
+        out.append(ln)
+    text = "\n".join(out)
+    # 区切り線を抜いて空いた空行が増えすぎるのを防ぐ（最大2連まで）
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip() + "\n"
 
 
 def input_title(driver, title: str) -> bool:
@@ -332,6 +357,29 @@ def save_draft(driver) -> bool:
     return False
 
 
+def record_draft_meta(output_dir: Path):
+    """下書き保存に成功したら、プロジェクトの .project.json に投稿ステータスを記録する。
+    Web UI のダッシュボードに「下書き(note)」「投稿日」が反映される。失敗しても無視。"""
+    try:
+        import json
+        from datetime import date
+        meta_path = Path(output_dir) / ".project.json"
+        meta = {}
+        if meta_path.exists():
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            except Exception:
+                meta = {}
+        # 既に公開済みなら下書きへ戻さない
+        if meta.get("status") != "published":
+            meta["status"] = "draft"
+        meta.setdefault("postedAt", date.today().isoformat())
+        meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"[INFO] 投稿ステータスを記録しました: {meta_path}")
+    except Exception as e:
+        print(f"[WARN] 投稿ステータスの記録に失敗（無視）: {e}")
+
+
 def post(output_dir: Path, title: str = None, profile_dir: str = None, auto_save: bool = False):
     """メイン処理: note.com に下書き投稿"""
     print(f"\n{'='*60}")
@@ -384,16 +432,19 @@ def post(output_dir: Path, title: str = None, profile_dir: str = None, auto_save
         # 下書き保存
         if auto_save:
             save_draft(driver)
+            record_draft_meta(output_dir)
         else:
             try:
                 ans = input("\n下書き保存しますか？ [Y/n]: ").strip().lower()
                 if ans in ("", "y", "yes"):
                     save_draft(driver)
+                    record_draft_meta(output_dir)
                 else:
                     print("[INFO] 手動で保存してください。ブラウザは開いたままです")
                     input("Enterを押すと終了します...")
             except EOFError:
                 save_draft(driver)
+                record_draft_meta(output_dir)
 
     except KeyboardInterrupt:
         print("\n[INFO] 中断しました")

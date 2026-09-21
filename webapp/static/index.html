@@ -6,19 +6,20 @@
 <title>AUTO-content-system</title>
 <style>
   :root {
-    /* ニューモーフィズム基調（緑→青→紫） */
-    --bg: #e7eaf0;
-    --text: #545c70;
-    --heading: #3c4357;
-    --muted: #969cb0;
-    --light: #ffffff;                 /* 左上のハイライト */
-    --dark: #c0c6d4;                  /* 右下の影 */
-    --g1: #27cf93;                    /* 緑 */
-    --g2: #2f9be0;                    /* 青 */
-    --g3: #6d6fc9;                    /* 紫 */
+    color-scheme: dark;
+    /* REVERSE：ダーク × オレンジ × ホワイト（配色のみ差し替え） */
+    --bg: #1b1b22;                    /* 面（カード/パネル/入力/ヘッダー） */
+    --text: #e6e8ee;                  /* 本文 */
+    --heading: #f7f8fa;               /* 見出し（白） */
+    --muted: #b4bac4;                 /* 補助テキスト */
+    --light: #24242e;                 /* 左上のハイライト（面より明るいダーク） */
+    --dark: #0c0c10;                  /* 右下の影（面より暗い） */
+    --g1: #ff7a18;                    /* 主アクセント（オレンジ） */
+    --g2: #ff9a4d;                    /* アクセント明（リンク/ホバー/強調） */
+    --g3: #5aa9ff;                    /* 第2アクセント（青・区別用） */
     --accent: var(--g1);
-    --grad: linear-gradient(135deg, var(--g1), var(--g2));
-    --grad3: linear-gradient(135deg, var(--g1) 0%, var(--g2) 55%, var(--g3) 100%);
+    --grad: linear-gradient(135deg, #ff7a18, #ff9a4d);
+    --grad3: linear-gradient(135deg, #ff7a18 0%, #ff9a4d 55%, #ff7a18 100%);
     --radius: 22px;
     --radius-sm: 14px;
     /* 凸（浮き出し） */
@@ -38,7 +39,11 @@
     flex-direction: column;
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
-    background: var(--bg);
+    /* REVERSE：ほぼ黒 + 上部にオレンジのグロー */
+    background:
+      radial-gradient(900px 420px at 50% -120px, rgba(255,122,24,0.16), transparent 70%),
+      #0b0b0e;
+    background-attachment: fixed;
   }
 
   header {
@@ -46,7 +51,7 @@
     z-index: 5;
     padding: 14px 20px 2px;
     background: var(--bg);
-    box-shadow: 0 6px 14px rgba(170,178,196,0.35);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
   }
   .header-row {
     display: flex;
@@ -64,7 +69,7 @@
     box-shadow: var(--nm-in);
   }
   .spacer { flex: 1; }
-  #model-select, #mode-select, #letter-select {
+  #model-select, #mode-select, #letter-select, #account-select {
     font-size: 12px;
     padding: 8px 13px;
     border: none;
@@ -77,9 +82,23 @@
     box-shadow: var(--nm-out-sm);
     transition: box-shadow .15s;
   }
-  #model-select:hover, #mode-select:hover, #letter-select:hover { box-shadow: var(--nm-out); }
-  #model-select:focus, #mode-select:focus, #letter-select:focus { box-shadow: var(--nm-in); }
+  #model-select:hover, #mode-select:hover, #letter-select:hover, #account-select:hover { box-shadow: var(--nm-out); }
+  #model-select:focus, #mode-select:focus, #letter-select:focus, #account-select:focus { box-shadow: var(--nm-in); }
   #mode-select.danger { color: #d6584b; font-weight: 700; }
+  /* ネイティブのドロップダウン候補（OSポップアップ）は白背景になりがち。
+     暗背景＋白文字に固定して、白文字が白背景に溶けるのを防ぐ */
+  select option, select optgroup {
+    background: #1b1b22;
+    color: #f7f8fa;
+    font-weight: 600;
+  }
+  /* 現在のnoteアカウント＝目立つアクセント表示 */
+  #account-select {
+    font-weight: 800;
+    color: #fff;
+    background: var(--grad);
+    box-shadow: -2px -2px 5px var(--light), 3px 3px 8px rgba(255,122,24,0.42);
+  }
 
   /* ===== セッションタブ ===== */
   #tabbar {
@@ -110,13 +129,25 @@
     background: var(--grad);
     color: #fff;
     font-weight: 700;
-    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.45);
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(255,122,24,0.45);
   }
   .tab .title {
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 110px;
   }
+  /* タブに紐づく output フォルダ名チップ（プロジェクト↔フォルダの関連を可視化） */
+  .tab .folder {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(255,122,24,.14);
+    color: var(--g2);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tab.active .folder { background: rgba(255,255,255,.28); color: #fff; }
   .tab .close {
     border: none;
     background: none;
@@ -167,7 +198,7 @@
     background: var(--grad);
     color: #fff;
     border-bottom-right-radius: 7px;
-    box-shadow: -3px -3px 7px var(--light), 5px 5px 14px rgba(47,155,224,0.40);
+    box-shadow: -3px -3px 7px var(--light), 5px 5px 14px rgba(255,122,24,0.40);
   }
   .msg.assistant {
     align-self: flex-start;
@@ -215,13 +246,13 @@
     width: 9px; height: 9px;
     border-radius: 50%;
     background: var(--grad);
-    box-shadow: 0 0 0 0 rgba(39,207,147,0.5);
+    box-shadow: 0 0 0 0 rgba(255,122,24,0.5);
     animation: pulse 1.3s infinite;
   }
   @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(39,207,147,0.45); }
-    70% { box-shadow: 0 0 0 7px rgba(39,207,147,0); }
-    100% { box-shadow: 0 0 0 0 rgba(39,207,147,0); }
+    0% { box-shadow: 0 0 0 0 rgba(255,122,24,0.45); }
+    70% { box-shadow: 0 0 0 7px rgba(255,122,24,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,122,24,0); }
   }
 
   #quickbar {
@@ -251,7 +282,7 @@
   #inputbar {
     padding: 16px 20px 20px;
     background: var(--bg);
-    box-shadow: 0 -6px 14px rgba(170,178,196,0.28);
+    box-shadow: 0 -6px 14px rgba(0,0,0,0.28);
     position: relative;
     z-index: 3;
   }
@@ -279,6 +310,49 @@
     transition: box-shadow .15s;
   }
   #input::placeholder { color: var(--muted); }
+  /* 参考画像 添付ボタン */
+  #attach-btn {
+    flex: 0 0 auto;
+    width: 48px;
+    align-self: stretch;
+    border: none;
+    border-radius: 18px;
+    background: var(--bg);
+    color: var(--g2);
+    font-size: 19px;
+    cursor: pointer;
+    box-shadow: var(--nm-out-sm);
+    transition: box-shadow .12s, transform .12s;
+  }
+  #attach-btn:hover { box-shadow: var(--nm-out); transform: translateY(-1px); }
+  #attach-btn:active { box-shadow: var(--nm-in); transform: none; }
+  /* 添付チップ（送信前に表示） */
+  #attach-chips {
+    max-width: 900px;
+    margin: 0 auto 9px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #attach-chips:empty { display: none; }
+  .attach-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(255,122,24,0.12);
+    border: 1px solid rgba(255,122,24,0.4);
+    border-radius: 999px;
+    padding: 4px 6px 4px 11px;
+  }
+  .attach-chip img { width: 26px; height: 26px; object-fit: cover; border-radius: 6px; }
+  .attach-chip .x {
+    border: none; background: none; cursor: pointer; color: var(--muted);
+    font-size: 15px; line-height: 1; padding: 0 4px; border-radius: 50%;
+  }
+  .attach-chip .x:hover { color: var(--g1); }
   #input:focus { box-shadow: var(--nm-in-deep); }
   #send {
     background: var(--grad);
@@ -289,7 +363,7 @@
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.42);
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(255,122,24,0.42);
     transition: box-shadow .12s, transform .12s, opacity .15s;
   }
   #send:hover:not(:disabled) { transform: translateY(-1px); }
@@ -443,7 +517,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: rgba(60,67,87,0.28);
+    background: rgba(0,0,0,0.6);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
   }
@@ -466,7 +540,7 @@
     gap: 9px;
     padding: 12px 14px;
     flex-wrap: wrap;
-    box-shadow: 0 5px 12px rgba(170,178,196,0.28);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.28);
   }
   #pv-bar select {
     font-size: 12px;
@@ -505,7 +579,7 @@
     font-size: 12.5px; font-weight: 800; color: #fff;
     border: none; border-radius: 999px; padding: 8px 16px; cursor: pointer;
     background: var(--grad);
-    box-shadow: -2px -2px 5px var(--light), 3px 3px 9px rgba(47,155,224,0.4);
+    box-shadow: -2px -2px 5px var(--light), 3px 3px 9px rgba(255,122,24,0.4);
   }
   #pv-save:active { box-shadow: var(--nm-in); }
   #pv-close {
@@ -541,7 +615,7 @@
   #pv-render p { margin: 0 0 12px; }
   #pv-render ul { margin: 4px 0 14px; padding-left: 20px; }
   #pv-render li { margin: 3px 0; }
-  #pv-render strong { color: #16775a; font-weight: 800; }
+  #pv-render strong { color: #d2620a; font-weight: 800; }
   #pv-render hr { border: none; border-top: 1px dashed #cdd2dd; margin: 20px 0; }
   #pv-render blockquote { margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--g1); background: #f4f7f9; border-radius: 8px; color: #555c6e; }
   #pv-render code { background: #eef1f5; border-radius: 5px; padding: 1px 6px; font-family: "Consolas", monospace; font-size: 13.5px; }
@@ -567,6 +641,41 @@
   #pv-modal.editing #pv-edit { display: block; }
 
   /* ===== フェーズ進捗カード ===== */
+  /* ===== フェーズ進捗バー ===== */
+  #phaseprogress {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 2px 2px 9px;
+  }
+  #phaseprogress.hidden { display: none; }
+  .pp-track {
+    flex: 1;
+    height: 9px;
+    border-radius: 999px;
+    background: var(--bg);
+    box-shadow: var(--nm-in);
+    overflow: hidden;
+  }
+  .pp-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: var(--grad);
+    box-shadow: 0 0 10px rgba(255,122,24,0.55);
+    transition: width .55s cubic-bezier(.3,1,.4,1);
+  }
+  .pp-label {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--g2);
+    white-space: nowrap;
+    min-width: 104px;
+    text-align: right;
+  }
+  #phaseprogress.running .pp-fill { animation: ppGlow 1.4s ease-in-out infinite; }
+  @keyframes ppGlow { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.28); } }
+
   #phasecards {
     display: flex;
     align-items: stretch;
@@ -638,12 +747,56 @@
     animation: rise .3s ease both;
   }
 
+  /* ===== プロジェクト・ダッシュボード ===== */
+  #db-fab {
+    position: fixed; right: 20px; bottom: 198px;
+    width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; border-radius: 50%; cursor: pointer;
+    background: var(--bg); box-shadow: var(--nm-out-sm); opacity: 0.5;
+    transition: opacity .2s, box-shadow .15s, transform .12s; z-index: 20; user-select: none;
+  }
+  #db-fab:hover { opacity: 1; box-shadow: var(--nm-out); transform: translateY(-2px); }
+  #db-fab:active { box-shadow: var(--nm-in); }
+  #db-overlay {
+    position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(0,0,0,0.6);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  }
+  #db-overlay.hidden { display: none; }
+  #db-modal {
+    width: 100%; max-width: 940px; height: 86vh; display: flex; flex-direction: column;
+    background: var(--bg); border-radius: var(--radius); box-shadow: var(--nm-out);
+    overflow: hidden; animation: rise .2s ease both;
+  }
+  #db-bar { display: flex; align-items: center; gap: 10px; padding: 14px 18px; box-shadow: 0 5px 12px rgba(0,0,0,0.3); }
+  .db-sub { font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  #db-close { font-size: 14px; color: var(--text); border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; background: var(--bg); box-shadow: var(--nm-out-sm); }
+  #db-close:active { box-shadow: var(--nm-in); }
+  #db-list { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 11px; }
+  .db-row { background: var(--bg); border-radius: var(--radius-sm); box-shadow: var(--nm-out-sm); padding: 13px 15px; display: flex; flex-direction: column; gap: 10px; }
+  .db-row-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .db-acct { font-size: 10.5px; font-weight: 800; color: var(--g2); background: rgba(255,122,24,.12); border-radius: 999px; padding: 2px 9px; }
+  .db-name { font-size: 14px; font-weight: 800; color: var(--heading); }
+  .db-prog { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+  .db-prog .t { width: 92px; height: 7px; border-radius: 999px; background: var(--bg); box-shadow: var(--nm-in); overflow: hidden; }
+  .db-prog .f { height: 100%; border-radius: 999px; background: var(--grad); transition: width .4s ease; }
+  .db-prog .n { font-size: 10.5px; font-weight: 800; color: var(--muted); min-width: 30px; }
+  .db-row-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .db-row-meta select, .db-row-meta input { font-size: 11.5px; padding: 6px 9px; border: none; border-radius: 8px; background: var(--bg); color: var(--text); box-shadow: var(--nm-in); outline: none; font-family: inherit; }
+  .db-row-meta .url { flex: 1; min-width: 130px; }
+  .db-row-meta .price { width: 92px; }
+  .db-act { display: flex; gap: 7px; margin-left: auto; }
+  .db-act button { font-size: 11.5px; font-weight: 800; border: none; border-radius: 999px; padding: 6px 12px; cursor: pointer; background: var(--bg); color: var(--text); box-shadow: var(--nm-out-sm); font-family: inherit; transition: box-shadow .12s, color .12s; }
+  .db-act button:hover { box-shadow: var(--nm-out); color: var(--g2); }
+  .db-act button.go { background: var(--grad); color: #fff; }
+  .db-empty { color: var(--muted); text-align: center; padding: 44px 0; font-size: 13px; line-height: 1.7; }
+
   /* ===== 殴り書きモーダル ===== */
   #bd-overlay {
     position: fixed; inset: 0; z-index: 40;
     display: flex; align-items: center; justify-content: center;
     padding: 24px;
-    background: rgba(60,67,87,0.28);
+    background: rgba(0,0,0,0.6);
     -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   }
   #bd-overlay.hidden { display: none; }
@@ -672,7 +825,7 @@
   #bd-go {
     font-size: 13px; font-weight: 800; padding: 10px 22px; border: none; border-radius: 14px;
     background: var(--grad); color: #fff; cursor: pointer; font-family: inherit;
-    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(47,155,224,0.42);
+    box-shadow: -3px -3px 7px var(--light), 4px 4px 12px rgba(255,122,24,0.42);
   }
   #bd-go:active { box-shadow: var(--nm-in); }
 </style>
@@ -684,6 +837,9 @@
     <h1>📝 AUTO-content-system</h1>
     <span class="badge" id="session-badge">新規セッション</span>
     <div class="spacer"></div>
+    <select id="account-select" title="投稿先のnoteアカウント（成果物の保存先も切り替わります）">
+      <option value="">アカウント読込中…</option>
+    </select>
     <select id="mode-select" title="Claude Codeの動作モード">
       <option value="restricted">モード: 制限（推奨）</option>
       <option value="auto">モード: 自動（auto）</option>
@@ -702,6 +858,10 @@
     </select>
   </div>
   <div id="tabbar"></div>
+  <div id="phaseprogress" class="hidden">
+    <div class="pp-track"><div class="pp-fill" id="pp-fill"></div></div>
+    <div class="pp-label" id="pp-label"></div>
+  </div>
   <div id="phasecards"></div>
 </header>
 
@@ -719,7 +879,10 @@
 </div>
 
 <div id="inputbar">
+  <div id="attach-chips"></div>
   <div class="inner">
+    <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="onPickImages(this)">
+    <button id="attach-btn" onclick="document.getElementById('file-input').click()" title="参考画像を添付（AIが読み取って制作の参考にします）">📎</button>
     <textarea id="input" rows="1" placeholder="メッセージを入力（Enterで送信 / Shift+Enterで改行）"></textarea>
     <button id="resume" class="ctl-btn" onclick="resumeGen()" title="中断した続きから再開">▶ 再開</button>
     <button id="stop" class="ctl-btn" onclick="stopGen()" title="実行を中断（途中まで残す）">⏹ 中断</button>
@@ -745,6 +908,20 @@
   <button onclick="openLetterTemplates()">📖 確認・編集（一覧＋プレビュー）</button>
   <button onclick="ltAdd()">➕ 型を追加（お手本レターを逆解析）</button>
   <div class="kb-note">お手本レターを貼ると型を自動生成。型は右上のプルダウンで切替できます。</div>
+</div>
+
+<!-- プロジェクト・ダッシュボード -->
+<div id="db-fab" title="プロジェクト・ダッシュボード" onclick="openDashboard()">📊</div>
+<div id="db-overlay" class="hidden" onclick="if(event.target===this)closeDashboard()">
+  <div id="db-modal">
+    <div id="db-bar">
+      <span class="pv-title">📊 プロジェクト・ダッシュボード</span>
+      <span class="db-sub" id="db-count"></span>
+      <span style="flex:1"></span>
+      <button id="db-close" onclick="closeDashboard()">×</button>
+    </div>
+    <div id="db-list"></div>
+  </div>
 </div>
 
 <!-- 殴り書きモード モーダル -->
@@ -803,6 +980,91 @@ const tabbar = document.getElementById("tabbar");
 const modelSelect = document.getElementById("model-select");
 const modeSelect = document.getElementById("mode-select");
 const letterSelect = document.getElementById("letter-select");
+const accountSelect = document.getElementById("account-select");
+
+// ===== noteアカウント（投稿先＋成果物の保存先を分ける単位） =====
+let accountList = [];        // [{profile, name, folder}]
+let currentAccount = null;   // 現在選択中のアカウント dict
+const ADD_ACCOUNT = "__add__";
+const DEL_ACCOUNT = "__delete__";
+
+// アカウントの保存先フォルダ（projects/<folder>/…）。未取得時は null
+function currentAccountFolder() { return currentAccount ? currentAccount.folder : null; }
+
+// アカウント一覧を取得してプルダウンを描画。現在アカウントを currentAccount に反映
+async function refreshAccountSelect() {
+  try {
+    const d = await (await fetch("/api/accounts")).json();
+    accountList = d.accounts || [];
+    currentAccount = accountList.find(a => a.profile === d.current) || accountList[0] || null;
+  } catch (e) { return; }
+  accountSelect.innerHTML =
+    accountList.map(a => `<option value="${a.profile}">📣 ${a.name}</option>`).join("") +
+    `<option value="${ADD_ACCOUNT}">＋ アカウントを追加…</option>` +
+    // 2件以上のときだけ「現在のアカウントを削除」を出す（最後の1件は消せない）
+    (accountList.length > 1 ? `<option value="${DEL_ACCOUNT}">🗑 このアカウントを削除…</option>` : "");
+  if (currentAccount) accountSelect.value = currentAccount.profile;
+}
+
+accountSelect.addEventListener("change", async () => {
+  if (busy) { alert("実行中はアカウントを切り替えられません。"); accountSelect.value = currentAccount ? currentAccount.profile : ""; return; }
+  const val = accountSelect.value;
+  if (val === ADD_ACCOUNT) {
+    const name = prompt("追加するnoteアカウントの表示名を入力してください\n（例: サブ垢、ビジネス用 など）", "");
+    accountSelect.value = currentAccount ? currentAccount.profile : "";
+    if (name === null || !name.trim()) return;
+    try {
+      const res = await fetch("/api/accounts/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) { alert("追加に失敗: " + (d.error || "")); return; }
+      await refreshAccountSelect();
+      await syncFolderTabs();
+      log(`👤 アカウント「${d.account.name}」を追加し、切り替えました（${d.account.profile}）。\n`
+        + `このアカウントで note.com にログインするには、下の入力欄の指示をそのまま送信してください。`);
+      // この新プロファイルで note ログインする指示を入力欄に用意（送信はユーザー操作）
+      input.value = `noteアカウント「${d.account.name}」でログインしたいです。`
+        + `python setup_note.py --profile "${d.account.profile}" を実行して、Chromeのログイン画面を開いてください。`;
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 140) + "px";
+      input.focus();
+    } catch (e) { alert("追加に失敗しました: " + e.message); }
+    return;
+  }
+  if (val === DEL_ACCOUNT) {
+    accountSelect.value = currentAccount ? currentAccount.profile : "";
+    if (!currentAccount) return;
+    if (!confirm(`アカウント「${currentAccount.name}」を一覧から削除しますか？\n`
+      + `※ note.comのアカウント自体は消えません。projects/${currentAccount.folder}/ の制作物は残ります（空のときだけフォルダも削除）。`)) return;
+    try {
+      const res = await fetch("/api/accounts/delete", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile: currentAccount.profile }),
+      });
+      const d = await res.json();
+      if (!res.ok) { alert("削除できません: " + (d.error || "")); return; }
+      const removedName = d.removed ? d.removed.name : "";
+      await refreshAccountSelect();
+      await syncFolderTabs();
+      log(`🗑 アカウント「${removedName}」を削除しました。現在は「${currentAccount ? currentAccount.name : ""}」です。`
+        + (d.keptFolder ? `\n（projects/${d.removed.folder}/ に ${d.projectCount} 件のプロジェクトが残っています。不要ならエクスプローラーで削除してください）` : ""));
+    } catch (e) { alert("削除に失敗しました: " + e.message); }
+    return;
+  }
+  // 既存アカウントへ切替
+  try {
+    const res = await fetch("/api/accounts/current", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile: val }),
+    });
+    const d = await res.json();
+    if (res.ok) currentAccount = d.account;
+  } catch (e) { /* サーバー未起動時は無視 */ }
+  await syncFolderTabs();
+  refreshStepper();
+});
 
 // セールスレターの型プルダウンを読み込み（サーバーの型一覧＋現在選択）
 async function refreshLetterSelect() {
@@ -892,10 +1154,48 @@ const TOOL_LABELS = {
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (s && Array.isArray(s.sessions) && s.sessions.length) return s;
+    if (s && Array.isArray(s.sessions)) return s;
   } catch {}
-  const key = String(Date.now());
-  return { sessions: [{ key, claudeId: null, title: "新しい会話", createdAt: Date.now(), messages: [] }], activeKey: key };
+  // デフォルトの空タブは作らない。起動後に syncFolderTabs() が projects/ から復元する
+  return { sessions: [], activeKey: null };
+}
+
+// 起動時：projects/ 配下の既存フォルダをタブとして復元する。
+// ・各フォルダ＝1タブ（localStorage に履歴があればそれを保持）
+// ・紐づけも履歴も無い空タブ（旧「新しい会話」）は表示しない
+async function syncFolderTabs() {
+  const acct = currentAccountFolder();
+  let folders = [];
+  try {
+    const q = acct ? "?account=" + encodeURIComponent(acct) : "";
+    folders = (await (await fetch("/api/projects" + q)).json()).projects || [];
+  } catch (e) {
+    // サーバー未起動時は localStorage の内容だけで描画
+    renderTabs(); renderChat(); return;
+  }
+  const have = new Set(state.sessions.filter(s => s.workdir).map(s => s.workdir));
+  for (const f of folders) {
+    if (have.has(f.folder)) continue;
+    state.sessions.push({
+      key: "f_" + f.folder, claudeId: null, title: f.name, customTitle: true,
+      workdir: f.folder, account: f.account, workdirSent: false,
+      createdAt: Date.now(), messages: [],
+    });
+  }
+  // 旧1階層 projects/<名前>（アカウント無し）のタブは破棄。
+  // 紐づけ無し かつ 履歴・セッションIDも無い空タブも除去。
+  state.sessions = state.sessions.filter(s => {
+    if (s.workdir && s.workdir.startsWith("projects/") && s.workdir.split("/").length !== 3) return false;
+    return s.workdir || s.messages.length || s.claudeId;
+  });
+  // activeKey は「現在アカウントで表示されるタブ」の中に収める
+  const vis = visibleSessions();
+  if (!vis.find(s => s.key === state.activeKey)) {
+    state.activeKey = vis.length ? vis[vis.length - 1].key : null;
+  }
+  saveState();
+  renderTabs();
+  renderChat();
 }
 
 function saveState() {
@@ -910,13 +1210,26 @@ function saveState() {
   }
 }
 
+// 現在のアカウントに属するタブだけを返す（workdir = projects/<アカウント>/<プロジェクト>）
+function visibleSessions() {
+  const acct = currentAccountFolder();
+  return state.sessions.filter(s => {
+    if (!s.workdir) return !acct;            // 未紐づけタブはアカウント未取得時のみ表示
+    const parts = s.workdir.split("/");      // ["projects", account, project]
+    return parts[0] === "projects" && parts[1] === acct;
+  });
+}
+
 function activeSession() {
-  return state.sessions.find(s => s.key === state.activeKey) || state.sessions[0];
+  const s = state.sessions.find(x => x.key === state.activeKey);
+  if (s) return s;
+  const vis = visibleSessions();
+  return vis.length ? vis[vis.length - 1] : undefined;
 }
 
 function renderTabs() {
   tabbar.innerHTML = "";
-  for (const s of state.sessions) {
+  for (const s of visibleSessions()) {
     const tab = document.createElement("div");
     tab.className = "tab" + (s.key === state.activeKey ? " active" : "");
     tab.onclick = () => switchTab(s.key);
@@ -926,6 +1239,13 @@ function renderTabs() {
     title.className = "title";
     title.textContent = s.title;
     tab.appendChild(title);
+    if (s.workdir) {
+      const folder = document.createElement("span");
+      folder.className = "folder";
+      folder.textContent = "📁 " + s.workdir.split("/").pop();
+      folder.title = "このプロジェクトの保存先フォルダ: " + s.workdir + "/";
+      tab.appendChild(folder);
+    }
     const close = document.createElement("button");
     close.className = "close";
     close.textContent = "×";
@@ -952,11 +1272,18 @@ function renderTabs() {
 function renderChat() {
   chat.innerHTML = "";
   const s = activeSession();
+  if (!s) {
+    addBubble("assistant", "プロジェクトがありません。👋\n\n左上の「＋ 新規」を押して、プロジェクト名を入れて始めてください。\n（`projects/<プロジェクト名>/` フォルダが作られ、ここに制作物が保存されます）", false);
+    badge.textContent = "📁 プロジェクト未選択（＋新規で作成）";
+    updateControls();
+    return;
+  }
   if (!s.messages.length) {
     addBubble("assistant", "ようこそ！👋\n\n**noteへのログインがまだの方** → 「⚙ セットアップ」を押してください。\n**ログイン済みの方** → 「📋 メニュー」を押してください。", false);
   }
   for (const m of s.messages) addBubble(m.role, m.text, false);
-  badge.textContent = s.claudeId ? "セッション: " + s.claudeId.slice(0, 8) : "新規セッション";
+  badge.textContent = (s.workdir ? "📁 " + s.workdir + "/　" : "📁 未紐づけ（＋新規で作成）　")
+    + (s.claudeId ? "セッション: " + s.claudeId.slice(0, 8) : "新規セッション");
   chat.scrollTop = chat.scrollHeight;
   updateControls();
 }
@@ -964,6 +1291,7 @@ function renderChat() {
 function switchTab(key) {
   if (busy) { alert("実行中はタブを切り替えられません。完了までお待ちください。"); return; }
   state.activeKey = key;
+  clearAttachments();   // 別プロジェクトに切り替えたら添付はリセット
   saveState();
   renderTabs();
   renderChat();
@@ -972,28 +1300,35 @@ function switchTab(key) {
 
 async function newSession() {
   if (busy) { alert("実行中は新規セッションを開始できません。完了までお待ちください。"); return; }
-  const name = prompt("セッション名を入力してください\n（空欄でOKすると、作成したフォルダ名がタブ名になります）", "");
+  const acctLabel = currentAccount ? `（アカウント: ${currentAccount.name}）` : "";
+  const name = prompt(`プロジェクト名を入力してください${acctLabel}\n（この名前で projects/<アカウント>/ 下にフォルダが作られます。空欄でも自動で名前が付きます）`, "");
   if (name === null) return; // キャンセル → 作成しない
-  // 新しい枝番ワーキングフォルダを作成（完全に新規スタート）
-  let workdir = null;
-  try {
-    const res = await fetch("/api/new-workfolder", { method: "POST" });
-    const d = await res.json();
-    if (res.ok) workdir = d.folder;
-  } catch (e) { /* サーバー未起動時はフォルダ無しで続行 */ }
   const trimmed = name.trim();
+  // プロジェクト名から projects/<アカウント>/<名前>/ フォルダを作成（完全に新規スタート）
+  let workdir = null, folderName = null, acctFolder = currentAccountFolder();
+  try {
+    const res = await fetch("/api/new-workfolder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: trimmed, account: acctFolder }),
+    });
+    const d = await res.json();
+    if (res.ok) { workdir = d.folder; folderName = d.name; acctFolder = d.account; }
+  } catch (e) { /* サーバー未起動時はフォルダ無しで続行 */ }
   const key = String(Date.now());
   state.sessions.push({
     key,
     claudeId: null,
-    title: trimmed || (workdir || "新しい会話"),
+    title: trimmed || folderName || "新しい会話",
     customTitle: !!trimmed,
     workdir: workdir,        // このセッション専用のワーキングフォルダ
+    account: acctFolder,     // 所属アカウント（保存先フォルダ名）
     workdirSent: false,      // 初回メッセージでAIに伝えたか
     createdAt: Date.now(),
     messages: [],
   });
   state.activeKey = key;
+  clearAttachments();
   saveState();
   renderTabs();
   renderChat();
@@ -1002,13 +1337,34 @@ async function newSession() {
   input.focus();
 }
 
-function renameTab(key) {
+async function renameTab(key) {
   const s = state.sessions.find(x => x.key === key);
   if (!s) return;
-  const name = prompt("新しいセッション名を入力してください", s.title);
+  if (busy) { alert("実行中は名前を変更できません。完了までお待ちください。"); return; }
+  const name = prompt("新しいプロジェクト名を入力してください\n（保存先フォルダ名も連動して変わります）", s.title);
   if (name === null) return; // キャンセル → 変更しない
   const trimmed = name.trim();
   if (!trimmed) return;
+  // フォルダに紐づくタブは、サーバー側で projects/<アカウント>/ 内のフォルダごとリネーム（連動）
+  if (s.workdir) {
+    try {
+      const res = await fetch("/api/projects/rename", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dir: s.workdir, name: trimmed }),
+      });
+      const d = await res.json();
+      if (!res.ok) { alert("フォルダ名の変更に失敗: " + (d.error || "")); return; }
+      s.workdir = d.folder;   // 新しいフォルダパス
+      s.title = d.name;       // タブ名＝フォルダ名（サニタイズ後）に合わせて完全連動
+      s.customTitle = true;
+      s.workdirSent = false;  // AIへ次回フォルダを伝え直す
+      saveState();
+      await syncFolderTabs();
+      log(`✏️ プロジェクト名を「${d.name}」に変更しました（フォルダも連動）`);
+    } catch (e) { alert("フォルダ名の変更に失敗しました: " + e.message); }
+    return;
+  }
+  // 未紐づけタブ（フォルダ無し）はタブ名だけ変更
   s.title = trimmed;
   s.customTitle = true;
   saveState();
@@ -1020,11 +1376,12 @@ function closeTab(key) {
   const s = state.sessions.find(x => x.key === key);
   if (s && s.messages.length && !confirm(`「${s.title}」を閉じますか？\nこのタブのチャット履歴は削除されます。`)) return;
   state.sessions = state.sessions.filter(x => x.key !== key);
-  if (!state.sessions.length) {
-    const k = String(Date.now());
-    state.sessions.push({ key: k, claudeId: null, title: "新しい会話", createdAt: Date.now(), messages: [] });
+  // 空になっても新しいタブは作らない（プロジェクト未選択の状態を許容）。
+  // アクティブは「現在アカウントで表示されるタブ」の中から選ぶ
+  if (state.activeKey === key) {
+    const vis = visibleSessions();
+    state.activeKey = vis.length ? vis[vis.length - 1].key : null;
   }
-  if (state.activeKey === key) state.activeKey = state.sessions[state.sessions.length - 1].key;
   saveState();
   renderTabs();
   renderChat();
@@ -1094,7 +1451,18 @@ async function refreshPhases(animate = true) {
   try { data = await (await fetch("/api/phase-status" + q)).json(); }
   catch (e) { return; }
   const el = document.getElementById("phasecards");
-  if (!data.folder) { el.innerHTML = ""; phaseDone = {}; return; }
+  const pp = document.getElementById("phaseprogress");
+  if (!data.folder) { el.innerHTML = ""; phaseDone = {}; pp.classList.add("hidden"); return; }
+
+  // 進捗バーを更新（完了フェーズ数 / 全6）
+  const doneCount = data.phases.filter(p => p.done).length;
+  const total = data.phases.length;
+  const pct = Math.round((doneCount / total) * 100);
+  document.getElementById("pp-fill").style.width = pct + "%";
+  document.getElementById("pp-label").textContent =
+    doneCount >= total ? "✅ 全6フェーズ完了" : `Phase ${doneCount}/${total}・${pct}%`;
+  pp.classList.remove("hidden");
+  pp.classList.toggle("running", busy && doneCount < total);
 
   data.phases.forEach((ph, i) => {
     const id = "pc-" + ph.key;
@@ -1243,7 +1611,7 @@ async function openPreview(startInEdit = false) {
     const folders = data.folders || [];
     if (!folders.length) {
       document.getElementById("pv-render").innerHTML =
-        '<p style="color:#888">まだ生成物がありません。<br>制作（メニュー1〜）を実行すると output/ に保存され、ここで編集できます。</p>';
+        '<p style="color:#888">まだ生成物がありません。<br>「＋新規」でプロジェクトを作って制作すると projects/ に保存され、ここで編集できます。</p>';
       document.getElementById("pv-edit").value = "";
       folderSel.innerHTML = ""; document.getElementById("pv-file").innerHTML = "";
       return;
@@ -1475,11 +1843,187 @@ document.addEventListener("click", (e) => {
 // ============================================================
 // 送信・ストリーミング受信
 // ============================================================
+// ===== プロジェクト・ダッシュボード =====
+const STATUS_OPTS = [
+  { v: "", t: "制作中" },
+  { v: "draft", t: "下書き(note)" },
+  { v: "published", t: "公開済み" },
+  { v: "paused", t: "保留" },
+];
+function openDashboard() { document.getElementById("db-overlay").classList.remove("hidden"); loadDashboard(); }
+function closeDashboard() { document.getElementById("db-overlay").classList.add("hidden"); }
+
+async function loadDashboard() {
+  const list = document.getElementById("db-list");
+  list.innerHTML = '<div class="db-empty">読み込み中…</div>';
+  let data;
+  try { data = await (await fetch("/api/dashboard")).json(); }
+  catch (e) { list.innerHTML = '<div class="db-empty">読み込みエラー（サーバー未起動？）</div>'; return; }
+  const rows = data.projects || [];
+  document.getElementById("db-count").textContent = rows.length ? `${rows.length} プロジェクト` : "";
+  if (!rows.length) {
+    list.innerHTML = '<div class="db-empty">まだプロジェクトがありません。<br>左上の「＋ 新規」で作成してください。</div>';
+    return;
+  }
+  list.innerHTML = "";
+  for (const r of rows) list.appendChild(dbRowEl(r));
+}
+
+function dbRowEl(r) {
+  const pct = Math.round(r.done / r.total * 100);
+  const row = document.createElement("div");
+  row.className = "db-row";
+  const statusSel = STATUS_OPTS.map(o =>
+    `<option value="${o.v}"${o.v === r.status ? " selected" : ""}>${o.t}</option>`).join("");
+  row.innerHTML =
+    `<div class="db-row-top">`
+    + `<span class="db-acct">📣 ${esc(r.accountName)}</span>`
+    + `<span class="db-name">${esc(r.name)}</span>`
+    + `<span class="db-prog"><span class="t"><span class="f" style="width:${pct}%"></span></span>`
+    + `<span class="n">${r.done}/${r.total}</span></span>`
+    + `</div>`
+    + `<div class="db-row-meta">`
+    + `<select class="db-status" title="投稿ステータス">${statusSel}</select>`
+    + `<input class="price" placeholder="価格(円)" value="${esc(r.price)}">`
+    + `<input class="url" placeholder="note URL" value="${esc(r.url)}">`
+    + `<span class="db-act">`
+    + `<button class="go">開く</button>`
+    + `<button class="dup">複製</button>`
+    + `<button class="ren">改名</button>`
+    + `</span></div>`;
+  const sel = row.querySelector(".db-status");
+  const price = row.querySelector(".price");
+  const url = row.querySelector(".url");
+  const save = () => dbSaveMeta(r.folder, { status: sel.value, price: price.value, url: url.value });
+  sel.onchange = save; price.onchange = save; url.onchange = save;
+  row.querySelector(".go").onclick = () => dbOpenProject(r);
+  row.querySelector(".dup").onclick = () => dbDuplicate(r);
+  row.querySelector(".ren").onclick = () => dbRename(r);
+  return row;
+}
+
+async function dbSaveMeta(folder, fields) {
+  try {
+    await fetch("/api/project-meta", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dir: folder, ...fields }),
+    });
+  } catch (e) { /* ignore */ }
+}
+
+async function dbOpenProject(r) {
+  if (busy) { alert("実行中は切り替えられません。"); return; }
+  closeDashboard();
+  if (currentAccountFolder() !== r.account) {
+    const acct = accountList.find(a => a.folder === r.account);
+    if (acct) {
+      try {
+        await fetch("/api/accounts/current", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile: acct.profile }),
+        });
+      } catch (e) { /* ignore */ }
+      await refreshAccountSelect();
+    }
+  }
+  await syncFolderTabs();
+  const target = state.sessions.find(s => s.workdir === r.folder);
+  if (target) {
+    state.activeKey = target.key;
+    clearAttachments();
+    saveState(); renderTabs(); renderChat(); resetPhases();
+  }
+}
+
+async function dbDuplicate(r) {
+  const name = prompt(`「${r.name}」を複製します。新しいプロジェクト名を入力してください。\n（制作物はコピーされ、投稿ステータスはリセットされます）`, r.name + "-copy");
+  if (name === null) return;
+  try {
+    const res = await fetch("/api/projects/duplicate", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dir: r.folder, name: name.trim() }),
+    });
+    const d = await res.json();
+    if (!res.ok) { alert("複製に失敗: " + (d.error || "")); return; }
+    await loadDashboard();
+    if (currentAccountFolder() === d.account) await syncFolderTabs();
+  } catch (e) { alert("複製に失敗しました: " + e.message); }
+}
+
+async function dbRename(r) {
+  const name = prompt(`「${r.name}」の新しい名前を入力してください。`, r.name);
+  if (name === null || !name.trim()) return;
+  try {
+    const res = await fetch("/api/projects/rename", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dir: r.folder, name: name.trim() }),
+    });
+    const d = await res.json();
+    if (!res.ok) { alert("改名に失敗: " + (d.error || "")); return; }
+    // 開いているタブがあれば workdir / タイトルを更新（AIへは次回フォルダを伝え直す）
+    const s = state.sessions.find(x => x.workdir === r.folder);
+    if (s) { s.workdir = d.folder; s.title = d.name; s.customTitle = true; s.workdirSent = false; saveState(); }
+    await loadDashboard();
+    if (currentAccountFolder() === d.account) await syncFolderTabs();
+  } catch (e) { alert("改名に失敗しました: " + e.message); }
+}
+
+// ===== 参考画像の添付（AIが Read で読み取る） =====
+let pendingAttachments = [];   // [{path, name, url}]
+
+async function onPickImages(inputEl) {
+  const files = Array.from(inputEl.files || []);
+  inputEl.value = "";   // 同じファイルを連続で選べるようにリセット
+  if (!files.length) return;
+  const session = activeSession();
+  if (!session || !session.workdir) {
+    alert("先に左上の「＋ 新規」でプロジェクトを作成してから画像を添付してください。");
+    return;
+  }
+  for (const f of files) {
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("dir", session.workdir);
+      const res = await fetch("/api/upload-image", { method: "POST", body: fd });
+      const d = await res.json();
+      if (!res.ok) { alert("画像の保存に失敗: " + (d.error || "")); continue; }
+      pendingAttachments.push({ path: d.path, name: d.name, url: URL.createObjectURL(f) });
+    } catch (e) { alert("画像の保存に失敗しました: " + e.message); }
+  }
+  renderAttachChips();
+}
+
+function renderAttachChips() {
+  const box = document.getElementById("attach-chips");
+  box.innerHTML = pendingAttachments.map((a, i) =>
+    `<span class="attach-chip"><img src="${a.url}" alt=""><span>${a.name}</span>`
+    + `<button class="x" onclick="removeAttachment(${i})" title="外す">×</button></span>`
+  ).join("");
+}
+
+function removeAttachment(i) {
+  const a = pendingAttachments[i];
+  if (a && a.url) URL.revokeObjectURL(a.url);
+  pendingAttachments.splice(i, 1);
+  renderAttachChips();
+}
+
+function clearAttachments() {
+  pendingAttachments.forEach(a => a.url && URL.revokeObjectURL(a.url));
+  pendingAttachments = [];
+  renderAttachChips();
+}
+
 async function send() {
   const message = input.value.trim();
-  if (!message || busy) return;
+  if ((!message && !pendingAttachments.length) || busy) return;
 
   const session = activeSession();
+  if (!session) {
+    alert("先に左上の「＋ 新規」でプロジェクトを作成してください。");
+    return;
+  }
   busy = true;
   cancelRequested = false;
   currentAbort = new AbortController();
@@ -1489,25 +2033,37 @@ async function send() {
   input.value = "";
   input.style.height = "auto";
 
+  // 添付画像（送信時点で確定）。表示用テキストとAIへ渡すパスを用意
+  const attached = pendingAttachments.slice();
+  const shownText = message + (attached.length ? `\n📎 ${attached.map(a => a.name).join(", ")}` : "");
+
   // ユーザー発言を保存・描画
-  session.messages.push({ role: "user", text: message });
+  session.messages.push({ role: "user", text: shownText });
   if (!session.customTitle && session.title === "新しい会話") {
-    session.title = message.length > 14 ? message.slice(0, 14) + "…" : message;
+    const t = message || (attached.length ? "画像を添付" : "");
+    session.title = t.length > 14 ? t.slice(0, 14) + "…" : t;
     renderTabs();
   }
   saveState();
-  addBubble("user", message);   // 画面にはユーザーのクリーンな文だけ表示
+  addBubble("user", shownText);   // 画面にはユーザーの文＋添付名だけ表示
   setStatus("考え中...");
 
-  // このセッション専用フォルダがあれば、初回だけAIに伝える（表示はしない）
-  let outbound = message;
+  // AIへ渡す本文を組み立て（表示はしない）
+  let outbound = message || "添付した画像を確認してください。";
+  // 添付画像があれば、Readで開いて参照するよう指示しパスを渡す
+  if (attached.length) {
+    const list = attached.map(a => "・" + a.path).join("\n");
+    outbound = `【添付された参考画像（必ず Read ツールで開いて内容を確認してから、制作・回答に反映すること）】\n${list}\n\n` + outbound;
+  }
+  // このセッション専用フォルダがあれば、初回だけAIに伝える
   if (session.workdir && !session.workdirSent) {
     outbound = `【このセッションのワーキングフォルダは ${session.workdir}/ です。`
       + `Phase 0〜5 の制作物はすべて ${session.workdir}/ に保存し、`
-      + `新しい output フォルダは作らないでください。】\n\n` + message;
+      + `新しい output フォルダは作らないでください。】\n\n` + outbound;
     session.workdirSent = true;
     saveState();
   }
+  clearAttachments();   // 送信したらチップをクリア
 
   let currentBubble = null;
   let currentText = "";
@@ -1665,10 +2221,11 @@ input.addEventListener("input", () => {
   input.style.height = Math.min(input.scrollHeight, 140) + "px";
 });
 
-// 初期描画
+// 初期描画：アカウント取得 → そのアカウントの projects/ フォルダをタブ復元（空のデフォルトタブは作らない）
 renderTabs();
-renderChat();
-refreshStepper();
+refreshAccountSelect()
+  .then(() => syncFolderTabs())
+  .then(() => { refreshStepper(); });
 refreshLetterSelect();
 input.focus();
 </script>
