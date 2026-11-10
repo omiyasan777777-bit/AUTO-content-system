@@ -28,7 +28,9 @@ AUTO-content-system/
 │   ├── 02_concept_design.md       ← Phase 2: コンセプト設計
 │   ├── 03_product_design.md       ← Phase 3: 商品設計
 │   ├── 04_paid_content.md         ← Phase 4: 有料部分作成
-│   └── 05_sales_letter.md         ← Phase 5: セールスレター
+│   ├── 05_sales_letter.md         ← Phase 5: セールスレター
+│   └── 06_sns_buzz_clone.md       ← SNS: Muse×バズ構成パクり→投稿化→スプシ記録
+├── sns/                   ← SNS運用（自アカ設定・下書き・勝ちポストログ）
 └── output/                ← 生成物の保存先
 ```
 
@@ -169,6 +171,16 @@ AUTO-content-system/
 
 ### 型の管理UI
 📄ボタン →「確認・編集」でモーダル一覧・プレビュー・編集・保存（`sales_templates/*.md` のみ編集可）
+
+## SNSバズ構成パクり（Muse × 自アカ投稿化 × スプシ記録）
+
+ユーザーが「**バズ構成パクり**」「**Museリサーチ**」「**伸びてるアカ探して**」と入力したら、`prompts/06_sns_buzz_clone.md` の STEP 0〜6 に従って実行する。
+- 必ず `knowledge/SNS_バズ構成の型.md` を先に読む（伸び判定基準・型カタログ・パクりの線引き）
+- 自アカ設定は `sns/my_accounts.md`、スプシIDは `sns/config.json`
+- 流れ: 自アカのコンセプト読込 → Muse用プロンプトを出す → 伸び判定 → 構成を9項目で分解 → 自アカ用ポスト9案 → 24h後の数字で判定 → 🔥伸びた/👍やや伸びをスプシに記録
+- **真似するのは構成だけ。元投稿の文章・体験談・固有の言い回しは使わない**
+- Google Sheets のツールが使えれば「勝ちポスト」シートに追記。使えなければ `sns/buzz_log.csv` に追記（CSVには常に残す）
+- 同じ型で🔥が3回たまったら、ユーザーに確認して knowledge の「自アカの勝ち型」に昇格
 
 ## 品質チェック機能（ワンポチ）
 

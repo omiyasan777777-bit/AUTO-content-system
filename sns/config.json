@@ -1,0 +1,7 @@
+{
+  "spreadsheet_id": "",
+  "sheet_winners": "勝ちポスト",
+  "sheet_patterns": "型カタログ",
+  "win_threshold": 2.0,
+  "soft_win_threshold": 1.5
+}
